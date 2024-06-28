@@ -1,16 +1,19 @@
-import Image from "next/image";
-import LinkList from "@/app/components/link-list";
+import Image from 'next/image';
+import LinkList from '@/app/components/link-list';
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between px-4 py-24 bg-gradient-to-b from-indigo-900 via-pink-800 to to-blue-700">
-      <section className="flex flex-col max-w-full gap-8 justify-center p-2">
-        <div id="profile-info" className="flex flex-col items-center gap-4">
+    <main className="flex min-h-screen flex-col items-center justify-between bg-gradient-to-b from-indigo-900 via-pink-800 to-blue-700 px-4 py-24">
+      <section className="flex max-w-full flex-col justify-center gap-8 p-2 lg:w-2/6">
+        <div
+          id="profile-info"
+          className="ml-4 flex w-full flex-col items-center gap-4"
+        >
           <div>
             <Image
               id="profile-picture"
               className="rounded-full"
-              src={"https://picsum.photos/200"}
+              src={'https://picsum.photos/200'}
               width={100}
               height={100}
               alt="something"
