@@ -1,9 +1,32 @@
 import Image from "next/image";
+import LinkList from "@/app/components/link-list";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
+    <main className="flex min-h-screen flex-col items-center justify-between px-4 py-24 bg-gradient-to-b from-indigo-900 via-pink-800 to to-blue-700">
+      <section className="flex flex-col max-w-full gap-8 justify-center p-2">
+        <div id="profile-info" className="flex flex-col items-center gap-4">
+          <div>
+            <Image
+              id="profile-picture"
+              className="rounded-full"
+              src={"https://picsum.photos/200"}
+              width={100}
+              height={100}
+              alt="something"
+            ></Image>
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <h1 className="text-3xl font-bold text-white">sadasspanda</h1>
+            <p className="text-sm text-white">I like chocolate milk</p>
+          </div>
+        </div>
+        <div id="links">
+          <LinkList></LinkList>
+        </div>
+      </section>
+
+      {/* <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
         <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
           Get started by editing&nbsp;
           <code className="font-mono font-bold">app/page.tsx</code>
@@ -107,7 +130,7 @@ export default function Home() {
             Instantly deploy your Next.js site to a shareable URL with Vercel.
           </p>
         </a>
-      </div>
+      </div> */}
     </main>
   );
 }
