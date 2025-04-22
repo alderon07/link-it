@@ -1,4 +1,4 @@
-import LinkStyled from "./link-styled";
+import LinkStyled from "./link-card";
 
 export default function LinkList() {
   const links = [
