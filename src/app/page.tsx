@@ -32,34 +32,31 @@ const profile = {
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen w-full bg-gradient-to-b from-purple-900 via-purple-700 to-blue-800 flex flex-col items-center justify-start py-16 px-4">
-      <div className="max-w-md w-full mx-auto">
+    <main className="flex min-h-[100dvh] w-full flex-col items-center bg-gradient-to-b from-purple-900 via-purple-700 to-blue-800">
+      <div className="flex w-full max-w-[500px] flex-col items-center px-4 py-12 sm:py-16">
         {/* Profile Section */}
-        <div className="flex flex-col items-center justify-center mb-10">
-          <div className="relative w-20 h-20 overflow-hidden rounded-full mb-4">
+        <div className="mb-8 flex w-full flex-col items-center">
+          <div className="relative mb-4 h-16 w-16 overflow-hidden rounded-full sm:h-20 sm:w-20">
             <Image
               src={profile.avatar}
               alt={profile.username}
               fill
               className="object-cover"
               priority
+              sizes="(max-width: 640px) 64px, 80px"
             />
           </div>
-          <h1 className="text-xl font-bold text-white mb-1">{profile.username}</h1>
-          <p className="text-sm text-pink-200 mb-6">{profile.bio}</p>
+          <h1 className="mb-1 text-lg font-bold text-white sm:text-xl">{profile.username}</h1>
+          <p className="text-sm text-pink-200">{profile.bio}</p>
         </div>
 
         {/* Links Section */}
-        <div className="space-y-4 w-full">
+        <div className="flex w-full flex-col gap-3 px-2 sm:gap-4">
           {profile.links.map((link) => (
             <LinkButton
               key={link.id}
               href={link.url}
-              className={`${
-                link.id % 2 === 0 
-                  ? 'bg-pink-300/50 hover:bg-pink-300/70' 
-                  : 'bg-pink-400/60 hover:bg-pink-400/80'
-              } text-white font-normal rounded-xl`}
+              className="bg-pink-400/40 hover:bg-pink-400/60 text-white"
             >
               {link.title}
             </LinkButton>
