@@ -1,47 +1,42 @@
 import Image from 'next/image';
 import { LinkButton } from '@/components/ui/LinkButton';
 
-// Dummy data - will be replaced with real data later
+// Dummy data - matching the screenshot
 const profile = {
-  username: '@johndoe',
-  bio: 'Digital Creator & Tech Enthusiast',
+  username: 'sadasspanda',
+  bio: 'I like chocolate milk',
   avatar: 'https://picsum.photos/200',
   links: [
     {
       id: 1,
-      title: 'My Portfolio',
-      url: 'https://example.com/portfolio',
+      title: 'Google',
+      url: 'https://google.com',
     },
     {
       id: 2,
-      title: 'Follow me on Twitter',
-      url: 'https://twitter.com/example',
+      title: 'Facebook',
+      url: 'https://facebook.com',
     },
     {
       id: 3,
-      title: 'Check out my GitHub',
-      url: 'https://github.com/example',
+      title: 'Twitter',
+      url: 'https://twitter.com',
     },
     {
       id: 4,
-      title: 'Connect on LinkedIn',
-      url: 'https://linkedin.com/in/example',
-    },
-    {
-      id: 5,
-      title: 'Read my Blog',
-      url: 'https://example.com/blog',
+      title: 'Instagram',
+      url: 'https://instagram.com',
     },
   ],
 };
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen w-full bg-gradient-to-b from-purple-600 via-purple-900 to-indigo-900 px-4 py-16">
-      <div className="mx-auto max-w-2xl">
+    <main className="min-h-screen w-full bg-gradient-to-b from-purple-900 via-purple-700 to-blue-800 flex flex-col items-center justify-start py-16 px-4">
+      <div className="max-w-md w-full mx-auto">
         {/* Profile Section */}
-        <div className="mb-12 text-center">
-          <div className="relative mx-auto mb-6 h-24 w-24 overflow-hidden rounded-full ring-4 ring-white/20">
+        <div className="flex flex-col items-center justify-center mb-10">
+          <div className="relative w-20 h-20 overflow-hidden rounded-full mb-4">
             <Image
               src={profile.avatar}
               alt={profile.username}
@@ -50,17 +45,21 @@ export default function HomePage() {
               priority
             />
           </div>
-          <h1 className="mb-2 text-2xl font-bold text-white">{profile.username}</h1>
-          <p className="text-lg text-white/80">{profile.bio}</p>
+          <h1 className="text-xl font-bold text-white mb-1">{profile.username}</h1>
+          <p className="text-sm text-pink-200 mb-6">{profile.bio}</p>
         </div>
 
         {/* Links Section */}
-        <div className="space-y-4">
+        <div className="space-y-4 w-full">
           {profile.links.map((link) => (
             <LinkButton
               key={link.id}
               href={link.url}
-              variant={link.id % 2 === 0 ? 'outline' : 'default'}
+              className={`${
+                link.id % 2 === 0 
+                  ? 'bg-pink-300/50 hover:bg-pink-300/70' 
+                  : 'bg-pink-400/60 hover:bg-pink-400/80'
+              } text-white font-normal rounded-xl`}
             >
               {link.title}
             </LinkButton>
