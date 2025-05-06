@@ -1,0 +1,80 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@example.com",
+      "password": "password123"
+    },
+    {
+      "id": 2,
+      "email": "user1@example.com",
+      "password": "userpass123"
+    },
+    {
+      "id": 3,
+      "email": "user2@example.com",
+      "password": "userpass456"
+    },
+    {
+      "id": 4,
+      "email": "developer@example.com",
+      "password": "devpass789"
+    }
+  ],
+  "links": [
+    {
+      "id": 1,
+      "userId": 1,
+      "title": "Example Link",
+      "url": "https://example.com",
+      "description": "An example link description",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "userId": 2,
+      "title": "MDN Web Docs",
+      "url": "https://developer.mozilla.org",
+      "description": "Resources for developers, by developers",
+      "createdAt": "2024-03-15T10:30:00.000Z",
+      "updatedAt": "2024-03-15T10:30:00.000Z"
+    },
+    {
+      "id": 3,
+      "userId": 1,
+      "title": "GitHub",
+      "url": "https://github.com",
+      "description": "Where the world builds software",
+      "createdAt": "2024-02-20T08:45:00.000Z",
+      "updatedAt": "2024-02-20T08:45:00.000Z"
+    },
+    {
+      "id": 4,
+      "userId": 3,
+      "title": "Stack Overflow",
+      "url": "https://stackoverflow.com",
+      "description": "Where developers learn, share, & build careers",
+      "createdAt": "2024-04-05T14:20:00.000Z",
+      "updatedAt": "2024-04-05T14:20:00.000Z"
+    },
+    {
+      "id": 5,
+      "userId": 4,
+      "title": "React Documentation",
+      "url": "https://reactjs.org",
+      "description": "A JavaScript library for building user interfaces",
+      "createdAt": "2024-03-10T11:15:00.000Z",
+      "updatedAt": "2024-03-10T11:15:00.000Z"
+    },
+    {
+      "id": 6,
+      "userId": 2,
+      "title": "CSS-Tricks",
+      "url": "https://css-tricks.com",
+      "description": "Tips, tricks, and techniques on using CSS",
+      "createdAt": "2024-05-01T09:30:00.000Z",
+      "updatedAt": "2024-05-01T09:30:00.000Z"
+    }
+  ]
+}

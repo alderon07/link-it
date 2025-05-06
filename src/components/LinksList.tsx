@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { LinkButton } from './ui/LinkButton';
-import { getAllLinks } from '@/data/links';
+import { getAllLinks } from '@/data/links/linkDAL';
 import { type Link } from '@/lib/validate/links';
 import { ValidationError } from '@/lib/validate/ValidationError';
 

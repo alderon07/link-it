@@ -7,12 +7,11 @@ import {
   createLink, 
   updateLink, 
   deleteLink
-} from '@/data/links';
+} from '@/data/links/linkDAL';
 import { type Link } from '@/lib/validate/links';
 import { ValidationError } from '@/lib/validate/ValidationError';
 
 export default function AdminPage() {
-  const router = useRouter();
   const [links, setLinks] = useState<Link[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newLink, setNewLink] = useState({ title: '', url: '' });
@@ -64,7 +63,7 @@ export default function AdminPage() {
       try {
         setIsSubmitting(true);
         setValidationErrors({});
-        const createdLink = await createLink(newLink);
+        const createdLink = await createLink({ ...newLink, userId: 1 });
         setLinks((prevLinks) => [...prevLinks, createdLink]);
         setNewLink({ title: '', url: '' });
       } catch (error) {
@@ -106,7 +105,7 @@ export default function AdminPage() {
   };
 
   // Handle deleting a link
-  const handleDeleteLink = async (id: string) => {
+  const handleDeleteLink = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this link?')) {
       try {
         setIsSubmitting(true);
