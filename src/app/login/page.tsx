@@ -66,9 +66,9 @@ export default function LoginPage() {
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-300">
+          <p className="mt-2 text-center text-sm text-secondary">
             Or{' '}
-            <Link href="/" className="font-medium text-pink-400 hover:text-pink-300">
+            <Link href="/" className="font-medium text-accent hover:text-accent/80">
               go back to home page
             </Link>
           </p>
@@ -77,7 +77,7 @@ export default function LoginPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="email-address" className="block text-sm font-medium text-gray-300">
+              <label htmlFor="email-address" className="block text-sm font-medium text-secondary">
                 Email address
               </label>
               <input
@@ -90,7 +90,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className={`mt-1 block w-full rounded-md border-0 py-3 px-4 text-gray-900 ring-1 ring-inset ${
                   getFieldError('email') ? 'ring-red-300' : 'ring-gray-300'
-                } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-400`}
+                } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary`}
                 placeholder="Email address"
               />
               {getFieldError('email') && (
@@ -99,7 +99,7 @@ export default function LoginPage() {
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+              <label htmlFor="password" className="block text-sm font-medium text-secondary">
                 Password
               </label>
               <input
@@ -112,7 +112,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className={`mt-1 block w-full rounded-md border-0 py-3 px-4 text-gray-900 ring-1 ring-inset ${
                   getFieldError('password') ? 'ring-red-300' : 'ring-gray-300'
-                } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-pink-400`}
+                } placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary`}
                 placeholder="Password"
               />
               {getFieldError('password') && (
@@ -140,7 +140,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-md bg-pink-500 px-3 py-3 text-sm font-semibold text-white hover:bg-pink-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500 disabled:bg-pink-300"
+              className="group relative flex w-full justify-center rounded-md bg-primary px-3 py-3 text-sm font-semibold text-white hover:bg-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:bg-primary/50"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>

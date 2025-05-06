@@ -4,6 +4,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { isAuthenticated, logout, getCurrentUser } from '@/lib/auth';
+import dynamic from 'next/dynamic';
+
+// Dynamically import ThemeToggle with no SSR to avoid hydration issues
+const ThemeToggle = dynamic(() => import('./ThemeToggle').then(mod => mod.ThemeToggle), { 
+  ssr: false 
+});
 
 export function Navbar() {
   const router = useRouter();
@@ -50,23 +56,24 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background shadow-sm">
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/" className="text-lg font-bold text-pink-600">
+        <Link href="/" className="text-lg font-bold text-primary">
           LinkIt
         </Link>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
           {isLoggedIn ? (
             <>
               {user && (
-                <span className="hidden items-center text-sm text-gray-600 md:flex">
+                <span className="hidden items-center text-sm text-text md:flex">
                   {user.email}
                 </span>
               )}
               {!isAdmin && (
                 <Link
                   href="/admin"
-                  className="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-300"
+                  className="rounded-md bg-secondary px-4 py-2 text-sm font-medium text-text hover:bg-secondary/80"
                 >
                   Dashboard
                 </Link>
@@ -74,14 +81,14 @@ export function Navbar() {
               {isAdmin && (
                 <Link
                   href="/"
-                  className="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-300"
+                  className="rounded-md bg-secondary px-4 py-2 text-sm font-medium text-text hover:bg-secondary/80"
                 >
                   View Profile
                 </Link>
               )}
               <button
                 onClick={handleLogout}
-                className="rounded-md bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700"
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/80"
               >
                 Logout
               </button>
@@ -91,7 +98,7 @@ export function Navbar() {
               {!isLoginPage && (
                 <Link
                   href="/login"
-                  className="rounded-md bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700"
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/80"
                 >
                   Login
                 </Link>

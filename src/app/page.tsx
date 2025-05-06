@@ -10,7 +10,7 @@ const profile = {
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-[100dvh] w-full flex-col items-center bg-gradient-to-b from-purple-900 via-purple-700 to-blue-800">
+    <main className="flex min-h-[100dvh] w-full flex-col items-center bg-gradient-to-b from-primary via-primary/90 to-primary/80">
       <div className="flex w-full max-w-[500px] flex-col items-center px-4 py-12 sm:py-16">
         {/* Profile Section */}
         <div className="mb-8 flex w-full flex-col items-center">
@@ -25,7 +25,7 @@ export default function HomePage() {
             />
           </div>
           <h1 className="mb-1 text-lg font-bold text-white sm:text-xl">{profile.username}</h1>
-          <p className="text-sm text-pink-200">{profile.bio}</p>
+          <p className="text-sm text-secondary">{profile.bio}</p>
         </div>
 
         {/* Links Section - Now using tRPC through the LinksList component */}
