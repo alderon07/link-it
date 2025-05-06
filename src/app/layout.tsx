@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { TRPCProvider } from "@/utils/trpc";
+import { Navbar } from "@/components/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +18,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="min-h-screen">
-      <body className={`${inter.className} min-h-screen`}>{children}</body>
+      <body className={`${inter.className} min-h-screen pt-14`}>
+        <TRPCProvider>
+          <Navbar />
+          {children}
+        </TRPCProvider>
+      </body>
     </html>
   );
 }

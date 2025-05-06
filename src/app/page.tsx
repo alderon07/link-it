@@ -1,33 +1,11 @@
 import Image from 'next/image';
-import { LinkButton } from '@/components/ui/LinkButton';
+import { LinksList } from '@/components/LinksList';
 
-// Dummy data - matching the screenshot
+// Dummy profile data - would be fetched from an API in a real app
 const profile = {
   username: 'sadasspanda',
   bio: 'I like chocolate milk',
   avatar: 'https://picsum.photos/200',
-  links: [
-    {
-      id: 1,
-      title: 'Google',
-      url: 'https://google.com',
-    },
-    {
-      id: 2,
-      title: 'Facebook',
-      url: 'https://facebook.com',
-    },
-    {
-      id: 3,
-      title: 'Twitter',
-      url: 'https://twitter.com',
-    },
-    {
-      id: 4,
-      title: 'Instagram',
-      url: 'https://instagram.com',
-    },
-  ],
 };
 
 export default function HomePage() {
@@ -50,18 +28,8 @@ export default function HomePage() {
           <p className="text-sm text-pink-200">{profile.bio}</p>
         </div>
 
-        {/* Links Section */}
-        <div className="flex w-full flex-col gap-3 px-2 sm:gap-4">
-          {profile.links.map((link) => (
-            <LinkButton
-              key={link.id}
-              href={link.url}
-              className="bg-pink-400/40 hover:bg-pink-400/60 text-white"
-            >
-              {link.title}
-            </LinkButton>
-          ))}
-        </div>
+        {/* Links Section - Now using tRPC through the LinksList component */}
+        <LinksList />
       </div>
     </main>
   );
