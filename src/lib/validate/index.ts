@@ -6,4 +6,7 @@
 export { ValidationError } from './ValidationError';
 
 // Export link schemas and types
-export * from './links'; 
+export * from './links';
+
+// Export auth schemas and types
+export * from './auth'; 

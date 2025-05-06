@@ -1,16 +1,27 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { isAuthenticated } from '@/lib/auth';
+
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if user is authenticated
+    if (!isAuthenticated()) {
+      // Redirect to login page if not authenticated
+      router.push('/login');
+    }
+  }, [router]);
+
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <h1 className="text-xl font-bold tracking-tight text-gray-900">Admin Dashboard</h1>
-        </div>
-      </header>
-      <main>{children}</main>
+    <div className="container mx-auto p-4">
+      {children}
     </div>
   );
 }
