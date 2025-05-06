@@ -6,7 +6,7 @@ This document provides a detailed overview of how data flows through the LinkIt 
 
 ```
 ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
-│  Client UI  │ ◄──► │  Server API │ ◄──► │  Data Store │
+│  Client UI  │ ◄──► │  Data Layer │ ◄──► │  Data Store │
 └─────────────┘      └─────────────┘      └─────────────┘
 ```
 
@@ -22,89 +22,89 @@ Layout (src/app/layout.tsx)
     └── Admin Page (src/app/admin/page.tsx)
 ```
 
-## tRPC Data Flow
+## Data Access Layer with Zod Validation
 
-tRPC provides type-safe API communication between the client and server:
+The application uses a data access layer with Zod for schema validation:
 
 ```
-Client Component                            Server
-┌───────────────────┐                      ┌───────────────────┐
-│                   │                      │                   │
-│  trpc.procedure   │  HTTP Request        │  Router/Procedure │
-│  .useQuery()      │ ─────────────────►  │  Handler          │
-│  .useMutation()   │                      │                   │
-│                   │  HTTP Response       │                   │
-│                   │ ◄─────────────────  │                   │
-└───────────────────┘                      └───────────────────┘
+Component (e.g., LinksList)
+  │
+  ├── Calls data access function (e.g., getAllLinks())
+  │   │
+  │   └── Data function validates inputs with Zod
+  │       │
+  │       └── If valid, returns data
+  │       └── If invalid, throws ValidationError
+  │
+  └── Renders UI based on data or displays validation errors
 ```
 
-### tRPC Client Usage
+### Zod Schemas
 
-1. **Queries** - For fetching data:
-   ```typescript
-   // Example from LinksList.tsx
-   const { data: links, isLoading, error } = trpc.links.getAll.useQuery();
-   ```
+The data layer uses Zod for type definitions and validation:
 
-2. **Mutations** - For changing data:
+```typescript
+// Define Zod schemas for validation
+export const LinkSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1, "Title is required").max(100, "Title cannot exceed 100 characters"),
+  url: z.string().url("Please enter a valid URL"),
+});
+
+// Derive TypeScript types from schemas
+export type Link = z.infer<typeof LinkSchema>;
+```
+
+### Data Access Functions
+
+The data access layer in `src/data/links.ts` validates inputs using Zod schemas:
+
+1. **Reading Data**:
    ```typescript
-   // Example from admin/page.tsx
-   const addLinkMutation = trpc.links.create.useMutation({
-     onSuccess: () => {
-       setNewLink({ title: '', url: '' });
-       utils.links.getAll.invalidate();
-     },
-   });
+   // Example: Get all links
+   const links = await getAllLinks();
    
-   // Using the mutation
-   addLinkMutation.mutate(newLink);
+   // Example: Get specific link with validation
+   const link = await getLinkById(id); // Validates id
    ```
 
-3. **Utils** - For invalidating queries:
+2. **Writing Data with Validation**:
    ```typescript
-   const utils = trpc.useUtils();
+   // Example: Create a link with validation
+   const validationResult = CreateLinkSchema.safeParse(data);
+   if (!validationResult.success) {
+     throw new ValidationError(validationResult.error);
+   }
    
-   // Invalidate cache to refresh data
-   utils.links.getAll.invalidate();
-   ```
-
-### tRPC Server Implementation
-
-1. **Procedures** - Defined in routers:
-   ```typescript
-   // Example from links router
-   export const linksRouter = router({
-     getAll: publicProcedure.query(() => {
-       return dummyLinks;
-     }),
-     
-     create: protectedProcedure
-       .input(z.object({
-         title: z.string().min(1).max(100),
-         url: z.string().url(),
-       }))
-       .mutation(({ input }) => {
-         // Create and return a new link
-       }),
-   });
-   ```
-
-2. **Input Validation** - Using Zod schemas:
-   ```typescript
-   .input(z.object({
-     title: z.string().min(1).max(100),
-     url: z.string().url(),
-   }))
-   ```
-
-3. **Context** - For shared resources:
-   ```typescript
-   export const createTRPCContext = async () => {
-     return {
-       // Resources like database connections
-     };
+   // Proceed with creation if valid
+   const newLink = { 
+     id: String(links.length + 1),
+     title: validationResult.data.title,
+     url: validationResult.data.url,
    };
    ```
+
+### Validation Error Handling
+
+Components handle validation errors using dedicated error states:
+
+```typescript
+// In component
+const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
+
+// In try/catch block
+try {
+  // Call data function
+} catch (err) {
+  if (err instanceof ValidationError) {
+    // Handle validation errors
+    setValidationErrors(err.errors.flatten().fieldErrors);
+  } else {
+    // Handle other errors
+    setError(err instanceof Error ? err : new Error('Error message'));
+  }
+}
+```
 
 ## Data Flow Patterns
 
@@ -113,49 +113,81 @@ Client Component                            Server
 ```
 LinksList (src/components/LinksList.tsx)
   │
-  ├── Calls trpc.links.getAll.useQuery()
+  ├── Calls getAllLinks() from data layer
   │   │
-  │   └── Makes HTTP request to /api/trpc/links.getAll
+  │   └── Data layer fetches link data (currently mocked)
   │       │
-  │       └── Server processes in links router getAll procedure
-  │           │
-  │           └── Returns link data
+  │       └── Returns link data
   │
   └── Renders LinkButton components for each link
 ```
 
-The LinksList component fetches links data using tRPC, displays a loading state while fetching, and renders LinkButton components once data is available.
+The LinksList component fetches links data using the data access layer, displays a loading state while fetching, and renders LinkButton components once data is available.
 
 ### 2. Admin Dashboard Flow
 
 ```
 Admin Page (src/app/admin/page.tsx)
   │
-  ├── Fetches links with trpc.links.getAll.useQuery()
+  ├── Fetches links with getAllLinks()
   │
-  ├── Creates links with trpc.links.create.useMutation()
+  ├── Creates links with createLink()
+  │   │
+  │   └── Validates input with CreateLinkSchema
   │
-  ├── Updates links with trpc.links.update.useMutation()
+  ├── Updates links with updateLink()
+  │   │
+  │   └── Validates input with UpdateLinkSchema
   │
-  └── Deletes links with trpc.links.delete.useMutation()
+  └── Deletes links with deleteLink()
+      │
+      └── Validates id parameter
 ```
 
-The admin dashboard provides a complete CRUD interface for managing links, using tRPC mutations for create, update, and delete operations.
+The admin dashboard provides a complete CRUD interface for managing links, using data access functions for create, read, update, and delete operations, with validation at each step.
 
 ## State Management
 
-The application leverages multiple approaches to state management:
+The application leverages React's built-in state management for managing UI state:
 
-1. **Server State** - Managed through TanStack Query (via tRPC)
-   - Handles data fetching, caching, and synchronization
-   - Provides loading, error, and success states
-   - Automatic background refetching
+1. **Remote Data Fetching** - Using useEffect and useState
+   ```typescript
+   const [links, setLinks] = useState<Link[]>([]);
+   const [isLoading, setIsLoading] = useState(true);
+   const [error, setError] = useState<Error | null>(null);
+   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
 
-2. **Local Component State** - Managed through React's useState hook
-   - Form inputs and UI state
-   - Temporary data before submission
-   
-3. **Global State** - No dedicated global state is used yet, as TanStack Query and tRPC handle most state needs
+   useEffect(() => {
+     async function fetchLinks() {
+       try {
+         setIsLoading(true);
+         setValidationErrors({});
+         const data = await getAllLinks();
+         setLinks(data);
+       } catch (err) {
+         if (err instanceof ValidationError) {
+           setValidationErrors(err.errors.flatten().fieldErrors);
+         } else {
+           setError(err instanceof Error ? err : new Error('Failed to load links'));
+         }
+       } finally {
+         setIsLoading(false);
+       }
+     }
+
+     fetchLinks();
+   }, []);
+   ```
+
+2. **Form State** - Using useState for form inputs
+   ```typescript
+   const [newLink, setNewLink] = useState({ title: '', url: '' });
+   ```
+
+3. **UI State** - Managing UI state like editing mode
+   ```typescript
+   const [editingLink, setEditingLink] = useState<Link | null>(null);
+   ```
 
 ## Data Entities
 
@@ -164,91 +196,98 @@ The application leverages multiple approaches to state management:
 - bio
 - avatar
 
-### Link
-- id
-- title
-- url
+### Link (defined using Zod schema)
+- id: string
+- title: string (min 1 char, max 100 chars)
+- url: string (valid URL format)
 
 ## Key Data Interactions
 
-1. **Fetching Links**: The application loads links using tRPC query
+1. **Fetching Links**: The application loads links using data access layer
    ```typescript
-   const { data: links } = trpc.links.getAll.useQuery();
+   const data = await getAllLinks();
    ```
 
-2. **Creating Links**: The admin page creates links using tRPC mutation
+2. **Creating Links**: The admin page creates links with validation
    ```typescript
-   addLinkMutation.mutate({ title, url });
+   const createdLink = await createLink({ title, url });
+   // Validates title and URL format
    ```
 
-3. **Updating Links**: The admin page updates links using tRPC mutation
+3. **Updating Links**: The admin page updates links with validation
    ```typescript
-   updateLinkMutation.mutate({ id, title, url });
+   const updatedLink = await updateLink({ id, title, url });
+   // Validates id, title, and URL format
    ```
 
-4. **Deleting Links**: The admin page deletes links using tRPC mutation
+4. **Deleting Links**: The admin page deletes links with validation
    ```typescript
-   deleteLinkMutation.mutate({ id });
+   const deletedLink = await deleteLink(id);
+   // Validates id format
    ```
 
 ## Error Handling
 
-1. **Client-Side Error Handling**:
-   - Query errors are captured in the error state from useQuery
-   - UI displays appropriate error messages
-   - Mutation errors are handled in the onError callback
+1. **Validation Errors**:
+   - Custom ValidationError class extends Error
+   - Contains Zod error details
+   - Components display field-specific error messages
 
-2. **Server-Side Error Handling**:
-   - tRPC procedures use try/catch blocks for error handling
-   - Errors are passed back to the client with appropriate status codes
-   - Zod validation provides automatic input validation
+2. **Client-Side Error Handling**:
+   - Try/catch blocks around async operations
+   - Error states stored in component state
+   - UI displays appropriate error messages
+
+3. **Graceful Degradation**:
+   - Loading states during data operations
+   - Error states for failed operations
+   - Disabled buttons during operations
 
 ## Performance Considerations
 
-1. **Query Caching**:
-   - TanStack Query automatically caches query results
-   - Prevents unnecessary re-fetching
-   - Enables optimistic UI updates
+1. **Local State Management**:
+   - Optimistic UI updates for better user experience
+   - Local state updates before server confirmation
 
-2. **Optimistic Updates**:
-   - Mutation responses update cache immediately
-   - Provides better user experience
+2. **Efficient Rendering**:
+   - Conditional rendering based on state
+   - Loading skeletons for better user experience
 
-3. **Query Invalidation**:
-   - After mutations, related queries are invalidated
-   - Ensures data consistency between API calls
+3. **Image Optimization**:
+   - Next.js Image component for optimized image loading
 
 ## Development and Debugging Guidelines
 
 1. **Component Testing**:
-   - Verify query and mutation hooks with mock data
-   - Test loading, error, and success states
+   - Verify component state with sample data
+   - Test loading, error, and validation error states
 
-2. **API Debugging**:
-   - Use browser developer tools to inspect network requests
-   - Verify payload matches expected schema
-   - Check that error handling properly passes errors to the client
+2. **Data Flow Debugging**:
+   - Use console.log in data access functions to trace data flow
+   - Check validation results with console.log
+   - Verify state updates after data operations
 
-3. **Data Flow Debugging**:
-   - Use React DevTools to inspect component state
-   - Use TanStack Query DevTools to monitor query status (if enabled)
-   - Add debugging logs in tRPC procedures for server-side issues
+3. **Validation Debugging**:
+   - Check Zod schema definitions for correctness
+   - Verify error messages in validation errors
+   - Test edge cases for validation
 
 ## Expansion Guidelines
 
 When adding new features:
 
 1. **New Data Entities**:
-   - Add type definitions in `src/types/`
-   - Create a new tRPC router in `src/server/api/routers/`
-   - Add the router to the root router in `src/server/api/root.ts`
+   - Define Zod schemas for new entities
+   - Derive TypeScript types using z.infer<>
+   - Implement CRUD operations with validation
 
-2. **New API Features**:
-   - Add new procedures to existing routers
-   - Use Zod for input validation
-   - Implement proper error handling
+2. **New Data Operations**:
+   - Add new functions to existing data modules
+   - Add appropriate Zod schemas
+   - Implement validation using safeParse
+   - Handle validation errors consistently
 
 3. **New UI Components**:
-   - Connect to data using tRPC hooks
-   - Handle loading, error, and empty states
-   - Implement proper optimistic updates for mutations 
+   - Connect to data using the data access layer
+   - Handle loading, error, and validation error states
+   - Implement local state for optimistic updates 

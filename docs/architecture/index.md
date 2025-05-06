@@ -14,40 +14,16 @@ This index provides navigation to all architecture documentation for the LinkIt 
 
 - **Frontend**: Next.js 14, React 18, TailwindCSS
 - **Language**: TypeScript
-- **API**: tRPC (Type-safe API)
-- **State Management**: TanStack Query (React Query)
-- **Validation**: Zod
-- **Data Serialization**: SuperJSON
+- **Validation**: Zod for type-safe schema validation
 - **Development**: ESLint, Prettier, json-server
 
 ### Key Directories
 
 - `src/app` - Next.js application pages
 - `src/components` - Reusable React components
-- `src/data` - Data access layer
-- `src/server` - Server-side code and API endpoints
-  - `src/server/api/trpc` - tRPC configuration
-  - `src/server/api/routers` - tRPC routers
+- `src/data` - Data access layer with Zod validation
 - `src/types` - TypeScript type definitions
 - `src/utils` - Utility functions
-  - `src/utils/trpc.tsx` - tRPC client setup
-
-### tRPC Configuration
-
-The project uses tRPC for type-safe API communication:
-
-1. **Server Configuration**:
-   - `src/server/api/trpc/trpc.ts` - Core tRPC setup
-   - `src/server/api/root.ts` - Root router
-   - `src/server/api/routers/*.ts` - API routers for specific features
-
-2. **Client Configuration**:
-   - `src/utils/trpc.tsx` - tRPC client setup
-   - `src/app/api/trpc/[trpc]/route.ts` - API handler for Next.js
-
-3. **Usage in Components**:
-   - Queries: `const { data, isLoading } = trpc.namespace.procedure.useQuery()`
-   - Mutations: `const mutation = trpc.namespace.procedure.useMutation()`
 
 ### Common Tasks
 
@@ -55,7 +31,7 @@ The project uses tRPC for type-safe API communication:
 
 1. Create a new file in `src/app/` following Next.js app router conventions
 2. If needed, create page-specific components
-3. Connect to data sources as needed using tRPC queries
+3. Connect to data sources using the data access layer
 
 #### Adding a New Component
 
@@ -63,12 +39,12 @@ The project uses tRPC for type-safe API communication:
 2. Follow the established patterns and coding standards
 3. Use TypeScript for type safety
 
-#### Adding a New API Endpoint
+#### Working with Data
 
-1. Define a new procedure in an existing router (e.g., `src/server/api/routers/links.ts`)
-2. Or create a new router file and add it to the root router in `src/server/api/root.ts`
-3. Use Zod schemas for input validation
-4. Update corresponding types in `src/types/`
+1. Use the functions provided in the data access layer (`src/data/`)
+2. Add new data access functions for new features
+3. Create Zod schemas for validation
+4. Use safeParse for validation and error handling
 
 ## How to Use This Documentation
 

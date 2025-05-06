@@ -1,62 +1,165 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { trpc } from '@/utils/trpc';
+import { 
+  getAllLinks, 
+  createLink, 
+  updateLink, 
+  deleteLink,
+  ValidationError,
+  type Link 
+} from '@/data/links';
 
 export default function AdminPage() {
   const router = useRouter();
+  const [links, setLinks] = useState<Link[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [newLink, setNewLink] = useState({ title: '', url: '' });
-  const [editingLink, setEditingLink] = useState<{
-    id: string;
-    title: string;
-    url: string;
-  } | null>(null);
+  const [editingLink, setEditingLink] = useState<Link | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
 
-  const { data: links, isLoading } = trpc.links.getAll.useQuery();
-  const addLinkMutation = trpc.links.create.useMutation({
-    onSuccess: () => {
-      setNewLink({ title: '', url: '' });
-      utils.links.getAll.invalidate();
-    },
-  });
-  const updateLinkMutation = trpc.links.update.useMutation({
-    onSuccess: () => {
-      setEditingLink(null);
-      utils.links.getAll.invalidate();
-    },
-  });
-  const deleteLinkMutation = trpc.links.delete.useMutation({
-    onSuccess: () => {
-      utils.links.getAll.invalidate();
-    },
-  });
+  // Fetch links
+  useEffect(() => {
+    async function fetchLinks() {
+      try {
+        setIsLoading(true);
+        setValidationErrors({});
+        const data = await getAllLinks();
+        setLinks(data);
+      } catch (error) {
+        console.error('Error loading links:', error);
+        handleValidationError(error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  const utils = trpc.useUtils();
+    fetchLinks();
+  }, []);
 
-  const handleAddLink = (e: React.FormEvent) => {
+  // Helper function to handle validation errors
+  const handleValidationError = (error: unknown) => {
+    if (error instanceof ValidationError) {
+      const fieldErrors = error.errors.flatten().fieldErrors;
+      const typedErrors: Record<string, string[]> = {};
+      
+      Object.entries(fieldErrors).forEach(([key, value]) => {
+        if (value) {
+          typedErrors[key] = value;
+        }
+      });
+      
+      setValidationErrors(typedErrors);
+      return true;
+    }
+    return false;
+  };
+
+  // Handle adding a new link
+  const handleAddLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newLink.title && newLink.url) {
-      addLinkMutation.mutate(newLink);
+      try {
+        setIsSubmitting(true);
+        setValidationErrors({});
+        const createdLink = await createLink(newLink);
+        setLinks((prevLinks) => [...prevLinks, createdLink]);
+        setNewLink({ title: '', url: '' });
+      } catch (error) {
+        console.error('Error creating link:', error);
+        if (!handleValidationError(error)) {
+          alert('Failed to create link. Please try again.');
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
-  const handleUpdateLink = (e: React.FormEvent) => {
+  // Handle updating a link
+  const handleUpdateLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingLink) {
-      updateLinkMutation.mutate(editingLink);
+      try {
+        setIsSubmitting(true);
+        setValidationErrors({});
+        const updatedLink = await updateLink(editingLink);
+        if (updatedLink) {
+          setLinks((prevLinks) =>
+            prevLinks.map((link) =>
+              link.id === updatedLink.id ? updatedLink : link
+            )
+          );
+          setEditingLink(null);
+        }
+      } catch (error) {
+        console.error('Error updating link:', error);
+        if (!handleValidationError(error)) {
+          alert('Failed to update link. Please try again.');
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
-  const handleDeleteLink = (id: string) => {
+  // Handle deleting a link
+  const handleDeleteLink = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this link?')) {
-      deleteLinkMutation.mutate({ id });
+      try {
+        setIsSubmitting(true);
+        setValidationErrors({});
+        const deletedLink = await deleteLink(id);
+        if (deletedLink) {
+          setLinks((prevLinks) => prevLinks.filter((link) => link.id !== id));
+        }
+      } catch (error) {
+        console.error('Error deleting link:', error);
+        if (!handleValidationError(error)) {
+          alert('Failed to delete link. Please try again.');
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
     }
+  };
+
+  // Render validation errors
+  const renderValidationErrors = () => {
+    if (Object.keys(validationErrors).length === 0) return null;
+    
+    return (
+      <div className="mb-4 rounded-md bg-red-50 p-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-red-800">Validation errors</h3>
+            <div className="mt-2 text-sm text-red-700">
+              <ul className="list-disc space-y-1 pl-5">
+                {Object.entries(validationErrors).map(([field, errors]) => (
+                  errors.map((error, i) => (
+                    <li key={`${field}-${i}`}><strong>{field}:</strong> {error}</li>
+                  ))
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="mb-6 text-2xl font-bold">Manage Links</h1>
+      
+      {renderValidationErrors()}
       
       {/* Add New Link Form */}
       <div className="mb-8 rounded-lg bg-white p-6 shadow-md">
@@ -85,10 +188,10 @@ export default function AdminPage() {
           <div>
             <button
               type="submit"
-              disabled={addLinkMutation.isPending}
+              disabled={isSubmitting}
               className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
-              {addLinkMutation.isPending ? 'Adding...' : 'Add Link'}
+              {isSubmitting ? 'Adding...' : 'Add Link'}
             </button>
           </div>
         </form>
@@ -122,10 +225,10 @@ export default function AdminPage() {
             <div className="flex space-x-3">
               <button
                 type="submit"
-                disabled={updateLinkMutation.isPending}
+                disabled={isSubmitting}
                 className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
               >
-                {updateLinkMutation.isPending ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
               </button>
               <button
                 type="button"
@@ -174,7 +277,7 @@ export default function AdminPage() {
                   <button
                     onClick={() => handleDeleteLink(link.id)}
                     className="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600"
-                    disabled={deleteLinkMutation.isPending}
+                    disabled={isSubmitting}
                   >
                     Delete
                   </button>

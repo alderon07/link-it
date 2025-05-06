@@ -12,6 +12,7 @@ LinkIt appears to be a link sharing application (similar to Linktree) where user
 - **UI Library**: React 18
 - **Styling**: TailwindCSS
 - **Language**: TypeScript
+- **Validation**: Zod for schema validation
 - **Development Tools**: ESLint, Prettier
 - **API Mocking**: json-server (for development)
 
@@ -31,15 +32,11 @@ linkIt/
 │   ├── components/          # Reusable React components
 │   │   ├── ui/              # UI components
 │   │   │   └── LinkButton.tsx  # Button component for links
+│   │   ├── LinksList.tsx    # Component to display links
 │   │   └── Navbar.tsx       # Navigation component
 │   ├── data/                # Data layer
-│   │   ├── billing/         # Billing-related data
-│   │   └── posts/           # Post-related data
+│   │   └── links.ts         # Links data access functions with Zod validation
 │   ├── lib/                 # Utility libraries and shared code
-│   ├── server/              # Server-side code
-│   │   ├── api/             # API endpoints
-│   │   │   └── trpc/        # tRPC API configuration
-│   │   └── routers/         # API route handlers
 │   ├── types/               # TypeScript type definitions
 │   └── utils/               # Utility functions
 ├── .eslintrc.json          # ESLint configuration
@@ -65,31 +62,30 @@ linkIt/
 
 2. **UI Components** (`src/components/`):
    - `ui/LinkButton.tsx`: Button component used for displaying links
+   - `LinksList.tsx`: Component that fetches and displays links
    - `Navbar.tsx`: Navigation component
-
-### Backend / API
-
-The application appears to use tRPC for type-safe API routes:
-- `src/server/api/trpc/`: tRPC API configuration
-- `src/server/routers/`: API route handlers
 
 ### Data Management
 
-- `src/data/`: Data access layer (likely contains data fetching logic)
+- `src/data/links.ts`: Data access layer with functions for CRUD operations and Zod validation
+  - Defines Zod schemas for Link entities
+  - Includes validation for all data operations
+  - Provides custom ValidationError class for handling validation errors
 - `db.json`: JSON Server mock database file for development
 
 ## Application Flow
 
 1. Users can view their profile page with links (`src/app/page.tsx`)
 2. Admin users can manage their links through the admin dashboard (`src/app/admin/page.tsx`)
-3. The application likely uses tRPC for API communication between frontend and backend
+3. The data layer (`src/data/links.ts`) handles data operations and validates all inputs
 
 ## Common Patterns
 
 1. **Next.js App Router**: The project uses Next.js app router with the file-based routing system
 2. **Component Structure**: UI components are organized in the `components/ui` directory
-3. **API Organization**: API routes appear to be organized through tRPC
-4. **Styling**: TailwindCSS is used for styling with utility classes
+3. **Data Access**: Data functions in the `data/` directory provide a layer between components and data storage
+4. **Validation**: Zod schemas define data shapes and provide validation
+5. **Styling**: TailwindCSS is used for styling with utility classes
 
 ## Development Guidelines
 
@@ -101,9 +97,11 @@ The application appears to use tRPC for type-safe API routes:
    - Create new files in `src/app/` directory according to Next.js app router conventions
    - For admin pages, add to `src/app/admin/`
 
-3. **API Modifications**:
-   - Add or modify API routes in `src/server/routers/`
-   - Update types as needed in `src/types/`
+3. **Data Modifications**:
+   - Add or modify data functions in `src/data/` directory
+   - Define Zod schemas for validation
+   - Implement error handling for validation errors
+   - Use safeParse for validating inputs
 
 4. **Style Modifications**:
    - Use TailwindCSS utility classes for styling
@@ -120,7 +118,6 @@ The codebase appears to be set up with a development environment using:
 LinkIt is a relatively straightforward Next.js application with a clear separation of concerns:
 - UI components in `components/`
 - Pages in `app/`
-- API routes in `server/`
-- Data access in `data/`
+- Data access in `data/` with Zod validation
 
-This architecture allows for easy maintenance and extension of the application's features. 
+This architecture allows for easy maintenance and extension of the application's features while ensuring data integrity through validation. 
