@@ -6,10 +6,10 @@ import {
   getAllLinks, 
   createLink, 
   updateLink, 
-  deleteLink,
-  ValidationError,
-  type Link 
+  deleteLink
 } from '@/data/links';
+import { type Link } from '@/lib/validate/links';
+import { ValidationError } from '@/lib/validate/ValidationError';
 
 export default function AdminPage() {
   const router = useRouter();

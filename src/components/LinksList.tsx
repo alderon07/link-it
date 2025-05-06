@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { LinkButton } from './ui/LinkButton';
-import { getAllLinks, type Link, ValidationError } from '@/data/links';
+import { getAllLinks } from '@/data/links';
+import { type Link } from '@/lib/validate/links';
+import { ValidationError } from '@/lib/validate/ValidationError';
 
 export function LinksList() {
   const [links, setLinks] = useState<Link[]>([]);
