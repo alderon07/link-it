@@ -7,7 +7,7 @@ import { ReactScan } from "@/components/ReactScan";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LinkUp - Your Digital Identity",
+  title: "Link-It - Your Digital Identity",
   description: "Connect all your online presence in one place",
 };
 
