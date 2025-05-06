@@ -1,8 +1,4 @@
 {    
-  "scripts": {
-    "dev": "next dev",
-    "scan": "next dev & npx react-scan@latest localhost:3000"
-  },
   "compilerOptions": {
     "lib": [
       "dom",
