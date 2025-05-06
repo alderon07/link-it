@@ -2,20 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
   width: 8px;
@@ -33,3 +19,27 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 } 
+
+@layer base {
+  :root {
+    --text: #05090a;
+    --background: #e4eff1;
+    --primary: #374a6d;
+    --secondary: #d0cde5;
+    --accent: #3e376d;
+  }
+  .dark {
+    --text: #f5f9fa;
+    --background: #0e191b;
+    --primary: #93a6c8;
+    --secondary: #1d1a32;
+    --accent: #9a93c8;
+  }
+  
+  /* Add smooth transition for all elements when theme changes */
+  * {
+    transition-property: color, background-color, border-color, fill, stroke;
+    transition-duration: 200ms;
+    transition-timing-function: ease-in-out;
+  }
+}
