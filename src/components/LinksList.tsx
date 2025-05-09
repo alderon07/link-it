@@ -94,9 +94,10 @@ export function LinksList() {
         <LinkButton
           key={link.id}
           href={link.url}
-          className="bg-accent/40 text-white hover:bg-accent/60"
+          className="bg-background text-text hover:bg-hover"
         >
           {link.title}
+          <p className="text-muted text-xs">{link.description}</p>
         </LinkButton>
       ))}
     </div>
