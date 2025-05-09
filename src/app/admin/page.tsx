@@ -249,11 +249,11 @@ export default function AdminPage() {
         ) : !links || links.length === 0 ? (
           <p>No links found. Add some links above.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-3 text-wrap">
             {links.map((link) => (
               <div
                 key={link.id}
-                className="flex items-center justify-between rounded-lg border border-gray-200 p-4"
+                className="flex items-center flex-wrap justify-between rounded-lg border border-gray-200 p-4"
               >
                 <div>
                   <h3 className="font-medium">{link.title}</h3>
@@ -269,13 +269,13 @@ export default function AdminPage() {
                 <div className="flex space-x-2">
                   <button
                     onClick={() => setEditingLink(link)}
-                    className="rounded bg-gray-200 px-3 py-1 text-sm hover:bg-gray-300"
+                    className="rounded bg-primary text-text px-3 py-1 text-sm hover:bg-secondary hover:text-text-muted"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDeleteLink(link.id)}
-                    className="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600"
+                    className="rounded bg-danger px-3 py-1 text-sm text-white hover:bg-red-600"
                     disabled={isSubmitting}
                   >
                     Delete

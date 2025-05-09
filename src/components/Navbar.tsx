@@ -64,7 +64,7 @@ export function Navbar() {
           LinkIt
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
           {isLoggedIn ? (
             <>
               {user && (
@@ -78,7 +78,7 @@ export function Navbar() {
                   className="flex items-center rounded-md bg-secondary p-2 text-sm font-medium text-text hover:bg-secondary/80 sm:px-4 sm:py-2"
                   title="Dashboard"
                 >
-                  <IconDashboard className="h-5 w-5 transition-transform duration-200" />
+                  <IconDashboard/>
                   <span className="hidden sm:ml-2 sm:inline">Dashboard</span>
                 </Link>
               )}
@@ -88,7 +88,7 @@ export function Navbar() {
                   className="flex items-center rounded-md bg-secondary p-2 text-sm font-medium text-text hover:bg-accent sm:px-4 sm:py-2"
                   title="View Profile"
                 >
-                  <IconUser className="h-5 w-5 transition-transform duration-200" />
+                  <IconUser/>
                   <span className="hidden sm:ml-2 sm:inline">View Profile</span>
                 </Link>
               )}
@@ -97,7 +97,7 @@ export function Navbar() {
                 className="flex items-center rounded-md bg-secondary p-2 text-sm font-medium text-text hover:bg-accent sm:px-4 sm:py-2"
                 title="Logout"
               >
-                <IconLogout className="h-5 w-5 transition-transform duration-1000" />
+                <IconLogout/>
                 <span className="hidden sm:ml-2 sm:inline">Logout</span>
               </button>
             </>
@@ -109,7 +109,7 @@ export function Navbar() {
                   className="flex items-center rounded-md bg-secondary p-2 text-sm font-medium text-text hover:bg-accent sm:px-4 sm:py-2"
                   title="Login"
                 >
-                  <IconLogin className="h-5 w-5 transition-transform duration-200" />
+                  <IconLogin/>
                   <span className="hidden sm:ml-2 sm:inline">Login</span>
                 </Link>
               )}
