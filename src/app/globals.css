@@ -4,7 +4,7 @@
 
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -12,28 +12,46 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--primary);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--secondary);
 } 
 
 @layer base {
   :root {
-    --text: #05090a;
-    --background: #e4eff1;
-    --primary: #374a6d;
-    --secondary: #d0cde5;
-    --accent: #3e376d;
+    --text: #1a171b;
+    --text-muted: #59445a;
+    --background: #f5f3f5;
+    --primary: #7a5c7d;
+    --secondary: #d5c9d6;
+    --accent: #9b7a9f;
+  
+    --border: #dcd1dd;
+    --hover: #ebe4ed;
+  
+    --danger: #cc4b4b;
+    --success: #48b86d;
+    --warning: #e7b338;
+    --info: #5db3ce;
   }
   .dark {
-    --text: #f5f9fa;
-    --background: #0e191b;
-    --primary: #93a6c8;
-    --secondary: #1d1a32;
-    --accent: #9a93c8;
+    --text: #eeecee;
+    --text-muted: #b1adb3;
+    --background: #0e0c0e;
+    --primary: #beb0bf;
+    --secondary: #59445a;
+    --accent: #a482a6;
+  
+    --border: #2e2b2f;
+    --hover: #1a171b;
+  
+    --danger: #ff6b6b;
+    --success: #7dd87d;
+    --warning: #f0c453;
+    --info: #7fc8e6;
   }
   
   /* Add smooth transition for all elements when theme changes */
