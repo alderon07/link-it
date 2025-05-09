@@ -89,7 +89,7 @@ export function LinksList() {
   }
 
   return (
-    <div className="flex w-full flex-col gap-3 px-2 sm:gap-4">
+    <div className="flex w-full flex-col gap-3 px-2 text-wrap sm:gap-4">
       {links.map((link) => (
         <LinkButton
           key={link.id}

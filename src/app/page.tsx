@@ -24,8 +24,8 @@ export default function HomePage() {
               sizes="(max-width: 640px) 64px, 80px"
             />
           </div>
-          <h1 className="mb-1 text-lg font-bold text-white sm:text-xl">{profile.username}</h1>
-          <p className="text-sm text-secondary">{profile.bio}</p>
+          <h1 className="mb-1 text-xl font-bold text-text sm:text-3xl">{profile.username}</h1>
+          <p className="text-sm text-text-muted">{profile.bio}</p>
         </div>
 
         {/* Links Section - Now using tRPC through the LinksList component */}
