@@ -61,7 +61,7 @@ export function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background shadow-sm">
       <div className="flex items-center justify-between px-2 py-2 sm:px-6 sm:py-3">
         <Link href="/" className="text-lg font-bold text-primary">
-          LinkIt
+          link-it 
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
           {/* <ThemeToggle /> */}
@@ -110,7 +110,7 @@ export function Navbar() {
                   title="Login"
                 >
                   <IconLogin/>
-                  <span className="hidden sm:ml-2 sm:inline">Login</span>
+                  <span className="hidden sm:ml-2 sm:inline">login</span>
                 </Link>
               )}
             </>
