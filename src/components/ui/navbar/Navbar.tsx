@@ -4,12 +4,19 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { isAuthenticated, logout, getCurrentUser } from '@/lib/auth';
+import {
+  IconDashboard,
+  IconLogout,
+  IconLogin,
+  IconUser,
+} from '@tabler/icons-react';
 
 export function Navbar() {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '';
   const isAdmin = pathname.startsWith('/admin');
   const isLoginPage = pathname === '/login';
+
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
 
@@ -24,14 +31,14 @@ export function Navbar() {
         setUser(null);
       }
     };
-    
+
     checkAuth();
-    
+
     // Add event listener for storage changes (logout from another tab)
     const handleStorageChange = () => {
       checkAuth();
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -50,40 +57,47 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+    <nav className="shadow-xs fixed left-0 right-0 top-0 z-50 bg-white">
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="text-lg font-bold text-pink-600">
           LinkIt
         </Link>
-        <div className="flex gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* <ThemeToggle /> */}
           {isLoggedIn ? (
             <>
               {user && (
-                <span className="hidden items-center text-sm text-gray-600 md:flex">
+                <span className="text-text hidden items-center text-sm md:flex">
                   {user.email}
                 </span>
               )}
               {!isAdmin && (
                 <Link
                   href="/admin"
-                  className="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-300"
+                  className="bg-secondary text-text hover:bg-secondary/80 flex items-center rounded-md p-2 text-sm font-medium sm:px-4 sm:py-2"
+                  title="Dashboard"
                 >
-                  Dashboard
+                  <IconDashboard />
+                  <span className="hidden sm:ml-2 sm:inline">Dashboard</span>
                 </Link>
               )}
               {isAdmin && (
                 <Link
                   href="/"
-                  className="rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-300"
+                  className="bg-secondary text-text hover:bg-accent flex items-center rounded-md p-2 text-sm font-medium sm:px-4 sm:py-2"
+                  title="View Profile"
                 >
-                  View Profile
+                  <IconUser />
+                  <span className="hidden sm:ml-2 sm:inline">View Profile</span>
                 </Link>
               )}
               <button
                 onClick={handleLogout}
-                className="rounded-md bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700"
+                className="bg-secondary text-text hover:bg-accent flex items-center rounded-md p-2 text-sm font-medium sm:px-4 sm:py-2"
+                title="Logout"
               >
-                Logout
+                <IconLogout />
+                <span className="hidden sm:ml-2 sm:inline">Logout</span>
               </button>
             </>
           ) : (
@@ -91,9 +105,11 @@ export function Navbar() {
               {!isLoginPage && (
                 <Link
                   href="/login"
-                  className="rounded-md bg-pink-600 px-4 py-2 text-sm font-medium text-white hover:bg-pink-700"
+                  className="bg-secondary text-text hover:bg-accent flex items-center rounded-md p-2 text-sm font-medium sm:px-4 sm:py-2"
+                  title="Login"
                 >
-                  Login
+                  <IconLogin />
+                  <span className="hidden sm:ml-2 sm:inline">login</span>
                 </Link>
               )}
             </>

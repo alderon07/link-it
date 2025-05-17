@@ -10,15 +10,32 @@ import {
   type UpdateLinkInput
 } from '@/lib/validate/links';
 import { ValidationError } from '@/lib/validate/ValidationError';
+import dummyData from '@/dummy.json';
 
-// Data source
-const links = require('@/dummy.json').links;
+// Ensure consistent type compatibility
+interface LinkData {
+  id: number;
+  userId: number;
+  title: string;
+  url: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Data source - map data to ensure all required fields have defaults
+const links: LinkData[] = dummyData.links.map(link => ({
+  ...link,
+  description: link.description || '',
+  createdAt: link.createdAt || new Date().toISOString(),
+  updatedAt: link.updatedAt || new Date().toISOString()
+}));
 
 // Get all links from data source
 export async function getAllLinks(): Promise<Link[]> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 100));
-  return links;
+  return links as Link[];
 }
 
 // Get a specific link by ID
@@ -32,8 +49,8 @@ export async function getLinkById(id: number): Promise<Link | null> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 100));
   // fetch from database
-  const link = links.find((link: Link) => link.id === id);
-  return link || null;
+  const link = links.find(link => link.id === id);
+  return link ? (link as Link) : null;
 }
 
 // Create a new link
@@ -47,13 +64,17 @@ export async function createLink(data: CreateLinkInput & {createdAt?: string, up
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 100));
   
-  const newLink: Link = {
+  // Create new link with all required fields
+  const newLink: LinkData = {
     id: links.length + 1,
     ...validationResult.data,
+    description: data.description || '',
+    createdAt: data.createdAt || new Date().toISOString(),
+    updatedAt: data.updatedAt || new Date().toISOString()
   };
   
   links.push(newLink);
-  return newLink;
+  return newLink as Link;
 }
 
 // Update an existing link
@@ -67,18 +88,20 @@ export async function updateLink(data: UpdateLinkInput & { updatedAt?: string })
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 100));
   
-  const linkIndex = links.findIndex((link: Link) => link.id === data.id);
+  const linkIndex = links.findIndex(link => link.id === data.id);
   if (linkIndex === -1) {
     return null;
   }
   
   links[linkIndex] = {
     ...links[linkIndex],
-    ...validationResult.data,
-    updatedAt: data.updatedAt || links[linkIndex].updatedAt
+    ...(data.title && { title: data.title }),
+    ...(data.url && { url: data.url }),
+    ...(data.description !== undefined && { description: data.description || '' }),
+    updatedAt: data.updatedAt || new Date().toISOString()
   };
   
-  return links[linkIndex];
+  return links[linkIndex] as Link;
 }
 
 // Delete a link
@@ -92,12 +115,12 @@ export async function deleteLink(id: number): Promise<Link | null> {
   // Simulate network delay
   await new Promise((resolve) => setTimeout(resolve, 100));
   
-  const linkIndex = links.findIndex((link: Link) => link.id === id);
+  const linkIndex = links.findIndex(link => link.id === id);
   if (linkIndex === -1) {
     return null;
   }
   
   const deletedLink = links[linkIndex];
   links.splice(linkIndex, 1);
-  return deletedLink;
+  return deletedLink as Link;
 } 

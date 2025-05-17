@@ -70,7 +70,7 @@ export function LinkButton({ href, children, className }: LinkButtonProps) {
 ```typescript
 interface ButtonProps {
   /** The variant style of the button */
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline-solid';
   /** Handler for click events */
   onClick?: () => void;
   children: React.ReactNode;
@@ -119,7 +119,7 @@ export function Button({
 
 ```tsx
 // Example of good Tailwind usage
-<div className="flex flex-col gap-4 p-4 rounded-lg bg-white shadow-sm">
+<div className="flex flex-col gap-4 p-4 rounded-lg bg-white shadow-xs">
   <h2 className="text-xl font-bold text-gray-900">Section Title</h2>
   <p className="text-gray-700">Content goes here</p>
 </div>

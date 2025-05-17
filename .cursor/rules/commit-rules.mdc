@@ -1,0 +1,18 @@
+---
+description: style to use when making up a commit message
+globs: 
+alwaysApply: false
+---
+- Commits should be no longer than a paragraph
+- Commits should use the following syntax <type>(<scope>): <description>
+| Type       | Meaning                         |
+| ---------- | ------------------------------- |
+| `feat`     | New feature                     |
+| `fix`      | Bug fix                         |
+| `chore`    | Routine task (e.g., deps)       |
+| `refactor` | Code change w/o behavior change |
+| `docs`     | Documentation changes           |
+| `test`     | Adding or fixing tests          |
+| `style`    | Formatting, linting, etc.       |
+| `perf`     | Performance improvement         |
+| `ci`       | CI/CD changes                   |

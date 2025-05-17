@@ -20,7 +20,7 @@ export default function AdminLayout({
   }, [router]);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 bg-background text-text">
       {children}
     </div>
   );
