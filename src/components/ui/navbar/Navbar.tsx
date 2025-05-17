@@ -4,12 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { isAuthenticated, logout, getCurrentUser } from '@/lib/auth';
-import {
-  IconDashboard,
-  IconLogout,
-  IconLogin,
-  IconUser,
-} from '@tabler/icons-react';
+import { LogIn, LogOut, User, Gauge } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function Navbar() {
   const router = useRouter();
@@ -57,13 +53,12 @@ export function Navbar() {
   };
 
   return (
-    <nav className="shadow-xs fixed left-0 right-0 top-0 z-50 bg-white">
+    <nav className="fixed top-0 right-0 left-0 z-50 bg-white shadow-xs">
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="text-lg font-bold text-pink-600">
           LinkIt
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* <ThemeToggle /> */}
           {isLoggedIn ? (
             <>
               {user && (
@@ -72,45 +67,35 @@ export function Navbar() {
                 </span>
               )}
               {!isAdmin && (
-                <Link
-                  href="/admin"
-                  className="bg-secondary text-text hover:bg-secondary/80 flex items-center rounded-md p-2 text-sm font-medium sm:px-4 sm:py-2"
-                  title="Dashboard"
-                >
-                  <IconDashboard />
-                  <span className="hidden sm:ml-2 sm:inline">Dashboard</span>
-                </Link>
+                <Button variant="secondary" asChild>
+                  <Link href="/admin" title="Dashboard">
+                    <Gauge />
+                    <span className="hidden sm:inline">Dashboard</span>
+                  </Link>
+                </Button>
               )}
               {isAdmin && (
-                <Link
-                  href="/"
-                  className="bg-secondary text-text hover:bg-accent flex items-center rounded-md p-2 text-sm font-medium sm:px-4 sm:py-2"
-                  title="View Profile"
-                >
-                  <IconUser />
-                  <span className="hidden sm:ml-2 sm:inline">View Profile</span>
-                </Link>
+                <Button variant="secondary" asChild>
+                  <Link href="/" title="View Profile">
+                    <User />
+                    <span className="hidden sm:inline">Profile</span>
+                  </Link>
+                </Button>
               )}
-              <button
-                onClick={handleLogout}
-                className="bg-secondary text-text hover:bg-accent flex items-center rounded-md p-2 text-sm font-medium sm:px-4 sm:py-2"
-                title="Logout"
-              >
-                <IconLogout />
-                <span className="hidden sm:ml-2 sm:inline">Logout</span>
-              </button>
+              <Button variant="secondary" onClick={handleLogout} title="Logout">
+                <LogOut />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
             </>
           ) : (
             <>
               {!isLoginPage && (
-                <Link
-                  href="/login"
-                  className="bg-secondary text-text hover:bg-accent flex items-center rounded-md p-2 text-sm font-medium sm:px-4 sm:py-2"
-                  title="Login"
-                >
-                  <IconLogin />
-                  <span className="hidden sm:ml-2 sm:inline">login</span>
-                </Link>
+                <Button asChild>
+                  <Link href="/login" title="Login">
+                    <LogIn />
+                    <span className="hidden sm:inline">Login</span>
+                  </Link>
+                </Button>
               )}
             </>
           )}
