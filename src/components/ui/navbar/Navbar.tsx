@@ -10,6 +10,7 @@ import {
   IconLogin,
   IconUser,
 } from '@tabler/icons-react';
+import { Button, buttonVariants } from "@/components/ui/button"
 
 export function Navbar() {
   const router = useRouter();
@@ -102,6 +103,9 @@ export function Navbar() {
             </>
           ) : (
             <>
+              <Link href="/login" className={buttonVariants({ variant: "outline" })}>Click here</Link>
+
+              <Button>shad button</Button>
               {!isLoginPage && (
                 <Link
                   href="/login"
