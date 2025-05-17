@@ -18,7 +18,7 @@ export function LinkButton({
     'transition-all duration-200',
     'text-center',
     'text-sm sm:text-base',
-    'backdrop-blur-sm',
+    'backdrop-blur-xs',
     'active:scale-[0.98]',
   ].join(' ');
 
