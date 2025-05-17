@@ -2,79 +2,657 @@
   "users": [
     {
       "id": 1,
-      "email": "admin@example.com",
-      "password": "password123"
+      "clerk_user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
+      "email": "john.doe@example.com",
+      "username": "johndoe",
+      "display_name": "John Doe",
+      "avatar_url": "https://example.com/avatars/john.jpg",
+      "created_at": "2023-12-01T10:00:00.000Z",
+      "updated_at": "2024-01-15T14:30:00.000Z",
+      "deleted_at": null
     },
     {
       "id": 2,
-      "email": "user1@example.com",
-      "password": "userpass123"
+      "clerk_user_id": "user_2bCdEfGhIjKlMnOpQrStUvWxYz2",
+      "email": "jane.smith@example.com",
+      "username": "janesmith",
+      "display_name": "Jane Smith",
+      "avatar_url": "https://example.com/avatars/jane.jpg",
+      "created_at": "2023-12-05T11:00:00.000Z",
+      "updated_at": "2024-01-20T16:45:00.000Z",
+      "deleted_at": null
     },
     {
       "id": 3,
-      "email": "user2@example.com",
-      "password": "userpass456"
+      "clerk_user_id": "user_2cDeFgHiJkLmNoPqRsTuVwXyZ3",
+      "email": "alex.wong@example.com",
+      "username": "alexwong",
+      "display_name": "Alex Wong",
+      "avatar_url": "https://example.com/avatars/alex.jpg",
+      "created_at": "2023-12-10T09:15:00.000Z",
+      "updated_at": "2024-02-01T10:00:00.000Z",
+      "deleted_at": null
     },
     {
       "id": 4,
-      "email": "developer@example.com",
-      "password": "devpass789"
+      "clerk_user_id": "user_2dEfGhIjKlMnOpQrStUvWxYz4",
+      "email": "sarah.jones@example.com",
+      "username": "sarahjones",
+      "display_name": "Sarah Jones",
+      "avatar_url": "https://example.com/avatars/sarah.jpg",
+      "created_at": "2023-12-15T14:30:00.000Z",
+      "updated_at": "2024-02-10T11:20:00.000Z",
+      "deleted_at": null
+    }
+  ],
+  "profiles": [
+    {
+      "id": 1,
+      "user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
+      "name": "John's Personal Profile",
+      "slug": "johns-personal",
+      "bio": "Software developer and tech enthusiast",
+      "avatar_url": "https://example.com/profiles/john.jpg",
+      "is_primary": true,
+      "created_at": "2024-01-01T00:00:00.000Z",
+      "updated_at": "2024-01-01T00:00:00.000Z",
+      "deleted_at": null
+    },
+    {
+      "id": 2,
+      "user_id": "user_2bCdEfGhIjKlMnOpQrStUvWxYz2",
+      "name": "Jane's Portfolio",
+      "slug": "janes-portfolio",
+      "bio": "UX Designer and creative professional",
+      "avatar_url": "https://example.com/profiles/jane.jpg",
+      "is_primary": true,
+      "created_at": "2024-01-15T00:00:00.000Z",
+      "updated_at": "2024-01-15T00:00:00.000Z",
+      "deleted_at": null
+    },
+    {
+      "id": 3,
+      "user_id": "user_2cDeFgHiJkLmNoPqRsTuVwXyZ3",
+      "name": "Alex's Tech Blog",
+      "slug": "alexs-tech-blog",
+      "bio": "Tech blogger and software engineer",
+      "avatar_url": "https://example.com/profiles/alex.jpg",
+      "is_primary": true,
+      "created_at": "2024-02-01T00:00:00.000Z",
+      "updated_at": "2024-02-01T00:00:00.000Z",
+      "deleted_at": null
+    },
+    {
+      "id": 4,
+      "user_id": "user_2dEfGhIjKlMnOpQrStUvWxYz4",
+      "name": "Sarah's Photography",
+      "slug": "sarahs-photography",
+      "bio": "Professional photographer and visual artist",
+      "avatar_url": "https://example.com/profiles/sarah.jpg",
+      "is_primary": true,
+      "created_at": "2024-02-15T00:00:00.000Z",
+      "updated_at": "2024-02-15T00:00:00.000Z",
+      "deleted_at": null
+    }
+  ],
+  "profile_members": [
+    {
+      "id": 1,
+      "profile_id": 1,
+      "user_id": "user_2bCdEfGhIjKlMnOpQrStUvWxYz2",
+      "role": "editor"
+    },
+    {
+      "id": 2,
+      "profile_id": 1,
+      "user_id": "user_2cDeFgHiJkLmNoPqRsTuVwXyZ3",
+      "role": "viewer"
+    },
+    {
+      "id": 3,
+      "profile_id": 2,
+      "user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
+      "role": "editor"
+    },
+    {
+      "id": 4,
+      "profile_id": 3,
+      "user_id": "user_2dEfGhIjKlMnOpQrStUvWxYz4",
+      "role": "viewer"
+    },
+    {
+      "id": 5,
+      "profile_id": 4,
+      "user_id": "user_2bCdEfGhIjKlMnOpQrStUvWxYz2",
+      "role": "editor"
+    }
+  ],
+  "user_settings": [
+    {
+      "user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
+      "dark_mode": false,
+      "email_notifications": true,
+      "default_profile_id": 1
+    },
+    {
+      "user_id": "user_2bCdEfGhIjKlMnOpQrStUvWxYz2",
+      "dark_mode": true,
+      "email_notifications": true,
+      "default_profile_id": 2
+    },
+    {
+      "user_id": "user_2cDeFgHiJkLmNoPqRsTuVwXyZ3",
+      "dark_mode": false,
+      "email_notifications": false,
+      "default_profile_id": 3
+    },
+    {
+      "user_id": "user_2dEfGhIjKlMnOpQrStUvWxYz4",
+      "dark_mode": true,
+      "email_notifications": true,
+      "default_profile_id": 4
+    }
+  ],
+  "user_progress": [
+    {
+      "user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
+      "completed_intro": true,
+      "added_first_link": true,
+      "published_page": true
+    },
+    {
+      "user_id": "user_2bCdEfGhIjKlMnOpQrStUvWxYz2",
+      "completed_intro": true,
+      "added_first_link": true,
+      "published_page": false
+    },
+    {
+      "user_id": "user_2cDeFgHiJkLmNoPqRsTuVwXyZ3",
+      "completed_intro": true,
+      "added_first_link": false,
+      "published_page": false
+    },
+    {
+      "user_id": "user_2dEfGhIjKlMnOpQrStUvWxYz4",
+      "completed_intro": false,
+      "added_first_link": false,
+      "published_page": false
+    }
+  ],
+  "themes": [
+    {
+      "id": 1,
+      "name": "Default Light",
+      "bg_color": "#FFFFFF",
+      "text_color": "#333333",
+      "accent_color": "#007BFF",
+      "is_custom": false
+    },
+    {
+      "id": 2,
+      "name": "Midnight Dark",
+      "bg_color": "#1A1A2E",
+      "text_color": "#E0E0E0",
+      "accent_color": "#16C79A",
+      "is_custom": false
+    },
+    {
+      "id": 3,
+      "name": "Sunset Glow",
+      "bg_color": "#FFDAB9",
+      "text_color": "#4A4A4A",
+      "accent_color": "#FF6347",
+      "is_custom": false
+    }
+  ],
+  "pages": [
+    {
+      "id": 1,
+      "profile_id": 1,
+      "title": "John's Developer Portfolio",
+      "slug": "john-dev-portfolio",
+      "description": "A showcase of John Doe's software development projects and skills.",
+      "seo_title": "John Doe - Software Developer Portfolio",
+      "og_image_url": "https://example.com/og/john-portfolio.jpg",
+      "is_public": true,
+      "created_at": "2024-01-05T00:00:00.000Z",
+      "updated_at": "2024-01-05T00:00:00.000Z",
+      "locale": "en-US",
+      "version": 1,
+      "deleted_at": null
+    },
+    {
+      "id": 2,
+      "profile_id": 1,
+      "title": "John's Blog",
+      "slug": "johns-tech-musings",
+      "description": "John Doe's thoughts on technology, programming, and the web.",
+      "seo_title": "John Doe - Tech Blog",
+      "og_image_url": "https://example.com/og/john-blog.jpg",
+      "is_public": true,
+      "created_at": "2024-01-10T00:00:00.000Z",
+      "updated_at": "2024-01-10T00:00:00.000Z",
+      "locale": "en-US",
+      "version": 1,
+      "deleted_at": null
+    },
+    {
+      "id": 3,
+      "profile_id": 2,
+      "title": "Jane's UX Design Showcase",
+      "slug": "jane-ux-showcase",
+      "description": "A collection of Jane Smith's best UX design projects and case studies.",
+      "seo_title": "Jane Smith - UX Design Showcase",
+      "og_image_url": "https://example.com/og/jane-ux.jpg",
+      "is_public": true,
+      "created_at": "2024-01-20T00:00:00.000Z",
+      "updated_at": "2024-01-20T00:00:00.000Z",
+      "locale": "en-US",
+      "version": 1,
+      "deleted_at": null
+    },
+    {
+      "id": 4,
+      "profile_id": 3,
+      "title": "Alex's Article Hub",
+      "slug": "alexs-articles",
+      "description": "Alex Wong's published articles on various tech topics.",
+      "seo_title": "Alex Wong - Tech Articles",
+      "og_image_url": "https://example.com/og/alex-articles.jpg",
+      "is_public": true,
+      "created_at": "2024-02-05T00:00:00.000Z",
+      "updated_at": "2024-02-05T00:00:00.000Z",
+      "locale": "en-US",
+      "version": 1,
+      "deleted_at": null
+    },
+    {
+      "id": 5,
+      "profile_id": 4,
+      "title": "Sarah's Photo Gallery",
+      "slug": "sarahs-gallery",
+      "description": "Sarah Jones's stunning photography portfolio.",
+      "seo_title": "Sarah Jones - Photography",
+      "og_image_url": "https://example.com/og/sarah-photos.jpg",
+      "is_public": false,
+      "created_at": "2024-02-20T00:00:00.000Z",
+      "updated_at": "2024-02-20T00:00:00.000Z",
+      "locale": "en-US",
+      "version": 1,
+      "deleted_at": null
+    }
+  ],
+  "page_themes": [
+    {
+      "page_id": 1,
+      "theme_id": 1
+    },
+    {
+      "page_id": 2,
+      "theme_id": 2
+    },
+    {
+      "page_id": 3,
+      "theme_id": 1
+    },
+    {
+      "page_id": 4,
+      "theme_id": 3
+    },
+    {
+      "page_id": 5,
+      "theme_id": 2
+    }
+  ],
+  "tags": [
+    {
+      "id": 1,
+      "name": "Social",
+      "color": "#3B5998"
+    },
+    {
+      "id": 2,
+      "name": "Portfolio",
+      "color": "#FFC107"
+    },
+    {
+      "id": 3,
+      "name": "Resources",
+      "color": "#28A745"
+    },
+    {
+      "id": 4,
+      "name": "Development",
+      "color": "#17A2B8"
+    },
+    {
+      "id": 5,
+      "name": "Personal",
+      "color": "#6F42C1"
     }
   ],
   "links": [
     {
       "id": 1,
-      "userId": 1,
-      "title": "Example Link",
-      "url": "https://example.com",
-      "description": "An example link description",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
+      "page_id": 1,
+      "title": "My GitHub Profile",
+      "url": "https://github.com/johndoe",
+      "type": "link",
+      "is_active": true,
+      "order_index": 0,
+      "visible_from": null,
+      "visible_until": null
     },
     {
       "id": 2,
-      "userId": 2,
-      "title": "MDN Web Docs",
-      "url": "https://developer.mozilla.org",
-      "description": "Resources for developers, by developers",
-      "createdAt": "2024-03-15T10:30:00.000Z",
-      "updatedAt": "2024-03-15T10:30:00.000Z"
+      "page_id": 1,
+      "title": "LinkedIn Profile",
+      "url": "https://linkedin.com/in/johndoe",
+      "type": "link",
+      "is_active": true,
+      "order_index": 1,
+      "visible_from": null,
+      "visible_until": null
     },
     {
       "id": 3,
-      "userId": 1,
-      "title": "GitHub",
-      "url": "https://github.com",
-      "description": "Where the world builds software",
-      "createdAt": "2024-02-20T08:45:00.000Z",
-      "updatedAt": "2024-02-20T08:45:00.000Z"
+      "page_id": 2,
+      "title": "Latest Blog Post: Mastering React Hooks",
+      "url": "https://example.com/blog/mastering-react-hooks",
+      "type": "link",
+      "is_active": true,
+      "order_index": 0,
+      "visible_from": null,
+      "visible_until": null
     },
     {
       "id": 4,
-      "userId": 3,
-      "title": "Stack Overflow",
-      "url": "https://stackoverflow.com",
-      "description": "Where developers learn, share, & build careers",
-      "createdAt": "2024-04-05T14:20:00.000Z",
-      "updatedAt": "2024-04-05T14:20:00.000Z"
+      "page_id": 3,
+      "title": "Project Showcase: UX Redesign for E-commerce",
+      "url": "https://example.com/portfolio/ux-redesign",
+      "type": "link",
+      "is_active": true,
+      "order_index": 0,
+      "visible_from": "2024-01-01T00:00:00.000Z",
+      "visible_until": null
     },
     {
       "id": 5,
-      "userId": 4,
-      "title": "React Documentation",
-      "url": "https://reactjs.org",
-      "description": "A JavaScript library for building user interfaces",
-      "createdAt": "2024-03-10T11:15:00.000Z",
-      "updatedAt": "2024-03-10T11:15:00.000Z"
+      "page_id": 3,
+      "title": "Behance Portfolio",
+      "url": "https://behance.net/janesmith",
+      "type": "link",
+      "is_active": true,
+      "order_index": 1,
+      "visible_from": null,
+      "visible_until": null
     },
     {
       "id": 6,
-      "userId": 2,
-      "title": "CSS-Tricks",
-      "url": "https://css-tricks.com",
-      "description": "Tips, tricks, and techniques on using CSS",
-      "createdAt": "2024-05-01T09:30:00.000Z",
-      "updatedAt": "2024-05-01T09:30:00.000Z"
+      "page_id": 4,
+      "title": "Article: The Future of AI",
+      "url": "https://example.com/articles/future-of-ai",
+      "type": "link",
+      "is_active": true,
+      "order_index": 0,
+      "visible_from": null,
+      "visible_until": null
+    },
+    {
+      "id": 7,
+      "page_id": 5,
+      "title": "My Favorite Landscape Shots",
+      "url": "https://example.com/gallery/landscapes",
+      "type": "header",
+      "is_active": true,
+      "order_index": 0,
+      "visible_from": null,
+      "visible_until": null
+    },
+    {
+      "id": 8,
+      "page_id": 5,
+      "title": "Vimeo Channel (Tutorials)",
+      "url": "https://vimeo.com/sarahjonesphoto",
+      "type": "video",
+      "is_active": false,
+      "order_index": 1,
+      "visible_from": null,
+      "visible_until": "2024-12-31T23:59:59.000Z"
+    }
+  ],
+  "link_tags": [
+    {
+      "link_id": 1,
+      "tag_id": 1
+    },
+    {
+      "link_id": 1,
+      "tag_id": 4
+    },
+    {
+      "link_id": 2,
+      "tag_id": 1
+    },
+    {
+      "link_id": 3,
+      "tag_id": 3
+    },
+    {
+      "link_id": 3,
+      "tag_id": 4
+    },
+    {
+      "link_id": 4,
+      "tag_id": 2
+    },
+    {
+      "link_id": 5,
+      "tag_id": 2
+    },
+    {
+      "link_id": 6,
+      "tag_id": 3
+    },
+    {
+      "link_id": 7,
+      "tag_id": 5
+    },
+    {
+      "link_id": 8,
+      "tag_id": 3
+    },
+    {
+      "link_id": 8,
+      "tag_id": 5
+    }
+  ],
+  "link_clicks": [
+    {
+      "id": 1,
+      "link_id": 1,
+      "clicked_at": "2024-03-01T10:00:00.000Z",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36",
+      "ip_address": "192.168.1.101"
+    },
+    {
+      "id": 2,
+      "link_id": 1,
+      "clicked_at": "2024-03-02T11:30:00.000Z",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15",
+      "ip_address": "10.0.0.52"
+    },
+    {
+      "id": 3,
+      "link_id": 3,
+      "clicked_at": "2024-03-05T14:15:00.000Z",
+      "user_agent": "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.101 Mobile Safari/537.36",
+      "ip_address": "172.16.0.203"
+    },
+    {
+      "id": 4,
+      "link_id": 4,
+      "clicked_at": "2024-03-10T09:05:00.000Z",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36",
+      "ip_address": "192.168.1.105"
+    },
+    {
+      "id": 5,
+      "link_id": 6,
+      "clicked_at": "2024-03-12T16:40:00.000Z",
+      "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Mobile/15E148 Safari/604.1",
+      "ip_address": "203.0.113.45"
+    }
+  ],
+  "audit_logs": [
+    {
+      "id": 1,
+      "user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
+      "action": "PROFILE_UPDATE",
+      "entity_type": "PROFILE",
+      "entity_id": 1,
+      "timestamp": "2024-01-02T10:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "user_id": "user_2bCdEfGhIjKlMnOpQrStUvWxYz2",
+      "action": "PAGE_CREATE",
+      "entity_type": "PAGE",
+      "entity_id": 3,
+      "timestamp": "2024-01-20T08:30:00.000Z"
+    },
+    {
+      "id": 3,
+      "user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
+      "action": "LINK_CREATE",
+      "entity_type": "LINK",
+      "entity_id": 1,
+      "timestamp": "2024-01-05T11:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "user_id": "user_2cDeFgHiJkLmNoPqRsTuVwXyZ3",
+      "action": "PROFILE_MEMBER_ADD",
+      "entity_type": "PROFILE_MEMBER",
+      "entity_id": 2,
+      "timestamp": "2024-02-10T15:00:00.000Z"
+    },
+    {
+      "id": 5,
+      "user_id": "user_2dEfGhIjKlMnOpQrStUvWxYz4",
+      "action": "THEME_APPLY",
+      "entity_type": "PAGE_THEME",
+      "entity_id": 5,
+      "timestamp": "2024-02-21T09:45:00.000Z"
+    },
+    {
+      "id": 6,
+      "user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
+      "action": "USER_LOGIN",
+      "entity_type": "USER",
+      "entity_id": 1,
+      "timestamp": "2024-03-01T12:00:00.000Z"
+    },
+    {
+      "id": 7,
+      "user_id": "user_2bCdEfGhIjKlMnOpQrStUvWxYz2",
+      "action": "LINK_UPDATE",
+      "entity_type": "LINK",
+      "entity_id": 5,
+      "timestamp": "2024-03-03T18:20:00.000Z"
+    }
+  ],
+  "page_views": [
+    {
+      "id": 1,
+      "page_id": 1,
+      "viewed_at": "2024-03-01T10:05:00.000Z",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36",
+      "ip_address": "192.168.1.101"
+    },
+    {
+      "id": 2,
+      "page_id": 1,
+      "viewed_at": "2024-03-01T12:15:00.000Z",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15",
+      "ip_address": "10.0.0.52"
+    },
+    {
+      "id": 3,
+      "page_id": 2,
+      "viewed_at": "2024-03-02T09:30:00.000Z",
+      "user_agent": "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.101 Mobile Safari/537.36",
+      "ip_address": "172.16.0.203"
+    },
+    {
+      "id": 4,
+      "page_id": 3,
+      "viewed_at": "2024-03-03T14:00:00.000Z",
+      "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Mobile/15E148 Safari/604.1",
+      "ip_address": "203.0.113.45"
+    },
+    {
+      "id": 5,
+      "page_id": 1,
+      "viewed_at": "2024-03-04T16:20:00.000Z",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0",
+      "ip_address": "192.168.1.108"
+    },
+    {
+      "id": 6,
+      "page_id": 4,
+      "viewed_at": "2024-03-05T11:55:00.000Z",
+      "user_agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:97.0) Gecko/20100101 Firefox/97.0",
+      "ip_address": "10.1.1.77"
+    },
+    {
+      "id": 7,
+      "page_id": 5,
+      "viewed_at": "2024-03-06T08:45:00.000Z",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36 Edg/99.0.1150.36",
+      "ip_address": "192.168.3.210"
+    }
+  ],
+  "page_view_counts": [
+    {
+      "page_id": 1,
+      "date": "2024-03-01",
+      "view_count": 2
+    },
+    {
+      "page_id": 2,
+      "date": "2024-03-02",
+      "view_count": 1
+    },
+    {
+      "page_id": 3,
+      "date": "2024-03-03",
+      "view_count": 1
+    },
+    {
+      "page_id": 1,
+      "date": "2024-03-04",
+      "view_count": 1
+    },
+    {
+      "page_id": 4,
+      "date": "2024-03-05",
+      "view_count": 1
+    },
+    {
+      "page_id": 5,
+      "date": "2024-03-06",
+      "view_count": 1
+    },
+    {
+      "page_id": 1,
+      "date": "2024-03-02",
+      "view_count": 5
+    },
+    {
+      "page_id": 2,
+      "date": "2024-03-03",
+      "view_count": 3
     }
   ]
 }
