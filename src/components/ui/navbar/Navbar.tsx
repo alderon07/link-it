@@ -4,20 +4,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { isAuthenticated, logout, getCurrentUser } from '@/lib/auth';
-import dynamic from 'next/dynamic';
 import {
   IconDashboard,
   IconLogout,
   IconLogin,
   IconUser,
 } from '@tabler/icons-react';
-// Dynamically import ThemeToggle with no SSR to avoid hydration issues
-const ThemeToggle = dynamic(
-  () => import('./ThemeToggle').then(mod => mod.ThemeToggle),
-  {
-    ssr: false,
-  }
-);
 
 export function Navbar() {
   const router = useRouter();

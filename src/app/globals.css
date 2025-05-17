@@ -42,7 +42,7 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--secondary);
-} 
+}
 
 @layer base {
   :root {
@@ -57,7 +57,7 @@
     --text-800: #2e3538;
     --text-900: #171b1c;
     --text-950: #0c0d0e;
-    
+
     --background-50: #f0f3f4;
     --background-100: #e2e7e9;
     --background-200: #c5ced3;
@@ -69,7 +69,7 @@
     --background-800: #2c353a;
     --background-900: #161b1d;
     --background-950: #0b0d0f;
-    
+
     --primary-50: #f0f4f5;
     --primary-100: #e1e8ea;
     --primary-200: #c3d1d5;
@@ -81,7 +81,7 @@
     --primary-800: #2a383c;
     --primary-900: #151c1e;
     --primary-950: #0a0e0f;
-    
+
     --secondary-50: #eff4f5;
     --secondary-100: #dfe9ec;
     --secondary-200: #c0d3d8;
@@ -93,7 +93,7 @@
     --secondary-800: #273a3f;
     --secondary-900: #131d20;
     --secondary-950: #0a0f10;
-    
+
     --accent-50: #eff4f6;
     --accent-100: #deeaed;
     --accent-200: #bdd4db;
@@ -105,7 +105,6 @@
     --accent-800: #243b42;
     --accent-900: #121e21;
     --accent-950: #090f10;
-    
   }
   .dark {
     --text-50: #0c0d0e;
@@ -119,7 +118,7 @@
     --text-800: #c7ced1;
     --text-900: #e3e7e8;
     --text-950: #f1f3f3;
-    
+
     --background-50: #0b0d0f;
     --background-100: #161b1d;
     --background-200: #2c353a;
@@ -131,7 +130,7 @@
     --background-800: #c5ced3;
     --background-900: #e2e7e9;
     --background-950: #f0f3f4;
-    
+
     --primary-50: #0a0e0f;
     --primary-100: #151c1e;
     --primary-200: #2a393c;
@@ -143,7 +142,7 @@
     --primary-800: #c3d2d5;
     --primary-900: #e1e8ea;
     --primary-950: #f0f4f5;
-    
+
     --secondary-50: #0a0f10;
     --secondary-100: #131d20;
     --secondary-200: #273a3f;
@@ -155,7 +154,7 @@
     --secondary-800: #c0d3d8;
     --secondary-900: #dfe9ec;
     --secondary-950: #eff4f5;
-    
+
     --accent-50: #090f10;
     --accent-100: #121e21;
     --accent-200: #243b42;
