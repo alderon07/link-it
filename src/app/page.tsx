@@ -10,7 +10,7 @@ const profile = {
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-[100dvh] w-full flex-col items-center bg-gradient-to-b from-primary via-primary/90 to-primary/80">
+    <main className="flex min-h-dvh w-full flex-col items-center bg-linear-to-b from-purple-900 via-purple-700 to-blue-800">
       <div className="flex w-full max-w-[500px] flex-col items-center px-4 py-12 sm:py-16">
         {/* Profile Section */}
         <div className="mb-8 flex w-full flex-col items-center">

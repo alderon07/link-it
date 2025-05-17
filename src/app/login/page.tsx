@@ -124,7 +124,7 @@ export default function LoginPage() {
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="flex">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
                   </svg>
@@ -140,7 +140,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative flex w-full justify-center rounded-md bg-primary px-3 py-3 text-sm font-semibold text-white hover:bg-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:bg-primary/50"
+              className="group relative flex w-full justify-center rounded-md bg-pink-500 px-3 py-3 text-sm font-semibold text-white hover:bg-pink-600 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-500 disabled:bg-pink-300"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
