@@ -56,7 +56,7 @@ export function Navbar() {
     <nav className="fixed top-0 right-0 left-0 z-50 bg-white shadow-xs">
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
         <Link href="/" className="text-lg font-bold text-pink-600">
-          LinkIt
+          link-it
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
           {isLoggedIn ? (
@@ -70,7 +70,7 @@ export function Navbar() {
                 <Button variant="secondary" asChild>
                   <Link href="/admin" title="Dashboard">
                     <Gauge />
-                    <span className="hidden sm:inline">Dashboard</span>
+                    <span className="hidden sm:inline">dashboard</span>
                   </Link>
                 </Button>
               )}
@@ -78,22 +78,22 @@ export function Navbar() {
                 <Button variant="secondary" asChild>
                   <Link href="/" title="View Profile">
                     <User />
-                    <span className="hidden sm:inline">Profile</span>
+                    <span className="hidden sm:inline">profile</span>
                   </Link>
                 </Button>
               )}
               <Button variant="secondary" onClick={handleLogout} title="Logout">
                 <LogOut />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline">logout</span>
               </Button>
             </>
           ) : (
             <>
               {!isLoginPage && (
-                <Button asChild>
+                <Button variant="secondary" title='Login' asChild>
                   <Link href="/login" title="Login">
                     <LogIn />
-                    <span className="hidden sm:inline">Login</span>
+                    <span className="hidden sm:inline">login</span>
                   </Link>
                 </Button>
               )}
