@@ -21,7 +21,6 @@ const ThemeToggle = dynamic(
 
 export function Navbar() {
   const router = useRouter();
-  const pathname = usePathname();
   const pathname = usePathname() ?? '';
   const isAdmin = pathname.startsWith('/admin');
   const isLoginPage = pathname === '/login';
