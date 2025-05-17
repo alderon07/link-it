@@ -46,9 +46,9 @@ export function LinksList() {
   if (isLoading) {
     return (
       <div className="flex w-full flex-col gap-3 px-2 sm:gap-4">
-        <div className="h-10 w-full animate-pulse rounded-2xl bg-pink-400/20"></div>
-        <div className="h-10 w-full animate-pulse rounded-2xl bg-pink-400/20"></div>
-        <div className="h-10 w-full animate-pulse rounded-2xl bg-pink-400/20"></div>
+        <div className="h-10 w-full animate-pulse rounded-2xl bg-accent/20"></div>
+        <div className="h-10 w-full animate-pulse rounded-2xl bg-accent/20"></div>
+        <div className="h-10 w-full animate-pulse rounded-2xl bg-accent/20"></div>
       </div>
     );
   }
@@ -83,20 +83,21 @@ export function LinksList() {
   if (!links || links.length === 0) {
     return (
       <div className="flex w-full flex-col gap-3 px-2 sm:gap-4">
-        <p className="text-center text-pink-200">No links found</p>
+        <p className="text-center text-secondary">No links found</p>
       </div>
     );
   }
 
   return (
-    <div className="flex w-full flex-col gap-3 px-2 sm:gap-4">
+    <div className="flex w-full flex-col gap-3 px-2 text-wrap sm:gap-4">
       {links.map((link) => (
         <LinkButton
           key={link.id}
           href={link.url}
-          className="bg-pink-400/40 text-white hover:bg-pink-400/60"
+          className="bg-background text-text hover:bg-hover"
         >
           {link.title}
+          <p className="text-muted text-xs">{link.description}</p>
         </LinkButton>
       ))}
     </div>
