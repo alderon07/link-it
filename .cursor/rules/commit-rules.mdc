@@ -1,7 +1,7 @@
 ---
-description: style to use when making up a commit message
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 - Commits should be no longer than a paragraph
 - Commits should use the following syntax <type>(<scope>): <description>
