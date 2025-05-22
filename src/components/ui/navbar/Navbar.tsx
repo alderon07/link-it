@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { isAuthenticated, logout, getCurrentUser } from '@/lib/auth';
 import { LogIn, LogOut, User, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { UserButton, SignedIn, SignedOut } from '@clerk/nextjs';
 
 export function Navbar() {
   const router = useRouter();
@@ -13,44 +14,7 @@ export function Navbar() {
   const isAdmin = pathname.startsWith('/admin');
   const isLoginPage = pathname === '/login';
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ email: string } | null>(null);
-
-  // Check for logged in status on mount and pathname change
-  useEffect(() => {
-    const checkAuth = () => {
-      const authStatus = isAuthenticated();
-      setIsLoggedIn(authStatus);
-      if (authStatus) {
-        setUser(getCurrentUser());
-      } else {
-        setUser(null);
-      }
-    };
-
-    checkAuth();
-
-    // Add event listener for storage changes (logout from another tab)
-    const handleStorageChange = () => {
-      checkAuth();
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [pathname]);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      setIsLoggedIn(false);
-      setUser(null);
-      router.push('/');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
+  
 
   return (
     <nav className="fixed top-0 right-0 left-0 z-50 bg-white shadow-xs">
@@ -59,46 +23,7 @@ export function Navbar() {
           LinkIt
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
-          {isLoggedIn ? (
-            <>
-              {user && (
-                <span className="text-text hidden items-center text-sm md:flex">
-                  {user.email}
-                </span>
-              )}
-              {!isAdmin && (
-                <Button variant="secondary" asChild>
-                  <Link href="/admin" title="Dashboard">
-                    <Gauge />
-                    <span className="hidden sm:inline">Dashboard</span>
-                  </Link>
-                </Button>
-              )}
-              {isAdmin && (
-                <Button variant="secondary" asChild>
-                  <Link href="/" title="View Profile">
-                    <User />
-                    <span className="hidden sm:inline">Profile</span>
-                  </Link>
-                </Button>
-              )}
-              <Button variant="secondary" onClick={handleLogout} title="Logout">
-                <LogOut />
-                <span className="hidden sm:inline">Logout</span>
-              </Button>
-            </>
-          ) : (
-            <>
-              {!isLoginPage && (
-                <Button asChild>
-                  <Link href="/login" title="Login">
-                    <LogIn />
-                    <span className="hidden sm:inline">Login</span>
-                  </Link>
-                </Button>
-              )}
-            </>
-          )}
+          
         </div>
       </div>
     </nav>
