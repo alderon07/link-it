@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/ui/navbar/Navbar";
 import { ReactScan } from "@/components/ReactScan";
 import {ClerkProvider} from '@clerk/nextjs'
+import { dark, neobrutalism } from '@clerk/themes'
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,7 +19,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-      <ClerkProvider>
+      <ClerkProvider appearance={{
+          baseTheme: [neobrutalism, dark],
+        }
+      }>
       <html lang="en">
         <body className={`${inter.className} min-h-screen pt-14 bg-background text-text`}>
           <ReactScan />
