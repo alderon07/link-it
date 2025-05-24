@@ -20,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
       <ClerkProvider appearance={{
-          baseTheme: [neobrutalism, dark],
+          baseTheme: [neobrutalism],
         }
       }>
       <html lang="en">
