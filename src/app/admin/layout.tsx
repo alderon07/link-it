@@ -1,23 +1,38 @@
 'use client';
 
+import { useAuth } from '@clerk/nextjs';
+import { redirect } from 'next/navigation';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { isAuthenticated } from '@/lib/auth';
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
 
   useEffect(() => {
-    // Check if user is authenticated
-    if (!isAuthenticated()) {
-      // Redirect to login page if not authenticated
-      router.push('/login');
+    // Wait for Clerk to load, then check authentication
+    if (isLoaded && !isSignedIn) {
+      redirect('/login');
     }
-  }, [router]);
+  }, [isLoaded, isSignedIn]);
+
+  // Show loading while Clerk is loading
+  if (!isLoaded) {
+    return (
+      <div className="container mx-auto p-4 bg-background text-text">
+        <div className="flex items-center justify-center min-h-screen">
+          <div>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render content if not signed in (redirect will handle this)
+  if (!isSignedIn) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto p-4 bg-background text-text">

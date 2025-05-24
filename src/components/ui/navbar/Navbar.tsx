@@ -3,10 +3,9 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { isAuthenticated, logout, getCurrentUser } from '@/lib/auth';
 import { LogIn, LogOut, User, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { UserButton, SignedIn, SignedOut, useUser, SignOutButton } from '@clerk/nextjs';
+import { UserButton, SignedIn, SignedOut, useUser, SignOutButton, SignInButton } from '@clerk/nextjs';
 import Image from 'next/image';
 
 export function Navbar() {
@@ -26,12 +25,7 @@ export function Navbar() {
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
           <SignedIn>
-            <SignOutButton>
-              <Button variant="outline">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
-            </SignOutButton>
+            <UserButton />
           </SignedIn>
         </div>
       </div>
