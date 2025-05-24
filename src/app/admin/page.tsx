@@ -10,6 +10,7 @@ import {
 } from '@/data/links/linkDAL';
 import { type Link } from '@/lib/validate/links';
 import { ValidationError } from '@/lib/validate/ValidationError';
+import { AppSidebar } from '@/components/AppSidebar';
 
 export default function AdminPage() {
   const [links, setLinks] = useState<Link[]>([]);
@@ -156,6 +157,7 @@ export default function AdminPage() {
 
   return (
     <div className="container mx-auto p-6">
+      <AppSidebar />
       <h1 className="mb-6 text-2xl font-bold">Manage Links</h1>
       
       {renderValidationErrors()}

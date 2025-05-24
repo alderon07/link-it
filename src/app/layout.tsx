@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/ui/navbar/Navbar";
+import { Navbar } from "@/components/Navbar";
 import { ReactScan } from "@/components/ReactScan";
 import {ClerkProvider} from '@clerk/nextjs'
 import { dark, neobrutalism } from '@clerk/themes'
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,10 +27,16 @@ export default function RootLayout({
         }
       }>
       <html lang="en">
-        <body className={`${inter.className} min-h-screen pt-14 bg-background text-text`}>
-          <ReactScan />
-          <Navbar />
-          {children}
+        <body className={`${inter.className} min-h-screen bg-background text-text`}>
+          {/* <ReactScan /> */}
+          {/* <Navbar /> */}
+          <SidebarProvider>
+            <AppSidebar />
+            <main className="flex-1">
+              <SidebarTrigger />
+              {children}
+            </main>
+        </SidebarProvider>
         </body>
       </html>
     </ClerkProvider>
