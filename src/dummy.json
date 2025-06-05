@@ -45,7 +45,7 @@
       "deleted_at": null
     }
   ],
-  "profiles": [
+  "pages": [
     {
       "id": 1,
       "user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
@@ -119,10 +119,10 @@
       "deleted_at": null
     }
   ],
-  "profile_collaborators": [
+  "page_collaborators": [
     {
       "id": 1,
-      "profile_id": 1,
+      "page_id": 1,
       "user_id": "user_2bCdEfGhIjKlMnOpQrStUvWxYz2",
       "role": "editor",
       "invited_at": "2024-01-10T10:00:00.000Z",
@@ -130,7 +130,7 @@
     },
     {
       "id": 2,
-      "profile_id": 2,
+      "page_id": 2,
       "user_id": "user_2aBcDeFgHiJkLmNoPqRsTuVwXyZ1",
       "role": "viewer",
       "invited_at": "2024-01-20T14:00:00.000Z",
@@ -245,7 +245,7 @@
   "links": [
     {
       "id": 1,
-      "profile_id": 1,
+      "page_id": 1,
       "title": "GitHub Profile",
       "url": "https://github.com/johndoe",
       "type": "link",
@@ -257,7 +257,7 @@
     },
     {
       "id": 2,
-      "profile_id": 1,
+      "page_id": 1,
       "title": "LinkedIn Profile",
       "url": "https://linkedin.com/in/johndoe",
       "type": "link",
@@ -269,7 +269,7 @@
     },
     {
       "id": 3,
-      "profile_id": 1,
+      "page_id": 1,
       "title": "Latest Blog Post: Mastering React Hooks",
       "url": "https://example.com/blog/mastering-react-hooks",
       "type": "link",
@@ -281,7 +281,7 @@
     },
     {
       "id": 4,
-      "profile_id": 2,
+      "page_id": 2,
       "title": "Design Portfolio",
       "url": "https://example.com/portfolio/jane-smith",
       "type": "link",
@@ -293,7 +293,7 @@
     },
     {
       "id": 5,
-      "profile_id": 2,
+      "page_id": 2,
       "title": "Behance Portfolio",
       "url": "https://behance.net/janesmith",
       "type": "link",
@@ -305,7 +305,7 @@
     },
     {
       "id": 6,
-      "profile_id": 3,
+      "page_id": 3,
       "title": "Tech Articles",
       "url": "https://example.com/articles/alex-wong",
       "type": "link",
@@ -317,7 +317,7 @@
     },
     {
       "id": 7,
-      "profile_id": 4,
+      "page_id": 4,
       "title": "Photography Gallery",
       "url": "https://example.com/gallery/sarah-jones",
       "type": "header",
@@ -329,7 +329,7 @@
     },
     {
       "id": 8,
-      "profile_id": 4,
+      "page_id": 4,
       "title": "Instagram",
       "url": "https://instagram.com/sarahjonesphoto",
       "type": "link",
@@ -386,38 +386,38 @@
       "tag_id": 5
     }
   ],
-  "profile_views": [
+  "page_views": [
     {
       "id": 1,
-      "profile_id": 1,
+      "page_id": 1,
       "viewed_at": "2024-03-01T10:05:00.000Z",
       "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36",
       "ip_address": "192.168.1.101"
     },
     {
       "id": 2,
-      "profile_id": 1,
+      "page_id": 1,
       "viewed_at": "2024-03-01T12:15:00.000Z",
       "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Safari/605.1.15",
       "ip_address": "10.0.0.52"
     },
     {
       "id": 3,
-      "profile_id": 2,
+      "page_id": 2,
       "viewed_at": "2024-03-02T09:30:00.000Z",
       "user_agent": "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.101 Mobile Safari/537.36",
       "ip_address": "172.16.0.203"
     },
     {
       "id": 4,
-      "profile_id": 3,
+      "page_id": 3,
       "viewed_at": "2024-03-03T14:00:00.000Z",
       "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.3 Mobile/15E148 Safari/604.1",
       "ip_address": "203.0.113.45"
     },
     {
       "id": 5,
-      "profile_id": 1,
+      "page_id": 1,
       "viewed_at": "2024-03-04T16:20:00.000Z",
       "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0",
       "ip_address": "192.168.1.108"

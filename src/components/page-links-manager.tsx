@@ -147,12 +147,12 @@ const mockProfileLinks = {
 }
 
 interface PageLinksManagerProps {
-  profileId: string
+  pageId: string
 }
 
-export function PageLinksManager({ profileId }: PageLinksManagerProps) {
-  const profile = mockProfiles.find((p) => p.id === profileId)
-  const [links, setLinks] = React.useState(mockProfileLinks[profileId as keyof typeof mockProfileLinks] || [])
+export function PageLinksManager({ pageId }: PageLinksManagerProps) {
+  const page = mockProfiles.find((p) => p.id === pageId)
+  const [links, setLinks] = React.useState(mockProfileLinks[pageId as keyof typeof mockProfileLinks] || [])
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
   const [editingLink, setEditingLink] = React.useState<any>(null)
@@ -233,7 +233,7 @@ export function PageLinksManager({ profileId }: PageLinksManagerProps) {
         <CardContent className="flex items-center justify-center py-12">
           <div className="text-center">
             <h3 className="text-lg font-semibold mb-2">Profile not found</h3>
-            <p className="text-muted-foreground">The profile you're looking for doesn't exist.</p>
+            <p className="text-muted-foreground">{`The profile you're looking for doesn't exist.`}</p>
           </div>
         </CardContent>
       </Card>
@@ -337,7 +337,7 @@ export function PageLinksManager({ profileId }: PageLinksManagerProps) {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add New Link</DialogTitle>
-                  <DialogDescription>Create a new link for {profile.name}'s profile</DialogDescription>
+                  <DialogDescription>{`Create a new link for ${profile.name}'s profile`}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">

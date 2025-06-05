@@ -21,15 +21,15 @@ import { galleryThemes } from "@/lib/gallery-themes"
 import { mockProfiles } from "@/lib/mock-profiles"
 
 interface PageThemeGalleryProps {
-  profileId: string
+  pageId: string
 }
 
-export function PageThemeGallery({ profileId }: PageThemeGalleryProps) {
+export function PageThemeGallery({ pageId }: PageThemeGalleryProps) {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedCategory, setSelectedCategory] = React.useState("all")
   const [appliedTheme, setAppliedTheme] = React.useState<string | null>(null)
 
-  const profile = mockProfiles.find((p) => p.id === profileId)
+  const page = mockProfiles.find((p) => p.id === pageId)
 
   const categories = [
     { id: "all", label: "All Themes" },
