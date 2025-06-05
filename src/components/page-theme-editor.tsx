@@ -26,12 +26,12 @@ interface CustomTheme {
 }
 
 interface PageThemeEditorProps {
-  profileId: string
+  pageId: string
 }
 
-export function PageThemeEditor({ profileId }: PageThemeEditorProps) {
-  const profile = mockProfiles.find((p) => p.id === profileId)
-  const [themeName, setThemeName] = React.useState(`${profile?.name || "Profile"} Custom Theme`)
+export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
+  const page = mockProfiles.find((p) => p.id === pageId)
+  const [themeName, setThemeName] = React.useState(`${page?.name || "Page"} Custom Theme`)
   const [colors, setColors] = React.useState<CustomTheme>({
     name: "custom",
     primary: "#8b5cf6",

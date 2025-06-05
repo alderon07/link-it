@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft, Palette, FolderOpen } from "lucide-react"
 import { mockProfiles } from "@/lib/mock-profiles"
-import { ProfileThemeEditor } from "@/components/profile-theme-editor"
+import { ProfileThemeEditor } from "@/components/page-theme-editor"
 import { ProfileThemeGallery } from "@/components/profile-theme-gallery"
 
 interface PageThemeManagerProps {
