@@ -5,8 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
-import { Users, Link, Eye, TrendingUp, Plus, ExternalLink, BarChart3, Settings } from "lucide-react"
+import {
+  Users,
+  LinkIcon,
+  Eye,
+  TrendingUp,
+  Plus,
+  ExternalLink,
+  BarChart3,
+  Settings,
+} from "lucide-react"
 import { mockProfiles } from "@/lib/mock-profiles"
+import Link from "next/link"
 
 export function AdminDashboard() {
   const totalProfiles = mockProfiles.length
@@ -38,7 +48,7 @@ export function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Links</CardTitle>
-            <Link className="h-4 w-4 text-muted-foreground" />
+            <LinkIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalLinks}</div>
@@ -77,31 +87,31 @@ export function AdminDashboard() {
           <CardContent className="space-y-4">
             <div className="grid gap-3">
               <Button className="justify-start h-auto p-4" variant="outline" asChild>
-                <a href="/admin/profiles">
+                <Link href="/admin/profiles">
                   <Plus className="h-5 w-5 mr-3" />
                   <div className="text-left">
                     <div className="font-medium">Create New Profile</div>
                     <div className="text-sm text-muted-foreground">Set up a new link-it profile</div>
                   </div>
-                </a>
+                </Link>
               </Button>
               <Button className="justify-start h-auto p-4" variant="outline" asChild>
-                <a href="/admin/links">
-                  <Link className="h-5 w-5 mr-3" />
+                <Link href="/admin/links">
+                  <LinkIcon className="h-5 w-5 mr-3" />
                   <div className="text-left">
                     <div className="font-medium">Manage All Links</div>
                     <div className="text-sm text-muted-foreground">View and edit links across profiles</div>
                   </div>
-                </a>
+                </Link>
               </Button>
               <Button className="justify-start h-auto p-4" variant="outline" asChild>
-                <a href="/admin/analytics">
+                <Link href="/admin/analytics">
                   <BarChart3 className="h-5 w-5 mr-3" />
                   <div className="text-left">
                     <div className="font-medium">View Analytics</div>
                     <div className="text-sm text-muted-foreground">Track performance and engagement</div>
                   </div>
-                </a>
+                </Link>
               </Button>
             </div>
           </CardContent>
@@ -131,22 +141,22 @@ export function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" asChild>
-                    <a href={`/admin/profiles`}>
+                    <Link href={`/admin/profiles`}>
                       <Settings className="h-3 w-3 mr-1" />
                       Manage
-                    </a>
+                    </Link>
                   </Button>
                   <Button size="sm" variant="outline" asChild>
-                    <a href={`/${profile.username}`} target="_blank" rel="noreferrer">
+                    <Link href={`/${profile.username}`} target="_blank" rel="noreferrer">
                       <ExternalLink className="h-3 w-3" />
-                    </a>
+                    </Link>
                   </Button>
                 </div>
               </div>
             ))}
             <div className="flex justify-end">
               <Button variant="outline" className="w-1/3" asChild>
-                <a href="/admin/profiles">View All Profiles</a>
+                <Link href="/admin/profiles">View All Profiles</Link>
               </Button>
             </div>
           </CardContent>
