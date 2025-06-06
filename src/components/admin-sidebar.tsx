@@ -55,11 +55,11 @@ const data = {
       ],
     },
     {
-      title: "Profile Management",
+      title: "Page Management",
       items: [
         {
-          title: "Profiles",
-          url: "/admin/profiles",
+          title: "Pages",
+          url: "/admin/pages",
           icon: Users,
         },
       ],

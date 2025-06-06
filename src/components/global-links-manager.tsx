@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Plus, Search, MoreHorizontal, Edit, Trash2, ExternalLink, Copy, Eye, BarChart3, LinkIcon } from "lucide-react"
-import { mockProfiles } from "@/lib/mock-profiles"
+import { mockPages } from "@/lib/mock-pages"
 
 // Mock links data
 const mockLinks = [
@@ -87,7 +87,7 @@ const mockLinks = [
 export function GlobalLinksManager() {
   const [links, setLinks] = React.useState(mockLinks)
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [selectedProfile, setSelectedProfile] = React.useState("all")
+  const [selectedPage, setSelectedPage] = React.useState("all")
   const [sortBy, setSortBy] = React.useState("recent")
 
   const filteredLinks = links.filter((link) => {
@@ -96,7 +96,7 @@ export function GlobalLinksManager() {
       link.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
       link.profileName.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesProfile = selectedProfile === "all" || link.profileId === selectedProfile
+    const matchesProfile = selectedPage === "all" || link.profileId === selectedPage
 
     return matchesSearch && matchesProfile
   })
@@ -188,15 +188,15 @@ export function GlobalLinksManager() {
                 className="pl-10"
               />
             </div>
-            <Select value={selectedProfile} onValueChange={setSelectedProfile}>
+            <Select value={selectedPage} onValueChange={setSelectedPage}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by profile" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Profiles</SelectItem>
-                {mockProfiles.map((profile) => (
-                  <SelectItem key={profile.id} value={profile.id}>
-                    {profile.name}
+                {mockPages.map((page) => (
+                  <SelectItem key={page.id} value={page.id}>
+                    {page.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -223,9 +223,9 @@ export function GlobalLinksManager() {
             <div>
               <CardTitle>Links ({sortedLinks.length})</CardTitle>
               <CardDescription>
-                {selectedProfile === "all"
+                {selectedPage === "all"
                   ? "Showing all links across profiles"
-                  : `Showing links for ${mockProfiles.find((p) => p.id === selectedProfile)?.name}`}
+                  : `Showing links for ${mockPages.find((p) => p.id === selectedPage)?.name}`}
               </CardDescription>
             </div>
             <Dialog>
@@ -248,14 +248,14 @@ export function GlobalLinksManager() {
                         <SelectValue placeholder="Select a profile" />
                       </SelectTrigger>
                       <SelectContent>
-                        {mockProfiles.map((profile) => (
-                          <SelectItem key={profile.id} value={profile.id}>
+                        {mockPages.map((page) => (
+                          <SelectItem key={page.id} value={page.id}>
                             <div className="flex items-center gap-2">
                               <Avatar className="h-5 w-5">
-                                <AvatarImage src={profile.avatar || "/placeholder.svg"} alt={profile.name} />
-                                <AvatarFallback className="text-xs">{profile.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
+                                <AvatarFallback className="text-xs">{page.name.charAt(0)}</AvatarFallback>
                               </Avatar>
-                              {profile.name}
+                              {page.name}
                             </div>
                           </SelectItem>
                         ))}
