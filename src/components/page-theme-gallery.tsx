@@ -18,7 +18,7 @@ import {
 import { Check, Search, Star, Palette, Eye, Download, ExternalLink } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { galleryThemes } from "@/lib/gallery-themes"
-import { mockProfiles } from "@/lib/mock-profiles"
+import { mockPages } from "@/lib/mock-pages"
 
 interface PageThemeGalleryProps {
   pageId: string
@@ -29,7 +29,7 @@ export function PageThemeGallery({ pageId }: PageThemeGalleryProps) {
   const [selectedCategory, setSelectedCategory] = React.useState("all")
   const [appliedTheme, setAppliedTheme] = React.useState<string | null>(null)
 
-  const page = mockProfiles.find((p) => p.id === pageId)
+  const page = mockPages.find((p) => p.id === pageId)
 
   const categories = [
     { id: "all", label: "All Themes" },
@@ -51,17 +51,17 @@ export function PageThemeGallery({ pageId }: PageThemeGalleryProps) {
 
   const applyTheme = (theme: any) => {
     // Store the theme for this specific profile
-    const profileThemeKey = `profile-${profileId}-theme`
+    const profileThemeKey = `profile-${pageId}-theme`
     localStorage.setItem(profileThemeKey, JSON.stringify(theme))
     setAppliedTheme(theme.id)
 
     // Show success message
-    alert(`Theme "${theme.name}" applied to ${profile?.name}'s profile! Visit the live profile to see the changes.`)
+    alert(`Theme "${theme.name}" applied to ${page?.name}'s profile! Visit the live profile to see the changes.`)
   }
 
   // Load applied theme on mount
   React.useEffect(() => {
-    const profileThemeKey = `profile-${profileId}-theme`
+    const profileThemeKey = `profile-${pageId}-theme`
     const savedTheme = localStorage.getItem(profileThemeKey)
     if (savedTheme) {
       try {
@@ -71,7 +71,7 @@ export function PageThemeGallery({ pageId }: PageThemeGalleryProps) {
         console.error("Error loading saved theme:", error)
       }
     }
-  }, [profileId])
+  }, [pageId])
 
   const ThemePreview = ({ theme, isSelected }: { theme: any; isSelected: boolean }) => (
     <Card
@@ -116,7 +116,7 @@ export function PageThemeGallery({ pageId }: PageThemeGalleryProps) {
                 <DialogTitle>{theme.name}</DialogTitle>
                 <DialogDescription>{theme.description}</DialogDescription>
               </DialogHeader>
-              <ThemePreviewModal theme={theme} profile={profile} />
+              <ThemePreviewModal theme={theme} profile={page} />
             </DialogContent>
           </Dialog>
           <Button size="sm" className="flex-1" onClick={() => applyTheme(theme)} disabled={isSelected}>
@@ -144,7 +144,7 @@ export function PageThemeGallery({ pageId }: PageThemeGalleryProps) {
     </Card>
   )
 
-  if (!profile) {
+  if (!page) {
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">Profile not found</p>
@@ -158,7 +158,7 @@ export function PageThemeGallery({ pageId }: PageThemeGalleryProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder={`Search themes for ${profile.name}'s profile...`}
+            placeholder={`Search themes for ${page.name}'s profile...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"

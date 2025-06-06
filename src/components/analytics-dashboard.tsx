@@ -7,10 +7,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart3, TrendingUp, Users, Eye, MousePointer, Download, Filter } from "lucide-react"
-import { mockProfiles } from "@/lib/mock-profiles"
+import { mockPages } from "@/lib/mock-pages"
 
 export function AnalyticsDashboard() {
-  const totalViews = mockProfiles.reduce((sum, profile) => sum + profile.views, 0)
+  const totalViews = mockPages.reduce((sum, profile) => sum + profile.views, 0)
   const totalClicks = 1205 // Mock data
   const avgEngagement = 8.2 // Mock data
 
@@ -36,9 +36,9 @@ export function AnalyticsDashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Profiles</SelectItem>
-              {mockProfiles.map((profile) => (
-                <SelectItem key={profile.id} value={profile.id}>
-                  {profile.name}
+              {mockPages.map((page) => (
+                <SelectItem key={page.id} value={page.id}>
+                  {page.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -183,24 +183,24 @@ export function AnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockProfiles.map((profile) => (
-                  <div key={profile.id} className="flex items-center justify-between p-4 border rounded-lg">
+                {mockPages.map((page) => (
+                  <div key={page.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={profile.avatar || "/placeholder.svg"} alt={profile.name} />
-                        <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
+                        <AvatarFallback>{page.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <h3 className="font-medium">{profile.name}</h3>
-                        <p className="text-sm text-muted-foreground">@{profile.username}</p>
+                        <h3 className="font-medium">{page.name}</h3>
+                        <p className="text-sm text-muted-foreground">@{page.username}</p>
                       </div>
                       <Badge variant="outline" className="capitalize">
-                        {profile.category}
+                        {page.category}
                       </Badge>
                     </div>
                     <div className="text-right">
-                      <div className="font-medium">{profile.views.toLocaleString()} views</div>
-                      <div className="text-sm text-muted-foreground">{profile.linkCount} links</div>
+                      <div className="font-medium">{page.views.toLocaleString()} views</div>
+                      <div className="text-sm text-muted-foreground">{page.linkCount} links</div>
                     </div>
                   </div>
                 ))}

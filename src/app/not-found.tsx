@@ -9,9 +9,9 @@ export default function NotFound() {
       <Card className="w-full max-w-md">
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
           <div className="text-6xl mb-6">🔍</div>
-          <h1 className="text-2xl font-bold mb-2">Profile Not Found</h1>
+          <h1 className="text-2xl font-bold mb-2">Page Not Found</h1>
           <p className="text-muted-foreground mb-6">
-            {`The profile you're looking for doesn't exist or may have been removed.`}
+            {`The page you're looking for doesn't exist or may have been removed.`}
           </p>
           <div className="flex gap-2">
             <Button asChild>
@@ -23,7 +23,7 @@ export default function NotFound() {
             <Button variant="outline" asChild>
               <Link href="/#explore">
                 <Search className="h-4 w-4 mr-2" />
-                Explore Profiles
+                Explore Pages
               </Link>
             </Button>
           </div>

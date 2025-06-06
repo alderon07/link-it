@@ -8,8 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ExternalLink, Share2, Heart, Eye } from "lucide-react"
 
 // Mock links data for profiles (same as in profile-links-manager)
-const mockProfileLinks = {
-  "profile-1": [
+const mockPageLinks = {
+  "page-1": [
     {
       id: "link-1",
       title: "My Portfolio",
@@ -51,7 +51,7 @@ const mockProfileLinks = {
       order: 4,
     },
   ],
-  "profile-2": [
+  "page-2": [
     {
       id: "link-5",
       title: "GitHub",
@@ -83,7 +83,7 @@ const mockProfileLinks = {
       order: 3,
     },
   ],
-  "profile-3": [
+  "page-3": [
     {
       id: "link-8",
       title: "Spotify",
@@ -115,7 +115,7 @@ const mockProfileLinks = {
       order: 3,
     },
   ],
-  "profile-4": [
+  "page-4": [
     {
       id: "link-11",
       title: "Fitness Programs",
@@ -147,7 +147,7 @@ const mockProfileLinks = {
       order: 3,
     },
   ],
-  "profile-5": [
+  "page-5": [
     {
       id: "link-14",
       title: "Recipe Collection",
@@ -185,10 +185,10 @@ interface PublicPageProps {
   page: any
 }
 
-export function PublicPage({ page }: PublicPageProps) {
+export function PublicPageComponent({ page }: PublicPageProps) {
   const [theme, setTheme] = React.useState<any>(null)
   const [viewCount, setViewCount] = React.useState(page.views)
-  const links = (mockProfileLinks[page.id as keyof typeof mockProfileLinks] || [])
+  const links = (mockPageLinks[page.id as keyof typeof mockPageLinks] || [])
     .filter((link) => link.isActive)
     .sort((a, b) => a.order - b.order)
 

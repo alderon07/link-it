@@ -35,11 +35,11 @@ import {
   X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { mockProfiles } from "@/lib/mock-profiles"
+import { mockPages } from "@/lib/mock-pages"
 
 // Mock links data for specific profiles
-const mockProfileLinks = {
-  "profile-1": [
+const mockPageLinks = {
+  "page-1": [
     {
       id: "link-1",
       title: "My Portfolio",
@@ -85,7 +85,7 @@ const mockProfileLinks = {
       createdAt: "2024-01-05",
     },
   ],
-  "profile-2": [
+  "page-2": [
     {
       id: "link-5",
       title: "GitHub",
@@ -120,7 +120,7 @@ const mockProfileLinks = {
       createdAt: "2024-01-06",
     },
   ],
-  "profile-3": [
+  "page-3": [
     {
       id: "link-8",
       title: "Spotify",
@@ -151,8 +151,8 @@ interface PageLinksManagerProps {
 }
 
 export function PageLinksManager({ pageId }: PageLinksManagerProps) {
-  const page = mockProfiles.find((p) => p.id === pageId)
-  const [links, setLinks] = React.useState(mockProfileLinks[pageId as keyof typeof mockProfileLinks] || [])
+  const page = mockPages.find((p) => p.id === pageId)
+  const [links, setLinks] = React.useState(mockPageLinks[pageId as keyof typeof mockPageLinks] || [])
   const [searchQuery, setSearchQuery] = React.useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false)
   const [editingLink, setEditingLink] = React.useState<any>(null)
@@ -227,7 +227,7 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
     }
   }
 
-  if (!profile) {
+  if (!page) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
@@ -248,23 +248,23 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
 
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={profile.avatar || "/placeholder.svg"} alt={profile.name} />
-              <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
+              <AvatarFallback>{page.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-              <h2 className="text-xl font-bold">{profile.name}</h2>
-              <p className="text-muted-foreground">@{profile.username}</p>
+              <h2 className="text-xl font-bold">{page.name}</h2>
+              <p className="text-muted-foreground">@{page.username}</p>
             </div>
             <Badge variant="outline" className="capitalize">
-              {profile.category}
+              {page.category}
             </Badge>
-            <Badge variant={profile.isActive ? "default" : "secondary"}>
-              {profile.isActive ? "Active" : "Inactive"}
+            <Badge variant={page.isActive ? "default" : "secondary"}>
+              {page.isActive ? "Active" : "Inactive"}
             </Badge>
           </div>
         </div>
         <Button asChild variant="outline">
-          <a href={`/${profile.username}`} target="_blank" rel="noreferrer">
+          <a href={`/${page.username}`} target="_blank" rel="noreferrer">
             <ExternalLink className="h-4 w-4 mr-2" />
             View Live Profile
           </a>
@@ -324,7 +324,7 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Links for {profile.name}</CardTitle>
+              <CardTitle>Links for {page.name}</CardTitle>
               <CardDescription>Manage links specifically for this profile</CardDescription>
             </div>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -337,7 +337,7 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add New Link</DialogTitle>
-                  <DialogDescription>{`Create a new link for ${profile.name}'s profile`}</DialogDescription>
+                  <DialogDescription>{`Create a new link for ${page.name}'s profile`}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -435,7 +435,7 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
               <p className="text-muted-foreground">
                 {searchQuery
                   ? "Try adjusting your search criteria"
-                  : `Create the first link for ${profile.name}'s profile`}
+                  : `Create the first link for ${page.name}'s profile`}
               </p>
             </div>
           ) : (

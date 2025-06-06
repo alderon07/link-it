@@ -15,14 +15,14 @@ import {
   BarChart3,
   Settings,
 } from "lucide-react"
-import { mockProfiles } from "@/lib/mock-profiles"
 import Link from "next/link"
+import { mockPages } from "@/lib/mock-pages"
 
 export function AdminDashboard() {
-  const totalProfiles = mockProfiles.length
-  const totalLinks = mockProfiles.reduce((sum, profile) => sum + profile.linkCount, 0)
-  const totalViews = mockProfiles.reduce((sum, profile) => sum + profile.views, 0)
-  const activeProfiles = mockProfiles.filter((profile) => profile.isActive).length
+  const totalProfiles = mockPages.length
+  const totalLinks = mockPages.reduce((sum, profile) => sum + profile.linkCount, 0)
+  const totalViews = mockPages.reduce((sum, profile) => sum + profile.views, 0)
+  const activeProfiles = mockPages.filter((profile) => profile.isActive).length
 
   const recentActivity = [
     { action: "Profile viewed", profile: "Alex Johnson", time: "2 minutes ago" },
@@ -87,7 +87,7 @@ export function AdminDashboard() {
           <CardContent className="space-y-4">
             <div className="grid gap-3">
               <Button className="justify-start h-auto p-4" variant="outline" asChild>
-                <Link href="/admin/profiles">
+                <Link href="/admin/pages">
                   <Plus className="h-5 w-5 mr-3" />
                   <div className="text-left">
                     <div className="font-medium">Create New Profile</div>
@@ -124,7 +124,7 @@ export function AdminDashboard() {
             <CardDescription>Overview of your active profiles</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {mockProfiles.slice(0, 3).map((profile) => (
+            {mockPages.slice(0, 3).map((profile) => (
               <div key={profile.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10">
@@ -141,7 +141,7 @@ export function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" asChild>
-                    <Link href={`/admin/profiles`}>
+                    <Link href={`/admin/pages`}>
                       <Settings className="h-3 w-3 mr-1" />
                       Manage
                     </Link>
@@ -156,7 +156,7 @@ export function AdminDashboard() {
             ))}
             <div className="flex justify-end">
               <Button variant="outline" className="w-1/3" asChild>
-                <Link href="/admin/profiles">View All Profiles</Link>
+                <Link href="/admin/pages">View All Pages</Link>
               </Button>
             </div>
           </CardContent>

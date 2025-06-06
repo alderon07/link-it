@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ExternalLink, Save, RotateCcw, Eye } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { mockProfiles } from "@/lib/mock-profiles"
+import { mockPages } from "@/lib/mock-pages"
 
 interface CustomTheme {
   name: string
@@ -30,7 +30,7 @@ interface PageThemeEditorProps {
 }
 
 export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
-  const page = mockProfiles.find((p) => p.id === pageId)
+  const page = mockPages.find((p) => p.id === pageId)
   const [themeName, setThemeName] = React.useState(`${page?.name || "Page"} Custom Theme`)
   const [colors, setColors] = React.useState<CustomTheme>({
     name: "custom",
@@ -49,18 +49,18 @@ export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
 
   // Load saved theme for this profile
   React.useEffect(() => {
-    const profileThemeKey = `profile-${profileId}-custom-theme`
-    const savedTheme = localStorage.getItem(profileThemeKey)
+    const pageThemeKey = `page-${pageId}-custom-theme`
+    const savedTheme = localStorage.getItem(pageThemeKey)
     if (savedTheme) {
       try {
         const theme = JSON.parse(savedTheme)
         setColors(theme)
-        setThemeName(theme.name || `${profile?.name || "Profile"} Custom Theme`)
+        setThemeName(theme.name || `${page?.name || "Profile"} Custom Theme`)
       } catch (error) {
         console.error("Error loading saved theme:", error)
       }
     }
-  }, [profileId, profile?.name])
+  }, [pageId, page?.name])
 
   const handleColorChange = (colorKey: keyof CustomTheme, value: string) => {
     setColors((prev) => ({ ...prev, [colorKey]: value }))
@@ -69,7 +69,7 @@ export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
   const applyPreview = () => {
     setPreviewMode(true)
     // Apply theme temporarily for preview - only to the preview container
-    const previewContainer = document.querySelector(`[data-theme-preview="${profileId}"]`) as HTMLElement
+    const previewContainer = document.querySelector(`[data-theme-preview="${pageId}"]`) as HTMLElement
     if (previewContainer) {
       previewContainer.style.setProperty("--primary", hexToHsl(colors.primary))
       previewContainer.style.setProperty("--accent", hexToHsl(colors.accent))
@@ -86,7 +86,7 @@ export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
   const resetPreview = () => {
     setPreviewMode(false)
     // Reset preview container styles
-    const previewContainer = document.querySelector(`[data-theme-preview="${profileId}"]`) as HTMLElement
+    const previewContainer = document.querySelector(`[data-theme-preview="${pageId}"]`) as HTMLElement
     if (previewContainer) {
       previewContainer.style.removeProperty("--primary")
       previewContainer.style.removeProperty("--accent")
@@ -105,24 +105,24 @@ export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
     const customTheme = {
       ...colors,
       name: themeName,
-      id: `custom-${profileId}`,
+      id: `custom-${pageId}`,
       type: "custom",
-      profileId,
+      pageId,
     }
 
     // Save to profile-specific storage
-    const profileThemeKey = `profile-${profileId}-custom-theme`
-    const profileActiveThemeKey = `profile-${profileId}-theme`
+    const pageThemeKey = `page-${pageId}-custom-theme`
+    const pageActiveThemeKey = `page-${pageId}-theme`
 
-    localStorage.setItem(profileThemeKey, JSON.stringify(customTheme))
-    localStorage.setItem(profileActiveThemeKey, JSON.stringify(customTheme))
+    localStorage.setItem(pageThemeKey, JSON.stringify(customTheme))
+    localStorage.setItem(pageActiveThemeKey, JSON.stringify(customTheme))
 
-    console.log("Saving theme for profile:", profileId, customTheme)
+    console.log("Saving theme for page:", pageId, customTheme)
 
     setPreviewMode(false)
 
     // Show success message
-    alert(`Custom theme saved for ${profile?.name}! Visit their live profile to see the changes.`)
+    alert(`Custom theme saved for ${page?.name}! Visit their live page to see the changes.`)
   }
 
   // Helper function to convert hex to HSL
@@ -157,7 +157,7 @@ export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
     return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`
   }
 
-  if (!profile) {
+  if (!page) {
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">Profile not found</p>
@@ -170,8 +170,8 @@ export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>{profile.name}{`'s Custom Theme`}</CardTitle>
-            <CardDescription>Create a unique theme specifically for {profile.name} {`'s profile`}</CardDescription>
+            <CardTitle>{page.name}{`'s Custom Theme`}</CardTitle>
+            <CardDescription>Create a unique theme specifically for {page.name} {`'s page`}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -396,7 +396,7 @@ export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
             {previewMode && (
               <div className="p-3 bg-accent/20 rounded-md">
                 <p className="text-sm text-accent-foreground">
-                  Preview mode active. Click "Save Theme" to apply to {profile.name}'s profile or "Reset" to cancel.
+                  {`Preview mode active. Click "Save Theme" to apply to ${page.name}'s profile or "Reset" to cancel.`}
                 </p>
               </div>
             )}
@@ -407,12 +407,12 @@ export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>{profile.name}'s Profile Preview</CardTitle>
-            <CardDescription>See how the theme will look on {profile.name}'s profile</CardDescription>
+            <CardTitle>{`${page.name}'s Profile Preview`}</CardTitle>
+            <CardDescription>{`See how the theme will look on ${page.name}'s profile`}</CardDescription>
           </CardHeader>
           <CardContent>
             <div
-              data-theme-preview={profileId}
+              data-theme-preview={pageId}
               className="space-y-4 p-4 rounded-lg border-2 border-dashed border-border"
               style={{
                 backgroundColor: colors.background,
@@ -422,20 +422,20 @@ export function PageThemeEditor({ pageId }: PageThemeEditorProps) {
             >
               <div className="flex flex-col items-center gap-3 text-center">
                 <Avatar className="w-16 h-16 border-4" style={{ borderColor: `${colors.primary}40` }}>
-                  <AvatarImage src={profile.avatar || "/placeholder.svg?height=200&width=200"} alt="Preview" />
+                  <AvatarImage src={page.avatar || "/placeholder.svg?height=200&width=200"} alt="Preview" />
                   <AvatarFallback style={{ backgroundColor: colors.primary, color: colors.background }}>
-                    {profile.name.charAt(0)}
+                    {page.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <h3 className="text-lg font-bold">{profile.name}</h3>
+                <h3 className="text-lg font-bold">{page.name}</h3>
                 <p className="text-sm" style={{ color: colors.muted }}>
-                  @{profile.username}
+                  @{page.username}
                 </p>
                 <Badge variant="secondary" style={{ backgroundColor: colors.muted, color: colors.foreground }}>
-                  {profile.category}
+                  {page.category}
                 </Badge>
                 <p className="text-sm" style={{ color: colors.muted }}>
-                  {profile.bio}
+                  {page.bio}
                 </p>
               </div>
 
