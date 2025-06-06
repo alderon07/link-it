@@ -120,7 +120,10 @@ export function AdminSidebar() {
 
   const userProp: UserProps = {
     name: user?.fullName || "",
-    email: user?.emailAddresses[0].emailAddress || "",
+    email:
+   user?.primaryEmailAddress?.emailAddress ??
+   user?.emailAddresses?.[0]?.emailAddress ??
+   "",
     avatar: user?.imageUrl || "",
   }
 
