@@ -34,7 +34,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Upload, Save, Eye, EyeOff, CreditCard, LinkIcon } from "lucide-react"
-import Link from "@next/link"
+import { SignedIn, useUser, useClerk } from "@clerk/nextjs"
+import { NavUser } from "./ui/nav-user"
 
 const data = {
   navMain: [
@@ -82,6 +83,8 @@ export function AdminSidebar() {
   const [showCurrentPassword, setShowCurrentPassword] = React.useState(false)
   const [showNewPassword, setShowNewPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
+  const { user, isLoaded } = useUser();
+  const { signOut, openUserProfile } = useClerk();
 
   const [accountData, setAccountData] = React.useState({
     name: "Alex Johnson",
@@ -109,17 +112,36 @@ export function AdminSidebar() {
     setAccountDialogOpen(false)
   }
 
+  type UserProps = {
+    name: string;
+    email: string;
+    avatar: string;
+  }
+
+  const userProp: UserProps = {
+    name: user?.fullName || "",
+    email: user?.emailAddresses[0].emailAddress || "",
+    avatar: user?.imageUrl || "",
+  }
+
+  const handleLogout = () => {
+    signOut();
+  };
+
+  const handleManageAccount = () => {
+    openUserProfile();
+  };
   return (
     <>
       <Sidebar>
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild className="hover:">
+              <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
                 <a href="/admin">
                   <div className="flex items-center gap-5">
                     <div className="flex items-center justify-center size-10 bg-gradient-to-br from-primary to-chart-2 rounded-xl">
-                      <LinkIcon className="size-5 text-white"/>
+                      <LinkIcon className="size-5"/>
                     </div>
                     <span className="text-2xl font-bold gradient-text">link-it</span>
                   </div>
@@ -152,29 +174,14 @@ export function AdminSidebar() {
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton>
-                    <User2 /> Alex Johnson
-                    <ChevronUp className="ml-auto" />
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-                  <DropdownMenuItem onClick={() => setAccountDialogOpen(true)}>
-                    <User2 className="mr-2 h-4 w-4" />
-                    <span>Account Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    <span>Billing</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <span>Sign out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
+                <SignedIn>
+                    <NavUser 
+                    user={userProp} 
+                    onLogout={handleLogout}
+                    onManageAccount={handleManageAccount}
+                  />
+                </SignedIn>
+              </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
         <SidebarRail />
