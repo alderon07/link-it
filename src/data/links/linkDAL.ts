@@ -15,20 +15,25 @@ import dummyData from '@/dummy.json';
 // Ensure consistent type compatibility
 interface LinkData {
   id: number;
-  userId: number;
+  page_id: number;
   title: string;
   url: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
+  type: string;
+  is_active: boolean;
+  order_index: number;
+  visible_from: string | null;
+  visible_until: string | null;
+  description?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Data source - map data to ensure all required fields have defaults
 const links: LinkData[] = dummyData.links.map(link => ({
   ...link,
-  description: link.description || '',
-  createdAt: link.createdAt || new Date().toISOString(),
-  updatedAt: link.updatedAt || new Date().toISOString()
+  description: (link as LinkData).description || '',
+  createdAt: (link as LinkData).createdAt || new Date().toISOString(),
+  updatedAt: (link as LinkData).updatedAt || new Date().toISOString()
 }));
 
 // Get all links from data source
@@ -54,7 +59,7 @@ export async function getLinkById(id: number): Promise<Link | null> {
 }
 
 // Create a new link
-export async function createLink(data: CreateLinkInput & {createdAt?: string, updatedAt?: string }): Promise<Link> {
+export async function createLink(data: CreateLinkInput & {createdAt?: string, updatedAt?: string, page_id?: number }): Promise<Link> {
   // Validate core data (title, url)
   const validationResult = CreateLinkSchema.safeParse(data);
   if (!validationResult.success) {
@@ -67,7 +72,14 @@ export async function createLink(data: CreateLinkInput & {createdAt?: string, up
   // Create new link with all required fields
   const newLink: LinkData = {
     id: links.length + 1,
-    ...validationResult.data,
+    page_id: data.page_id || 1,
+    title: validationResult.data.title,
+    url: validationResult.data.url,
+    type: 'link',
+    is_active: true,
+    order_index: links.length,
+    visible_from: null,
+    visible_until: null,
     description: data.description || '',
     createdAt: data.createdAt || new Date().toISOString(),
     updatedAt: data.updatedAt || new Date().toISOString()
