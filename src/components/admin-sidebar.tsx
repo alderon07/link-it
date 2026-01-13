@@ -34,7 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Upload, Save, Eye, EyeOff, CreditCard, LinkIcon } from "lucide-react"
-import { SignedIn, useUser, useClerk } from "@clerk/nextjs"
+import { useUser, useClerk } from "@clerk/nextjs"
 import { NavUser } from "./ui/nav-user"
 
 const data = {
@@ -177,13 +177,13 @@ export function AdminSidebar() {
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-                <SignedIn>
+                {isLoaded && user && (
                     <NavUser 
                     user={userProp} 
                     onLogout={handleLogout}
                     onManageAccount={handleManageAccount}
                   />
-                </SignedIn>
+                )}
               </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
