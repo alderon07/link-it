@@ -5,9 +5,18 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ExternalLink, Share2, Heart, Eye } from "lucide-react"
+import { ExternalLink, Share2, Heart, Eye, LinkIcon, Star } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { PixelBorder } from "@/components/pixel-art/PixelBorder"
+import { PixelIcon } from "@/components/pixel-art/PixelIcon"
+import { PixelDivider } from "@/components/pixel-art/PixelDivider"
+import { FadeIn, SlideUp } from "@/components/animations/PageTransition"
+import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer"
+import { CountUp } from "@/components/animations/CountUp"
+import { trackEvent } from "@/lib/analytics/posthog-client"
+import { AnalyticsEvents } from "@/lib/analytics/events"
 
-// Mock links data for profiles (same as in profile-links-manager)
+// Mock links data for profiles
 const mockPageLinks = {
   "page-1": [
     {
@@ -15,7 +24,7 @@ const mockPageLinks = {
       title: "My Portfolio",
       url: "https://alexjohnson.dev",
       description: "Check out my latest creative work",
-      icon: "🎨",
+      icon: "star",
       isActive: true,
       clicks: 245,
       order: 1,
@@ -25,7 +34,7 @@ const mockPageLinks = {
       title: "YouTube Channel",
       url: "https://youtube.com/@alexcreates",
       description: "Creative tutorials and behind-the-scenes",
-      icon: "📹",
+      icon: "play",
       isActive: true,
       clicks: 189,
       order: 2,
@@ -35,7 +44,7 @@ const mockPageLinks = {
       title: "Instagram",
       url: "https://instagram.com/alexcreates",
       description: "Daily inspiration and updates",
-      icon: "📸",
+      icon: "heart",
       isActive: true,
       clicks: 156,
       order: 3,
@@ -45,7 +54,7 @@ const mockPageLinks = {
       title: "Shop My Prints",
       url: "https://shop.alexjohnson.dev",
       description: "Limited edition art prints",
-      icon: "🛒",
+      icon: "sparkle",
       isActive: false,
       clicks: 89,
       order: 4,
@@ -57,7 +66,7 @@ const mockPageLinks = {
       title: "GitHub",
       url: "https://github.com/sarahchen",
       description: "Open source projects and contributions",
-      icon: "💻",
+      icon: "code",
       isActive: true,
       clicks: 203,
       order: 1,
@@ -67,7 +76,7 @@ const mockPageLinks = {
       title: "Tech Blog",
       url: "https://sarahtech.blog",
       description: "Latest insights on web development",
-      icon: "📝",
+      icon: "document",
       isActive: true,
       clicks: 178,
       order: 2,
@@ -77,7 +86,7 @@ const mockPageLinks = {
       title: "LinkedIn",
       url: "https://linkedin.com/in/sarahchen",
       description: "Professional network and updates",
-      icon: "💼",
+      icon: "user",
       isActive: true,
       clicks: 134,
       order: 3,
@@ -89,7 +98,7 @@ const mockPageLinks = {
       title: "Spotify",
       url: "https://spotify.com/artist/mikemusic",
       description: "Latest tracks and albums",
-      icon: "🎵",
+      icon: "music",
       isActive: true,
       clicks: 312,
       order: 1,
@@ -99,7 +108,7 @@ const mockPageLinks = {
       title: "SoundCloud",
       url: "https://soundcloud.com/mikerodriguez",
       description: "Unreleased tracks and demos",
-      icon: "🎧",
+      icon: "play",
       isActive: true,
       clicks: 198,
       order: 2,
@@ -109,7 +118,7 @@ const mockPageLinks = {
       title: "Apple Music",
       url: "https://music.apple.com/artist/mikerodriguez",
       description: "Stream on Apple Music",
-      icon: "🍎",
+      icon: "heart",
       isActive: true,
       clicks: 167,
       order: 3,
@@ -121,7 +130,7 @@ const mockPageLinks = {
       title: "Fitness Programs",
       url: "https://emmafitness.com/programs",
       description: "Personalized workout plans",
-      icon: "💪",
+      icon: "bolt",
       isActive: true,
       clicks: 189,
       order: 1,
@@ -131,7 +140,7 @@ const mockPageLinks = {
       title: "Nutrition Guide",
       url: "https://emmafitness.com/nutrition",
       description: "Healthy eating made simple",
-      icon: "🥗",
+      icon: "check",
       isActive: true,
       clicks: 156,
       order: 2,
@@ -141,7 +150,7 @@ const mockPageLinks = {
       title: "Instagram",
       url: "https://instagram.com/emmafitness",
       description: "Daily motivation and tips",
-      icon: "📸",
+      icon: "heart",
       isActive: true,
       clicks: 234,
       order: 3,
@@ -153,7 +162,7 @@ const mockPageLinks = {
       title: "Recipe Collection",
       url: "https://davidcooks.com/recipes",
       description: "My favorite recipes to share",
-      icon: "👨‍🍳",
+      icon: "star",
       isActive: true,
       clicks: 278,
       order: 1,
@@ -163,7 +172,7 @@ const mockPageLinks = {
       title: "Cooking Classes",
       url: "https://davidcooks.com/classes",
       description: "Learn to cook like a pro",
-      icon: "🍳",
+      icon: "play",
       isActive: true,
       clicks: 145,
       order: 2,
@@ -173,7 +182,7 @@ const mockPageLinks = {
       title: "Instagram",
       url: "https://instagram.com/davidcooks",
       description: "Food photography and tips",
-      icon: "📸",
+      icon: "heart",
       isActive: true,
       clicks: 198,
       order: 3,
@@ -181,40 +190,64 @@ const mockPageLinks = {
   ],
 }
 
+const iconMap: Record<string, "star" | "heart" | "arrow" | "check" | "cross" | "plus" | "minus" | "sparkle" | "diamond" | "coin" | "lightning" | "fire" | "link" | "cursor"> = {
+  star: "star",
+  heart: "heart",
+  play: "diamond",
+  sparkle: "sparkle",
+  code: "link",
+  document: "coin",
+  music: "sparkle",
+  bolt: "lightning",
+  check: "check",
+  user: "star",
+  fire: "fire",
+}
+
+const colorVariants = ["pink", "teal", "yellow", "mint", "coral", "purple", "blue", "orange", "green"] as const
+
 interface PublicPageProps {
-  page: any
+  page: {
+    id: string
+    name: string
+    username: string
+    bio?: string
+    avatar?: string
+    category?: string
+    views: number
+    verified?: boolean
+  }
 }
 
 export function PublicPageComponent({ page }: PublicPageProps) {
-  const [theme, setTheme] = React.useState<any>(null)
-  const [viewCount, setViewCount] = React.useState(page.views)
+  const [viewCount, setViewCount] = React.useState<number>(page.views)
+  const [shareSuccess, setShareSuccess] = React.useState(false)
   const links = (mockPageLinks[page.id as keyof typeof mockPageLinks] || [])
     .filter((link) => link.isActive)
     .sort((a, b) => a.order - b.order)
 
-  // Load profile-specific theme
+  // Track page view on mount
   React.useEffect(() => {
-    const pageThemeKey = `page-${page.id}-theme`
-    const savedTheme = localStorage.getItem(pageThemeKey)
-    if (savedTheme) {
-      try {
-        const themeData = JSON.parse(savedTheme)
-        setTheme(themeData)
-      } catch (error) {
-        console.error("Error loading theme:", error)
-      }
-    }
-  }, [page.id])
-
-  // Simulate view tracking
-  React.useEffect(() => {
-    // Increment view count (in real app, this would be an API call)
     setViewCount((prev) => prev + 1)
-  }, [])
+    // Track in PostHog
+    trackEvent(AnalyticsEvents.PAGE_VIEW, {
+      page_id: parseInt(page.id.replace("page-", "")),
+      page_slug: page.username,
+      page_name: page.name,
+      is_public: true,
+    })
+  }, [page.id, page.username, page.name])
 
-  const handleLinkClick = (link: any) => {
-    // Track click (in real app, this would be an API call)
-    console.log(`Clicked link: ${link.title}`)
+  const handleLinkClick = (link: typeof links[0], index: number) => {
+    // Track click in PostHog
+    trackEvent(AnalyticsEvents.LINK_CLICK, {
+      link_id: parseInt(link.id.replace("link-", "")),
+      page_id: parseInt(page.id.replace("page-", "")),
+      page_slug: page.username,
+      link_url: link.url,
+      link_title: link.title,
+      link_position: index,
+    })
     // Open link
     window.open(link.url, "_blank", "noopener,noreferrer")
   }
@@ -232,242 +265,189 @@ export function PublicPageComponent({ page }: PublicPageProps) {
         console.log("Error sharing:", error)
       }
     } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(url)
-      alert("Profile link copied to clipboard!")
+      await navigator.clipboard.writeText(url)
+      setShareSuccess(true)
+      setTimeout(() => setShareSuccess(false), 2000)
     }
   }
 
-  // Helper function to convert hex to HSL
-  const hexToHsl = (hex: string): string => {
-    const r = Number.parseInt(hex.slice(1, 3), 16) / 255
-    const g = Number.parseInt(hex.slice(3, 5), 16) / 255
-    const b = Number.parseInt(hex.slice(5, 7), 16) / 255
-
-    const max = Math.max(r, g, b)
-    const min = Math.min(r, g, b)
-    let h = 0,
-      s = 0,
-      l = (max + min) / 2
-
-    if (max !== min) {
-      const d = max - min
-      s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
-      switch (max) {
-        case r:
-          h = (g - b) / d + (g < b ? 6 : 0)
-          break
-        case g:
-          h = (b - r) / d + 2
-          break
-        case b:
-          h = (r - g) / d + 4
-          break
-      }
-      h /= 6
-    }
-
-    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`
-  }
-
-  // Apply theme styles - ISOLATED from global theme
-  const themeStyles = theme
-    ? {
-        "--profile-primary": hexToHsl(theme.colors.primary),
-        "--profile-accent": hexToHsl(theme.colors.accent),
-        "--profile-background": hexToHsl(theme.colors.background),
-        "--profile-foreground": hexToHsl(theme.colors.foreground),
-        "--profile-muted": hexToHsl(theme.colors.muted),
-        "--profile-border": hexToHsl(theme.colors.border),
-        "--profile-link-background": hexToHsl(theme.colors.linkBackground),
-        "--profile-link-foreground": hexToHsl(theme.colors.linkForeground),
-        "--profile-radius": theme.colors.borderRadius || "0.75rem",
-      }
-    : {}
+  // Get a consistent color based on page id
+  const pageColor = colorVariants[parseInt(page.id.replace("page-", "")) % colorVariants.length]
 
   return (
-    <div
-      className="profile-page min-h-screen transition-colors"
-      style={
-        {
-          backgroundColor: theme ? theme.colors.background : "#ffffff",
-          color: theme ? theme.colors.foreground : "#0f172a",
-          ...themeStyles,
-        } as React.CSSProperties
-      }
-    >
-      {/* Background Pattern - uses profile theme colors */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: theme
-            ? `linear-gradient(135deg, ${theme.colors.primary}10 0%, transparent 50%, ${theme.colors.accent}10 100%)`
-            : "linear-gradient(135deg, #8b5cf610 0%, transparent 50%, #06b6d410 100%)",
-        }}
-      />
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+      {/* Pixel Grid Background */}
+      <div className="fixed inset-0 pixel-grid opacity-20 pointer-events-none" />
+
+      {/* Floating decorations */}
+      <motion.div
+        className="absolute top-20 right-10 hidden md:block"
+        animate={{ y: [0, -10, 0], rotate: [0, 5, 0] }}
+        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <PixelIcon icon="star" size="default" color="yellow" />
+      </motion.div>
+      <motion.div
+        className="absolute top-40 left-10 hidden md:block"
+        animate={{ y: [0, 10, 0], rotate: [0, -5, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+      >
+        <PixelIcon icon="heart" size="default" color="pink" />
+      </motion.div>
 
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-between items-start mb-6">
-            <div className="flex items-center gap-2 text-sm" style={{ color: theme ? theme.colors.muted : "#64748b" }}>
-              <Eye className="h-4 w-4" />
-              <span>{viewCount.toLocaleString()} views</span>
-            </div>
+        {/* Header Stats */}
+        <FadeIn>
+          <div className="flex justify-between items-center mb-8">
+            <PixelBorder variant="solid" shadow="sm" className="px-3 py-1.5 bg-card">
+              <div className="flex items-center gap-2 text-sm">
+                <Eye className="h-4 w-4 text-pixel-teal" />
+                <CountUp value={viewCount} duration={1} />
+                <span className="text-muted-foreground">views</span>
+              </div>
+            </PixelBorder>
             <Button
-              variant="outline"
+              variant="pixel-outline"
               size="sm"
               onClick={handleShare}
-              style={
-                theme
-                  ? {
-                      borderColor: theme.colors.border,
-                      color: theme.colors.foreground,
-                      backgroundColor: theme.colors.background,
-                    }
-                  : {}
-              }
+              className="relative"
             >
               <Share2 className="h-4 w-4 mr-2" />
-              Share
+              {shareSuccess ? "Copied!" : "Share"}
             </Button>
           </div>
+        </FadeIn>
 
-          <Avatar
-            className="w-24 h-24 mx-auto mb-4 border-4"
-            style={{ borderColor: theme ? `${theme.colors.primary}40` : "#8b5cf640" }}
-          >
-            <AvatarImage src={page.avatar || "/placeholder.svg?height=200&width=200"} alt={page.name} />
-            <AvatarFallback
-              className="text-2xl"
-              style={{
-                backgroundColor: theme ? theme.colors.primary : "#8b5cf6",
-                color: theme ? theme.colors.background : "#ffffff",
-              }}
+        {/* Profile Header */}
+        <SlideUp delay={0.1}>
+          <div className="text-center mb-8">
+            {/* Avatar */}
+            <motion.div
+              className="flex justify-center mb-4"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
             >
-              {page.name.charAt(0)}
-            </AvatarFallback>
-          </Avatar>
+              <PixelBorder variant="solid" shadow="default" className={`p-1 bg-pixel-${pageColor}`}>
+                <Avatar className="w-24 h-24 pixel-border">
+                  <AvatarImage src={page.avatar || "/placeholder.svg?height=200&width=200"} alt={page.name} />
+                  <AvatarFallback className={`text-2xl font-bold bg-pixel-${pageColor}`}>
+                    {page.name.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </PixelBorder>
+            </motion.div>
 
-          <h1 className="text-2xl font-bold mb-2">{page.name}</h1>
-          <p className="mb-3" style={{ color: theme ? theme.colors.muted : "#64748b" }}>
-            @{page.username}
-          </p>
-
-          <div className="flex justify-center mb-4">
-            <Badge
-              variant="secondary"
-              className="capitalize"
-              style={
-                theme
-                  ? {
-                      backgroundColor: theme.colors.muted,
-                      color: theme.colors.foreground,
-                    }
-                  : {}
-              }
-            >
-              {page.category}
-            </Badge>
-          </div>
-
-          {page.bio && (
-            <p className="text-sm leading-relaxed" style={{ color: theme ? theme.colors.muted : "#64748b" }}>
-              {page.bio}
+            {/* Name & Username */}
+            <h1 className="text-2xl font-black mb-1 pixel-text-shadow">{page.name}</h1>
+            <p className="text-muted-foreground mb-3 flex items-center justify-center gap-1">
+              @{page.username}
+              {page.verified && (
+                <span className="inline-flex items-center justify-center w-5 h-5 bg-pixel-yellow pixel-border ml-1">
+                  <Star className="w-3 h-3 fill-current" />
+                </span>
+              )}
             </p>
-          )}
-        </div>
+
+            {/* Category Badge */}
+            {page.category && (
+              <div className="flex justify-center mb-4">
+                <Badge variant="retro" className="capitalize">
+                  {page.category}
+                </Badge>
+              </div>
+            )}
+
+            {/* Bio */}
+            {page.bio && (
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
+                {page.bio}
+              </p>
+            )}
+          </div>
+        </SlideUp>
+
+        <PixelDivider variant="dashed" className="mb-8" />
 
         {/* Links */}
-        <div className="space-y-4 mb-8">
+        <div className="mb-8">
           {links.length === 0 ? (
-            <Card style={theme ? { backgroundColor: theme.colors.background, borderColor: theme.colors.border } : {}}>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <ExternalLink className="h-12 w-12 mb-4" style={{ color: theme ? theme.colors.muted : "#64748b" }} />
-                <h3 className="text-lg font-semibold mb-2">No links available</h3>
-                <p className="text-center" style={{ color: theme ? theme.colors.muted : "#64748b" }}>
-                  {`This page doesn't have any active links yet.`}
+            <FadeIn>
+              <PixelBorder variant="solid" shadow="default" className="p-8 bg-card text-center">
+                <PixelIcon icon="cross" size="lg" color="coral" className="mx-auto mb-4" />
+                <h3 className="text-lg font-bold mb-2">No Links Yet</h3>
+                <p className="text-muted-foreground text-sm">
+                  This page doesn&apos;t have any active links yet.
                 </p>
-              </CardContent>
-            </Card>
+              </PixelBorder>
+            </FadeIn>
           ) : (
-            links.map((link) => (
-              <Card
-                key={link.id}
-                className="group cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg border-2"
-                onClick={() => handleLinkClick(link)}
-                style={{
-                  backgroundColor: theme ? theme.colors.linkBackground : "#f8fafc",
-                  color: theme ? theme.colors.linkForeground : "#0f172a",
-                  borderColor: theme ? theme.colors.border : "#e2e8f0",
-                  borderRadius: theme ? theme.colors.borderRadius || "0.75rem" : "0.75rem",
-                }}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1 min-w-0">
-                      <div
-                        className="w-12 h-12 flex items-center justify-center text-2xl"
-                        style={{
-                          backgroundColor: theme ? `${theme.colors.linkForeground}20` : "#e2e8f0",
-                          borderRadius: theme ? `calc(${theme.colors.borderRadius || "0.75rem"} * 0.7)` : "0.5rem",
-                        }}
+            <StaggerContainer className="space-y-4">
+              {links.map((link, index) => {
+                const linkColor = colorVariants[(index + parseInt(page.id.replace("page-", ""))) % colorVariants.length]
+                const iconName = iconMap[link.icon] || "star"
+
+                return (
+                  <StaggerItem key={link.id}>
+                    <motion.div
+                      whileHover={{ scale: 1.02, x: -2, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Card
+                        variant="pixel-interactive"
+                        className="cursor-pointer group"
+                        onClick={() => handleLinkClick(link, index)}
                       >
-                        {link.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold truncate">{link.title}</h3>
-                        {link.description && (
-                          <p
-                            className="text-sm truncate mt-1"
-                            style={{
-                              color: theme ? `${theme.colors.linkForeground}80` : "#64748b",
-                            }}
-                          >
-                            {link.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <ExternalLink
-                      className="h-5 w-5 opacity-60 group-hover:opacity-100 transition-opacity"
-                      style={{ color: theme ? theme.colors.linkForeground : "#0f172a" }}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-4">
+                            {/* Icon */}
+                            <div className={`w-12 h-12 bg-pixel-${linkColor} pixel-border flex items-center justify-center flex-shrink-0 group-hover:pixel-shake`}>
+                              <PixelIcon icon={iconName} size="sm" />
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold truncate group-hover:text-pixel-pink transition-colors">
+                                {link.title}
+                              </h3>
+                              {link.description && (
+                                <p className="text-sm text-muted-foreground truncate mt-0.5">
+                                  {link.description}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Arrow */}
+                            <ExternalLink className="h-5 w-5 text-muted-foreground group-hover:text-pixel-pink transition-colors flex-shrink-0" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  </StaggerItem>
+                )
+              })}
+            </StaggerContainer>
           )}
         </div>
 
         {/* Footer */}
-        <div className="text-center">
-          <div
-            className="flex items-center justify-center gap-2 text-sm mb-4"
-            style={{ color: theme ? theme.colors.muted : "#64748b" }}
-          >
-            <Heart className="h-4 w-4" />
-            <span>Made with link-it</span>
+        <FadeIn delay={0.5}>
+          <div className="text-center">
+            <PixelDivider variant="stars" className="mb-6" />
+
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-4">
+              <Heart className="h-4 w-4 text-pixel-coral" />
+              <span>Made with link-it</span>
+            </div>
+
+            <Button variant="pixel-outline" size="sm" asChild>
+              <a href="/" target="_blank" rel="noreferrer">
+                <LinkIcon className="h-4 w-4 mr-2" />
+                Create your own link-it
+              </a>
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            asChild
-            style={
-              theme
-                ? {
-                    borderColor: theme.colors.border,
-                    color: theme.colors.foreground,
-                    backgroundColor: theme.colors.background,
-                  }
-                : {}
-            }
-          >
-            <a href="/" target="_blank" rel="noreferrer">
-              Create your own link-it
-            </a>
-          </Button>
-        </div>
+        </FadeIn>
       </div>
     </div>
   )

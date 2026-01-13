@@ -36,6 +36,7 @@ import { Separator } from "@/components/ui/separator"
 import { Upload, Save, Eye, EyeOff, CreditCard, LinkIcon } from "lucide-react"
 import { useUser, useClerk } from "@clerk/nextjs"
 import { NavUser } from "./ui/nav-user"
+import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 
 const data = {
   navMain: [
@@ -142,11 +143,11 @@ export function AdminSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
                 <a href="/admin">
-                  <div className="flex items-center gap-5">
-                    <div className="flex items-center justify-center size-10 bg-gradient-to-br from-primary to-chart-2 rounded-xl">
-                      <LinkIcon className="size-5"/>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center size-10 bg-pixel-pink pixel-border pixel-shadow">
+                      <PixelIcon icon="link" size="sm" />
                     </div>
-                    <span className="text-2xl font-bold gradient-text">link-it</span>
+                    <span className="text-2xl font-black pixel-text-shadow">link-it</span>
                   </div>
                 </a>
               </SidebarMenuButton>

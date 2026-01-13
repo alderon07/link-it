@@ -8,6 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart3, TrendingUp, Users, Eye, MousePointer, Download, Filter } from "lucide-react"
 import { mockPages } from "@/lib/mock-pages"
+import { PixelBorder } from "@/components/pixel-art/PixelBorder"
+import { PixelIcon } from "@/components/pixel-art/PixelIcon"
+import { PixelDivider } from "@/components/pixel-art/PixelDivider"
+import { FadeIn, SlideUp } from "@/components/animations/PageTransition"
+import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer"
+import { CountUp } from "@/components/animations/CountUp"
 
 export function AnalyticsDashboard() {
   const totalViews = mockPages.reduce((sum, profile) => sum + profile.views, 0)
@@ -17,322 +23,407 @@ export function AnalyticsDashboard() {
   return (
     <div className="space-y-6">
       {/* Time Period Selector */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        <div className="flex items-center gap-4">
-          <Select defaultValue="30d">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select defaultValue="all">
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by profile" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Profiles</SelectItem>
-              {mockPages.map((page) => (
-                <SelectItem key={page.id} value={page.id}>
-                  {page.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <FadeIn>
+        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+          <div className="flex items-center gap-4">
+            <Select defaultValue="30d">
+              <SelectTrigger className="w-[180px] pixel-border">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Last 7 days</SelectItem>
+                <SelectItem value="30d">Last 30 days</SelectItem>
+                <SelectItem value="90d">Last 90 days</SelectItem>
+                <SelectItem value="1y">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-[200px] pixel-border">
+                <SelectValue placeholder="Filter by profile" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Profiles</SelectItem>
+                {mockPages.map((page) => (
+                  <SelectItem key={page.id} value={page.id}>
+                    {page.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="pixel-outline">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+            <Button variant="pixel-outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </div>
+      </FadeIn>
 
       {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalViews.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+12.5%</span> from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Link Clicks</CardTitle>
-            <MousePointer className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalClicks.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+8.2%</span> from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Click-through Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{avgEngagement}%</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+2.1%</span> from last month
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unique Visitors</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">8,429</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+15.3%</span> from last month
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <StaggerContainer className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StaggerItem>
+          <Card variant="pixel">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold">Total Views</CardTitle>
+              <PixelIcon icon="cursor" size="xs" color="pink" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black pixel-text-shadow">
+                <CountUp value={totalViews} duration={0.8} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-pixel-teal font-bold">+12.5%</span> from last month
+              </p>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <Card variant="pixel">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold">Link Clicks</CardTitle>
+              <PixelIcon icon="cursor" size="xs" color="teal" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black pixel-text-shadow">
+                <CountUp value={totalClicks} duration={0.8} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-pixel-teal font-bold">+8.2%</span> from last month
+              </p>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <Card variant="pixel">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold">Click-through Rate</CardTitle>
+              <PixelIcon icon="arrow" size="xs" color="yellow" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black pixel-text-shadow text-pixel-teal">{avgEngagement}%</div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-pixel-teal font-bold">+2.1%</span> from last month
+              </p>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+        <StaggerItem>
+          <Card variant="pixel">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold">Unique Visitors</CardTitle>
+              <PixelIcon icon="star" size="xs" color="coral" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black pixel-text-shadow">
+                <CountUp value={8429} duration={0.8} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                <span className="text-pixel-teal font-bold">+15.3%</span> from last month
+              </p>
+            </CardContent>
+          </Card>
+        </StaggerItem>
+      </StaggerContainer>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="profiles">Profiles</TabsTrigger>
-          <TabsTrigger value="links">Top Links</TabsTrigger>
-          <TabsTrigger value="traffic">Traffic</TabsTrigger>
-        </TabsList>
+      <SlideUp delay={0.2}>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 pixel-border">
+            <TabsTrigger value="overview" className="font-bold">Overview</TabsTrigger>
+            <TabsTrigger value="profiles" className="font-bold">Profiles</TabsTrigger>
+            <TabsTrigger value="links" className="font-bold">Top Links</TabsTrigger>
+            <TabsTrigger value="traffic" className="font-bold">Traffic</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card variant="pixel">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <PixelIcon icon="cursor" size="sm" color="teal" />
+                    <CardTitle className="font-black">Views Over Time</CardTitle>
+                  </div>
+                  <CardDescription>Daily profile views for the last 30 days</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PixelDivider variant="dashed" className="mb-4" />
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <PixelBorder variant="solid" shadow="default" className="p-4 bg-pixel-teal mx-auto w-fit mb-4">
+                        <PixelIcon icon="cursor" size="lg" />
+                      </PixelBorder>
+                      <p className="font-bold">Chart visualization would go here</p>
+                      <p className="text-sm">Showing trend of {totalViews.toLocaleString()} total views</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card variant="pixel">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <PixelIcon icon="diamond" size="sm" color="pink" />
+                    <CardTitle className="font-black">Click Distribution</CardTitle>
+                  </div>
+                  <CardDescription>How clicks are distributed across your links</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PixelDivider variant="dashed" className="mb-4" />
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    <div className="text-center">
+                      <PixelBorder variant="solid" shadow="default" className="p-4 bg-pixel-pink mx-auto w-fit mb-4">
+                        <PixelIcon icon="diamond" size="lg" />
+                      </PixelBorder>
+                      <p className="font-bold">Pie chart visualization would go here</p>
+                      <p className="text-sm">Showing distribution of {totalClicks.toLocaleString()} total clicks</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card variant="pixel">
               <CardHeader>
-                <CardTitle>Views Over Time</CardTitle>
-                <CardDescription>Daily profile views for the last 30 days</CardDescription>
+                <div className="flex items-center gap-2">
+                  <PixelIcon icon="lightning" size="sm" color="yellow" />
+                  <CardTitle className="font-black">Recent Performance</CardTitle>
+                </div>
+                <CardDescription>Key metrics from the last 7 days</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-4" />
-                    <p>Chart visualization would go here</p>
-                    <p className="text-sm">Showing trend of {totalViews.toLocaleString()} total views</p>
-                  </div>
+                <PixelDivider variant="dashed" className="mb-4" />
+                <div className="grid gap-4 md:grid-cols-3">
+                  <PixelBorder variant="solid" shadow="sm" className="text-center p-4 bg-pixel-teal">
+                    <div className="text-2xl font-black pixel-text-shadow">+23%</div>
+                    <p className="text-sm font-medium">Views vs last week</p>
+                  </PixelBorder>
+                  <PixelBorder variant="solid" shadow="sm" className="text-center p-4 bg-pixel-pink">
+                    <div className="text-2xl font-black pixel-text-shadow">+18%</div>
+                    <p className="text-sm font-medium">Clicks vs last week</p>
+                  </PixelBorder>
+                  <PixelBorder variant="solid" shadow="sm" className="text-center p-4 bg-pixel-yellow">
+                    <div className="text-2xl font-black pixel-text-shadow">+5%</div>
+                    <p className="text-sm font-medium">CTR vs last week</p>
+                  </PixelBorder>
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            <Card>
+          <TabsContent value="profiles" className="space-y-6">
+            <Card variant="pixel">
               <CardHeader>
-                <CardTitle>Click Distribution</CardTitle>
-                <CardDescription>How clicks are distributed across your links</CardDescription>
+                <div className="flex items-center gap-2">
+                  <PixelIcon icon="star" size="sm" color="teal" />
+                  <CardTitle className="font-black">Profile Performance</CardTitle>
+                </div>
+                <CardDescription>Analytics breakdown by profile</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  <div className="text-center">
-                    <MousePointer className="h-12 w-12 mx-auto mb-4" />
-                    <p>Pie chart visualization would go here</p>
-                    <p className="text-sm">Showing distribution of {totalClicks.toLocaleString()} total clicks</p>
-                  </div>
-                </div>
+                <PixelDivider variant="dashed" className="mb-4" />
+                <StaggerContainer className="space-y-4">
+                  {mockPages.map((page, index) => {
+                    const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
+                    const colorClass = colors[index % colors.length]
+
+                    return (
+                      <StaggerItem key={page.id}>
+                        <PixelBorder variant="solid" shadow="sm" className="p-4 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <PixelBorder variant="solid" shadow="sm" className={`p-0.5 ${colorClass}`}>
+                                <Avatar className="h-12 w-12 pixel-border">
+                                  <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
+                                  <AvatarFallback className={`font-bold ${colorClass}`}>{page.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                              </PixelBorder>
+                              <div>
+                                <h3 className="font-bold group-hover:text-pixel-pink transition-colors">{page.name}</h3>
+                                <p className="text-sm text-muted-foreground">@{page.username}</p>
+                              </div>
+                              <Badge variant="retro" className="capitalize">
+                                {page.category}
+                              </Badge>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-black text-pixel-pink">{page.views.toLocaleString()} views</div>
+                              <div className="text-sm text-muted-foreground font-medium">{page.linkCount} links</div>
+                            </div>
+                          </div>
+                        </PixelBorder>
+                      </StaggerItem>
+                    )
+                  })}
+                </StaggerContainer>
               </CardContent>
             </Card>
-          </div>
+          </TabsContent>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Performance</CardTitle>
-              <CardDescription>Key metrics from the last 7 days</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">+23%</div>
-                  <p className="text-sm text-muted-foreground">Views vs last week</p>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">+18%</div>
-                  <p className="text-sm text-muted-foreground">Clicks vs last week</p>
-                </div>
-                <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">+5%</div>
-                  <p className="text-sm text-muted-foreground">CTR vs last week</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="profiles" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Performance</CardTitle>
-              <CardDescription>Analytics breakdown by profile</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockPages.map((page) => (
-                  <div key={page.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
-                        <AvatarFallback>{page.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-medium">{page.name}</h3>
-                        <p className="text-sm text-muted-foreground">@{page.username}</p>
-                      </div>
-                      <Badge variant="outline" className="capitalize">
-                        {page.category}
-                      </Badge>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{page.views.toLocaleString()} views</div>
-                      <div className="text-sm text-muted-foreground">{page.linkCount} links</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="links" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top Performing Links</CardTitle>
-              <CardDescription>Your most clicked links across all profiles</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  { title: "Spotify Music", clicks: 312, profile: "Mike Rodriguez", ctr: "12.4%" },
-                  { title: "Portfolio Website", clicks: 245, profile: "Alex Johnson", ctr: "9.8%" },
-                  { title: "Tech Blog", clicks: 203, profile: "Sarah Chen", ctr: "8.1%" },
-                  { title: "YouTube Channel", clicks: 189, profile: "Alex Johnson", ctr: "7.6%" },
-                  { title: "GitHub Profile", clicks: 156, profile: "Sarah Chen", ctr: "6.2%" },
-                ].map((link, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-sm font-medium">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <h4 className="font-medium">{link.title}</h4>
-                        <p className="text-sm text-muted-foreground">{link.profile}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{link.clicks} clicks</div>
-                      <div className="text-sm text-muted-foreground">{link.ctr} CTR</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="traffic" className="space-y-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card>
+          <TabsContent value="links" className="space-y-6">
+            <Card variant="pixel">
               <CardHeader>
-                <CardTitle>Traffic Sources</CardTitle>
-                <CardDescription>Where your visitors are coming from</CardDescription>
+                <div className="flex items-center gap-2">
+                  <PixelIcon icon="link" size="sm" color="pink" />
+                  <CardTitle className="font-black">Top Performing Links</CardTitle>
+                </div>
+                <CardDescription>Your most clicked links across all profiles</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <PixelDivider variant="dashed" className="mb-4" />
+                <StaggerContainer className="space-y-4">
                   {[
-                    { source: "Direct", percentage: 45, visitors: 3789 },
-                    { source: "Social Media", percentage: 28, visitors: 2356 },
-                    { source: "Search Engines", percentage: 15, visitors: 1264 },
-                    { source: "Referrals", percentage: 12, visitors: 1020 },
-                  ].map((source) => (
-                    <div key={source.source} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-primary rounded-full" />
-                        <span className="font-medium">{source.source}</span>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium">{source.percentage}%</div>
-                        <div className="text-sm text-muted-foreground">{source.visitors.toLocaleString()} visitors</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    { title: "Spotify Music", clicks: 312, profile: "Mike Rodriguez", ctr: "12.4%" },
+                    { title: "Portfolio Website", clicks: 245, profile: "Alex Johnson", ctr: "9.8%" },
+                    { title: "Tech Blog", clicks: 203, profile: "Sarah Chen", ctr: "8.1%" },
+                    { title: "YouTube Channel", clicks: 189, profile: "Alex Johnson", ctr: "7.6%" },
+                    { title: "GitHub Profile", clicks: 156, profile: "Sarah Chen", ctr: "6.2%" },
+                  ].map((link, index) => {
+                    const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
+                    const colorClass = colors[index % colors.length]
+
+                    return (
+                      <StaggerItem key={index}>
+                        <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 ${colorClass} pixel-border flex items-center justify-center text-sm font-black group-hover:pixel-bounce`}>
+                                {index + 1}
+                              </div>
+                              <div>
+                                <h4 className="font-bold group-hover:text-pixel-pink transition-colors">{link.title}</h4>
+                                <p className="text-sm text-muted-foreground">{link.profile}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-black text-pixel-teal">{link.clicks} clicks</div>
+                              <div className="text-sm text-muted-foreground font-medium">{link.ctr} CTR</div>
+                            </div>
+                          </div>
+                        </PixelBorder>
+                      </StaggerItem>
+                    )
+                  })}
+                </StaggerContainer>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            <Card>
+          <TabsContent value="traffic" className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card variant="pixel">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <PixelIcon icon="arrow" size="sm" color="teal" />
+                    <CardTitle className="font-black">Traffic Sources</CardTitle>
+                  </div>
+                  <CardDescription>Where your visitors are coming from</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PixelDivider variant="dashed" className="mb-4" />
+                  <div className="space-y-4">
+                    {[
+                      { source: "Direct", percentage: 45, visitors: 3789, color: "bg-pixel-pink" },
+                      { source: "Social Media", percentage: 28, visitors: 2356, color: "bg-pixel-teal" },
+                      { source: "Search Engines", percentage: 15, visitors: 1264, color: "bg-pixel-yellow" },
+                      { source: "Referrals", percentage: 12, visitors: 1020, color: "bg-pixel-mint" },
+                    ].map((source) => (
+                      <div key={source.source} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-4 h-4 ${source.color} pixel-border`} />
+                          <span className="font-bold">{source.source}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-black text-pixel-pink">{source.percentage}%</div>
+                          <div className="text-sm text-muted-foreground">{source.visitors.toLocaleString()} visitors</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card variant="pixel">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <PixelIcon icon="diamond" size="sm" color="yellow" />
+                    <CardTitle className="font-black">Device Types</CardTitle>
+                  </div>
+                  <CardDescription>Breakdown by device category</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PixelDivider variant="dashed" className="mb-4" />
+                  <div className="space-y-4">
+                    {[
+                      { device: "Mobile", percentage: 68, color: "bg-pixel-pink" },
+                      { device: "Desktop", percentage: 25, color: "bg-pixel-teal" },
+                      { device: "Tablet", percentage: 7, color: "bg-pixel-yellow" },
+                    ].map((device) => (
+                      <div key={device.device} className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-bold">{device.device}</span>
+                          <span className="font-black">{device.percentage}%</span>
+                        </div>
+                        <div className="w-full bg-muted pixel-border h-3">
+                          <div
+                            className={`${device.color} h-full`}
+                            style={{ width: `${device.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card variant="pixel">
               <CardHeader>
-                <CardTitle>Device Types</CardTitle>
-                <CardDescription>Breakdown by device category</CardDescription>
+                <div className="flex items-center gap-2">
+                  <PixelIcon icon="star" size="sm" color="coral" />
+                  <CardTitle className="font-black">Geographic Distribution</CardTitle>
+                </div>
+                <CardDescription>Top countries by visitor count</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <PixelDivider variant="dashed" className="mb-4" />
+                <StaggerContainer className="grid gap-4 md:grid-cols-2">
                   {[
-                    { device: "Mobile", percentage: 68, color: "bg-blue-500" },
-                    { device: "Desktop", percentage: 25, color: "bg-green-500" },
-                    { device: "Tablet", percentage: 7, color: "bg-orange-500" },
-                  ].map((device) => (
-                    <div key={device.device} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>{device.device}</span>
-                        <span>{device.percentage}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`${device.color} h-2 rounded-full`}
-                          style={{ width: `${device.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    { country: "United States", visitors: 3245, flag: "🇺🇸" },
+                    { country: "United Kingdom", visitors: 1876, flag: "🇬🇧" },
+                    { country: "Canada", visitors: 1234, flag: "🇨🇦" },
+                    { country: "Australia", visitors: 987, flag: "🇦🇺" },
+                    { country: "Germany", visitors: 756, flag: "🇩🇪" },
+                    { country: "France", visitors: 543, flag: "🇫🇷" },
+                  ].map((country, index) => {
+                    const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral", "bg-pixel-pink"]
+                    const colorClass = colors[index % colors.length]
+
+                    return (
+                      <StaggerItem key={country.country}>
+                        <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 ${colorClass} pixel-border flex items-center justify-center text-lg group-hover:pixel-bounce`}>
+                                {country.flag}
+                              </div>
+                              <span className="font-bold group-hover:text-pixel-pink transition-colors">{country.country}</span>
+                            </div>
+                            <span className="font-black text-pixel-teal">{country.visitors.toLocaleString()}</span>
+                          </div>
+                        </PixelBorder>
+                      </StaggerItem>
+                    )
+                  })}
+                </StaggerContainer>
               </CardContent>
             </Card>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Geographic Distribution</CardTitle>
-              <CardDescription>Top countries by visitor count</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {[
-                  { country: "United States", visitors: 3245, flag: "🇺🇸" },
-                  { country: "United Kingdom", visitors: 1876, flag: "🇬🇧" },
-                  { country: "Canada", visitors: 1234, flag: "🇨🇦" },
-                  { country: "Australia", visitors: 987, flag: "🇦🇺" },
-                  { country: "Germany", visitors: 756, flag: "🇩🇪" },
-                  { country: "France", visitors: 543, flag: "🇫🇷" },
-                ].map((country) => (
-                  <div key={country.country} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl">{country.flag}</span>
-                      <span className="font-medium">{country.country}</span>
-                    </div>
-                    <span className="text-muted-foreground">{country.visitors.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      </SlideUp>
     </div>
   )
 }

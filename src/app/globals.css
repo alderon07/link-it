@@ -124,6 +124,27 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.541 0.281 293.009);
+
+  /* Pixel Art Color Palette - Fun, Bright Colors */
+  --pixel-pink: #FF6B9D;
+  --pixel-teal: #4ECDC4;
+  --pixel-yellow: #FFE66D;
+  --pixel-mint: #95E1D3;
+  --pixel-coral: #F38181;
+  --pixel-purple: #A855F7;
+  --pixel-blue: #60A5FA;
+  --pixel-orange: #FB923C;
+  --pixel-green: #4ADE80;
+  --pixel-red: #EF4444;
+
+  /* Neobrutalism Shadow Colors */
+  --shadow-color: #2D3436;
+  --shadow-color-light: #636E72;
+
+  /* Pixel Art Specific */
+  --pixel-border-width: 3px;
+  --pixel-shadow-offset: 4px;
+  --pixel-shadow-offset-hover: 6px;
 }
 
 .dark { 
@@ -168,4 +189,247 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* ============================================
+   PIXEL ART UTILITIES
+   Fun, playful styling with neobrutalism shadows
+   ============================================ */
+
+@layer utilities {
+  /* Pixel Shadow - The signature neobrutalism effect */
+  .pixel-shadow {
+    box-shadow: var(--pixel-shadow-offset) var(--pixel-shadow-offset) 0 0 var(--shadow-color);
+    transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .pixel-shadow:hover {
+    box-shadow: var(--pixel-shadow-offset-hover) var(--pixel-shadow-offset-hover) 0 0 var(--shadow-color);
+    transform: translate(-2px, -2px);
+  }
+
+  .pixel-shadow:active {
+    box-shadow: 2px 2px 0 0 var(--shadow-color);
+    transform: translate(2px, 2px);
+  }
+
+  /* Pixel Shadow Variants */
+  .pixel-shadow-sm {
+    box-shadow: 2px 2px 0 0 var(--shadow-color);
+  }
+
+  .pixel-shadow-lg {
+    box-shadow: 6px 6px 0 0 var(--shadow-color);
+  }
+
+  .pixel-shadow-pink {
+    --shadow-color: var(--pixel-pink);
+  }
+
+  .pixel-shadow-teal {
+    --shadow-color: var(--pixel-teal);
+  }
+
+  .pixel-shadow-yellow {
+    --shadow-color: var(--pixel-yellow);
+  }
+
+  .pixel-shadow-purple {
+    --shadow-color: var(--pixel-purple);
+  }
+
+  /* Pixel Border - Chunky, bold borders */
+  .pixel-border {
+    border: var(--pixel-border-width) solid var(--shadow-color);
+  }
+
+  .pixel-border-dashed {
+    border: var(--pixel-border-width) dashed var(--shadow-color);
+  }
+
+  /* Scanlines Effect - Retro CRT feel */
+  .scanlines {
+    position: relative;
+  }
+
+  .scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+  }
+
+  /* Pixel Grid Background */
+  .pixel-grid {
+    background-image:
+      linear-gradient(to right, var(--border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+    background-size: 8px 8px;
+  }
+
+  /* Pixel Corners - Stepped corner effect */
+  .pixel-corners {
+    clip-path: polygon(
+      0 8px, 8px 8px, 8px 0,
+      calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+      100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+      8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+    );
+  }
+
+  /* Dithered Background Pattern */
+  .pixel-dither {
+    background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h2v2H0zM2 2h2v2H2z' fill='%23000' fill-opacity='0.05'/%3E%3C/svg%3E");
+  }
+
+  /* Glitch Effect */
+  .pixel-glitch {
+    animation: glitch 0.3s infinite;
+  }
+
+  @keyframes glitch {
+    0%, 100% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(2px, -2px); }
+    60% { transform: translate(-1px, -1px); }
+    80% { transform: translate(1px, 1px); }
+  }
+
+  /* Pixel Shake on Hover */
+  .pixel-shake:hover {
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+
+  @keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+    40%, 60% { transform: translate3d(3px, 0, 0); }
+  }
+
+  /* Pixel Bounce */
+  .pixel-bounce {
+    animation: bounce 0.6s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  /* Pixel Pulse Glow */
+  .pixel-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow:
+        var(--pixel-shadow-offset) var(--pixel-shadow-offset) 0 0 var(--shadow-color),
+        0 0 5px var(--pixel-pink),
+        0 0 10px var(--pixel-pink);
+    }
+    to {
+      box-shadow:
+        var(--pixel-shadow-offset) var(--pixel-shadow-offset) 0 0 var(--shadow-color),
+        0 0 10px var(--pixel-teal),
+        0 0 20px var(--pixel-teal);
+    }
+  }
+
+  /* Typewriter cursor */
+  .pixel-cursor::after {
+    content: '▮';
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  /* Pixel Text Shadow */
+  .pixel-text-shadow {
+    text-shadow: 2px 2px 0 var(--shadow-color);
+  }
+
+  /* Rainbow Border Animation */
+  .pixel-rainbow {
+    background: linear-gradient(
+      90deg,
+      var(--pixel-pink),
+      var(--pixel-orange),
+      var(--pixel-yellow),
+      var(--pixel-green),
+      var(--pixel-teal),
+      var(--pixel-blue),
+      var(--pixel-purple),
+      var(--pixel-pink)
+    );
+    background-size: 200% 100%;
+    animation: rainbow 3s linear infinite;
+  }
+
+  @keyframes rainbow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  /* Pixel Loading Shimmer */
+  .pixel-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--muted) 0%,
+      var(--muted-foreground) 50%,
+      var(--muted) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+}
+
+/* ============================================
+   PIXEL ART COLOR UTILITIES
+   ============================================ */
+
+@layer utilities {
+  .bg-pixel-pink { background-color: var(--pixel-pink); }
+  .bg-pixel-teal { background-color: var(--pixel-teal); }
+  .bg-pixel-yellow { background-color: var(--pixel-yellow); }
+  .bg-pixel-mint { background-color: var(--pixel-mint); }
+  .bg-pixel-coral { background-color: var(--pixel-coral); }
+  .bg-pixel-purple { background-color: var(--pixel-purple); }
+  .bg-pixel-blue { background-color: var(--pixel-blue); }
+  .bg-pixel-orange { background-color: var(--pixel-orange); }
+  .bg-pixel-green { background-color: var(--pixel-green); }
+  .bg-pixel-red { background-color: var(--pixel-red); }
+
+  .text-pixel-pink { color: var(--pixel-pink); }
+  .text-pixel-teal { color: var(--pixel-teal); }
+  .text-pixel-yellow { color: var(--pixel-yellow); }
+  .text-pixel-mint { color: var(--pixel-mint); }
+  .text-pixel-coral { color: var(--pixel-coral); }
+  .text-pixel-purple { color: var(--pixel-purple); }
+  .text-pixel-blue { color: var(--pixel-blue); }
+  .text-pixel-orange { color: var(--pixel-orange); }
+  .text-pixel-green { color: var(--pixel-green); }
+  .text-pixel-red { color: var(--pixel-red); }
+
+  .border-pixel-pink { border-color: var(--pixel-pink); }
+  .border-pixel-teal { border-color: var(--pixel-teal); }
+  .border-pixel-yellow { border-color: var(--pixel-yellow); }
+  .border-pixel-mint { border-color: var(--pixel-mint); }
+  .border-pixel-coral { border-color: var(--pixel-coral); }
+  .border-pixel-purple { border-color: var(--pixel-purple); }
 }
