@@ -64,7 +64,7 @@ export default function AdminPage() {
       try {
         setIsSubmitting(true);
         setValidationErrors({});
-        const createdLink = await createLink({ ...newLink, userId: 1 });
+        const createdLink = await createLink({ ...newLink, page_id: 1 });
         setLinks((prevLinks) => [...prevLinks, createdLink]);
         setNewLink({ title: '', url: '' });
       } catch (error) {

@@ -13,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { SignedIn, UserButton, useUser, useClerk } from "@clerk/nextjs"
+import { UserButton, useUser, useClerk } from "@clerk/nextjs"
 import { NavUser } from "./ui/nav-user"
 // Menu items., UserButton
 const items = [
@@ -75,13 +75,13 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter> 
-        <SignedIn>
+        {isSignedIn && (
           <NavUser 
             user={userProp} 
             onLogout={handleLogout}
             onManageAccount={handleManageAccount}
           />
-        </SignedIn>
+        )}
       </SidebarFooter>
     </Sidebar>
   )

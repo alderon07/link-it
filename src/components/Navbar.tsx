@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { LogIn, LogOut, User, Gauge } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { UserButton, SignedIn, SignedOut, useUser, SignOutButton, SignInButton } from '@clerk/nextjs';
+import { UserButton, useUser, SignOutButton, SignInButton } from '@clerk/nextjs';
 import Image from 'next/image';
 
 export function Navbar() {
@@ -13,7 +13,7 @@ export function Navbar() {
   const pathname = usePathname() ?? '';
   const isAdmin = pathname.startsWith('/admin');
   const isLoginPage = pathname === '/login';
-  const { user } = useUser();
+  const { user, isSignedIn } = useUser();
   console.log(user);
   
 
@@ -24,9 +24,7 @@ export function Navbar() {
           LinkIt
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+          {isSignedIn && <UserButton />}
         </div>
       </div>
     </nav>

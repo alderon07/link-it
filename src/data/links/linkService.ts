@@ -21,7 +21,7 @@ export async function getLinkById(id: number): Promise<Link | null> {
 }
 
 // Create a new link with business logic
-export async function createLink(data: CreateLinkInput & { userId: string }): Promise<Link> {
+export async function createLink(data: CreateLinkInput & { page_id?: number }): Promise<Link> {
   // Here you could add business logic before creating
   // For example: validating URL, adding default properties, etc.
   const now = new Date().toISOString();
@@ -71,10 +71,10 @@ export async function searchLinks(query: string): Promise<Link[]> {
   );
 }
 
-// Example of additional business logic
-export async function getLinksByUser(userId: number): Promise<Link[]> {
+// Example of additional business logic - filter links by page
+export async function getLinksByPage(pageId: number): Promise<Link[]> {
   const links = await linkDAL.getAllLinks();
   
-  // Business logic for filtering by user
-  return links.filter(link => link.userId === userId);
+  // Business logic for filtering by page
+  return links.filter(link => link.page_id === pageId);
 }
