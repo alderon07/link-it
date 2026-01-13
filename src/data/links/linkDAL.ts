@@ -1,138 +1,72 @@
 /**
- * Links data access layer with Zod validation
+ * Links data access layer
+ * Handles direct database operations for links
  */
-import { 
-  CreateLinkSchema, 
-  UpdateLinkSchema,
-  IdSchema,
-  type Link,
-  type CreateLinkInput,
-  type UpdateLinkInput
-} from '@/lib/validate/links';
-import { ValidationError } from '@/lib/validate/ValidationError';
-import dummyData from '@/dummy.json';
+import { getDb } from "@/data/db"
+import type { Link, CreateLinkInput, UpdateLinkInput } from "@/data/db"
 
-// Ensure consistent type compatibility
-interface LinkData {
-  id: number;
-  page_id: number;
-  title: string;
-  url: string;
-  type: string;
-  is_active: boolean;
-  order_index: number;
-  visible_from: string | null;
-  visible_until: string | null;
-  description?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-// Data source - map data to ensure all required fields have defaults
-const links: LinkData[] = dummyData.links.map(link => ({
-  ...link,
-  description: (link as LinkData).description || '',
-  createdAt: (link as LinkData).createdAt || new Date().toISOString(),
-  updatedAt: (link as LinkData).updatedAt || new Date().toISOString()
-}));
-
-// Get all links from data source
-export async function getAllLinks(): Promise<Link[]> {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  return links as Link[];
-}
-
-// Get a specific link by ID
+/**
+ * Get a link by ID
+ */
 export async function getLinkById(id: number): Promise<Link | null> {
-  // Validate input
-  const validatedId = IdSchema.safeParse(id);
-  if (!validatedId.success) {
-    throw new ValidationError(validatedId.error);
-  }
-  
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  // fetch from database
-  const link = links.find(link => link.id === id);
-  return link ? (link as Link) : null;
+  const db = getDb()
+  return db.links.findById(id)
 }
 
-// Create a new link
-export async function createLink(data: CreateLinkInput & {createdAt?: string, updatedAt?: string, page_id?: number }): Promise<Link> {
-  // Validate core data (title, url)
-  const validationResult = CreateLinkSchema.safeParse(data);
-  if (!validationResult.success) {
-    throw new ValidationError(validationResult.error);
-  }
-  
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  
-  // Create new link with all required fields
-  const newLink: LinkData = {
-    id: links.length + 1,
-    page_id: data.page_id || 1,
-    title: validationResult.data.title,
-    url: validationResult.data.url,
-    type: 'link',
-    is_active: true,
-    order_index: links.length,
-    visible_from: null,
-    visible_until: null,
-    description: data.description || '',
-    createdAt: data.createdAt || new Date().toISOString(),
-    updatedAt: data.updatedAt || new Date().toISOString()
-  };
-  
-  links.push(newLink);
-  return newLink as Link;
+/**
+ * Get all links for a page
+ */
+export async function getLinksByPageId(pageId: number): Promise<Link[]> {
+  const db = getDb()
+  return db.links.findByPageId(pageId)
 }
 
-// Update an existing link
-export async function updateLink(data: UpdateLinkInput & { updatedAt?: string }): Promise<Link | null> {
-  // Validate input
-  const validationResult = UpdateLinkSchema.safeParse(data);
-  if (!validationResult.success) {
-    throw new ValidationError(validationResult.error);
-  }
-  
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  
-  const linkIndex = links.findIndex(link => link.id === data.id);
-  if (linkIndex === -1) {
-    return null;
-  }
-  
-  links[linkIndex] = {
-    ...links[linkIndex],
-    ...(data.title && { title: data.title }),
-    ...(data.url && { url: data.url }),
-    ...(data.description !== undefined && { description: data.description || '' }),
-    updatedAt: data.updatedAt || new Date().toISOString()
-  };
-  
-  return links[linkIndex] as Link;
+/**
+ * Get active links for a page (respecting visibility windows)
+ */
+export async function getActiveLinksByPageId(pageId: number): Promise<Link[]> {
+  const db = getDb()
+  return db.links.findActiveByPageId(pageId)
 }
 
-// Delete a link
-export async function deleteLink(id: number): Promise<Link | null> {
-  // Validate input
-  const validatedId = IdSchema.safeParse(id);
-  if (!validatedId.success) {
-    throw new ValidationError(validatedId.error);
-  }
-  
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  
-  const linkIndex = links.findIndex(link => link.id === id);
-  if (linkIndex === -1) {
-    return null;
-  }
-  
-  const deletedLink = links[linkIndex];
-  links.splice(linkIndex, 1);
-  return deletedLink as Link;
-} 
+/**
+ * Create a new link
+ */
+export async function createLink(data: CreateLinkInput): Promise<Link> {
+  const db = getDb()
+  return db.links.create(data)
+}
+
+/**
+ * Update a link
+ */
+export async function updateLink(data: UpdateLinkInput): Promise<Link | null> {
+  const db = getDb()
+  return db.links.update(data)
+}
+
+/**
+ * Soft delete a link
+ */
+export async function deleteLink(id: number): Promise<boolean> {
+  const db = getDb()
+  return db.links.delete(id)
+}
+
+/**
+ * Reorder links
+ */
+export async function reorderLinks(
+  links: Array<{ id: number; order_index: number }>
+): Promise<void> {
+  const db = getDb()
+  return db.links.reorder(links)
+}
+
+/**
+ * Increment click count for a link
+ */
+export async function incrementLinkClicks(id: number): Promise<void> {
+  const db = getDb()
+  return db.links.incrementClickCount(id)
+}

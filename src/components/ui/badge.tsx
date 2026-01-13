@@ -17,6 +17,22 @@ const badgeVariants = cva(
           "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+        // Pixel Art Variants
+        pixel:
+          "rounded-none pixel-shadow-sm pixel-border bg-primary text-primary-foreground font-bold uppercase tracking-wider",
+        "pixel-secondary":
+          "rounded-none pixel-shadow-sm pixel-border bg-secondary text-secondary-foreground font-bold uppercase tracking-wider",
+        "pixel-outline":
+          "rounded-none pixel-shadow-sm pixel-border bg-transparent text-foreground font-bold uppercase tracking-wider",
+        // Retro style - monospace font with pixel aesthetic
+        retro:
+          "rounded-none pixel-shadow-sm pixel-border bg-pixel-yellow text-foreground font-mono font-bold uppercase text-[10px] tracking-widest",
+        "retro-pink":
+          "rounded-none pixel-shadow-sm pixel-border bg-pixel-pink text-white font-mono font-bold uppercase text-[10px] tracking-widest",
+        "retro-teal":
+          "rounded-none pixel-shadow-sm pixel-border bg-pixel-teal text-foreground font-mono font-bold uppercase text-[10px] tracking-widest",
+        "retro-mint":
+          "rounded-none pixel-shadow-sm pixel-border bg-pixel-mint text-foreground font-mono font-bold uppercase text-[10px] tracking-widest",
       },
     },
     defaultVariants: {

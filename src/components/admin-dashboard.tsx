@@ -14,216 +14,330 @@ import {
   ExternalLink,
   BarChart3,
   Settings,
+  Zap,
+  Sparkles,
 } from "lucide-react"
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { mockPages } from "@/lib/mock-pages"
+import { PixelBorder } from "@/components/pixel-art/PixelBorder"
+import { PixelIcon } from "@/components/pixel-art/PixelIcon"
+import { PixelDivider } from "@/components/pixel-art/PixelDivider"
+import { FadeIn } from "@/components/animations/PageTransition"
+import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer"
+import { CountUp } from "@/components/animations/CountUp"
+
+const statsConfig = [
+  {
+    title: "Total Pages",
+    icon: Users,
+    color: "pink",
+    getValue: (pages: typeof mockPages) => pages.length,
+    getSubtext: (pages: typeof mockPages) => `${pages.filter(p => p.isActive).length} active`,
+  },
+  {
+    title: "Total Links",
+    icon: LinkIcon,
+    color: "teal",
+    getValue: (pages: typeof mockPages) => pages.reduce((sum, p) => sum + p.linkCount, 0),
+    getSubtext: () => "Across all pages",
+  },
+  {
+    title: "Total Views",
+    icon: Eye,
+    color: "yellow",
+    getValue: (pages: typeof mockPages) => pages.reduce((sum, p) => sum + p.views, 0),
+    getSubtext: () => "+12% from last month",
+  },
+  {
+    title: "Engagement",
+    icon: TrendingUp,
+    color: "mint",
+    getValue: () => 8.2,
+    getSubtext: () => "+2.1% from last week",
+    suffix: "%",
+  },
+]
+
+const quickActions = [
+  {
+    title: "Create New Page",
+    description: "Set up a new link-it page",
+    icon: Plus,
+    href: "/admin/pages",
+    color: "pink",
+  },
+  {
+    title: "Manage All Links",
+    description: "View and edit all your links",
+    icon: LinkIcon,
+    href: "/admin/links",
+    color: "teal",
+  },
+  {
+    title: "View Analytics",
+    description: "Track performance and engagement",
+    icon: BarChart3,
+    href: "/admin/analytics",
+    color: "yellow",
+  },
+]
+
+const recentActivity = [
+  { action: "Page viewed", page: "Alex Johnson", time: "2 min ago", color: "teal" },
+  { action: "Link clicked", page: "Sarah Chen", time: "5 min ago", color: "pink" },
+  { action: "New page created", page: "Mike Rodriguez", time: "1 hour ago", color: "yellow" },
+  { action: "Theme updated", page: "Alex Johnson", time: "2 hours ago", color: "purple" },
+]
 
 export function AdminDashboard() {
-  const totalProfiles = mockPages.length
-  const totalLinks = mockPages.reduce((sum, profile) => sum + profile.linkCount, 0)
-  const totalViews = mockPages.reduce((sum, profile) => sum + profile.views, 0)
-  const activeProfiles = mockPages.filter((profile) => profile.isActive).length
-
-  const recentActivity = [
-    { action: "Profile viewed", profile: "Alex Johnson", time: "2 minutes ago" },
-    { action: "Link clicked", profile: "Sarah Chen", time: "5 minutes ago" },
-    { action: "New profile created", profile: "Mike Rodriguez", time: "1 hour ago" },
-    { action: "Theme updated", profile: "Alex Johnson", time: "2 hours ago" },
-  ]
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Profiles</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalProfiles}</div>
-            <p className="text-xs text-muted-foreground">{activeProfiles} active profiles</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Links</CardTitle>
-            <LinkIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalLinks}</div>
-            <p className="text-xs text-muted-foreground">Across all profiles</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Views</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalViews.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">+12% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Engagement Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">8.2%</div>
-            <p className="text-xs text-muted-foreground">+2.1% from last week</p>
-          </CardContent>
-        </Card>
-      </div>
+      <FadeIn>
+        <StaggerContainer className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {statsConfig.map((stat, index) => (
+            <StaggerItem key={stat.title}>
+              <Card variant="pixel" className="group">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={`w-10 h-10 bg-pixel-${stat.color} pixel-border flex items-center justify-center group-hover:pixel-shake`}>
+                      <stat.icon className="h-5 w-5" />
+                    </div>
+                    <Badge variant="retro" className="text-xs">
+                      {stat.title}
+                    </Badge>
+                  </div>
+                  <div className="text-3xl font-black mb-1">
+                    <CountUp
+                      value={stat.getValue(mockPages)}
+                      suffix={stat.suffix}
+                      duration={1.5}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {stat.getSubtext(mockPages)}
+                  </p>
+                </CardContent>
+              </Card>
+            </StaggerItem>
+          ))}
+        </StaggerContainer>
+      </FadeIn>
+
+      <PixelDivider variant="dashed" />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3">
-              <Button className="justify-start h-auto p-4" variant="outline" asChild>
-                <Link href="/admin/pages">
-                  <Plus className="h-5 w-5 mr-3" />
-                  <div className="text-left">
-                    <div className="font-medium">Create New Profile</div>
-                    <div className="text-sm text-muted-foreground">Set up a new link-it profile</div>
-                  </div>
-                </Link>
-              </Button>
-              <Button className="justify-start h-auto p-4" variant="outline" asChild>
-                <Link href="/admin/links">
-                  <LinkIcon className="h-5 w-5 mr-3" />
-                  <div className="text-left">
-                    <div className="font-medium">Manage All Links</div>
-                    <div className="text-sm text-muted-foreground">View and edit links across profiles</div>
-                  </div>
-                </Link>
-              </Button>
-              <Button className="justify-start h-auto p-4" variant="outline" asChild>
-                <Link href="/admin/analytics">
-                  <BarChart3 className="h-5 w-5 mr-3" />
-                  <div className="text-left">
-                    <div className="font-medium">View Analytics</div>
-                    <div className="text-sm text-muted-foreground">Track performance and engagement</div>
-                  </div>
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Profile Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Profiles</CardTitle>
-            <CardDescription>Overview of your active profiles</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {mockPages.slice(0, 3).map((profile) => (
-              <div key={profile.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={profile.avatar || "/placeholder.svg"} alt={profile.name} />
-                    <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium">{profile.name}</div>
-                    <div className="text-sm text-muted-foreground">@{profile.username}</div>
-                  </div>
-                  <Badge variant={profile.isActive ? "default" : "secondary"} className="ml-2">
-                    {profile.isActive ? "Active" : "Inactive"}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href={`/admin/pages`}>
-                      <Settings className="h-3 w-3 mr-1" />
-                      Manage
-                    </Link>
-                  </Button>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href={`/${profile.username}`} target="_blank" rel="noreferrer">
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
-                  </Button>
-                </div>
+        <FadeIn delay={0.1}>
+          <Card variant="pixel">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <PixelIcon icon="lightning" color="yellow" />
+                <CardTitle className="font-black">Quick Actions</CardTitle>
               </div>
-            ))}
-            <div className="flex justify-end">
-              <Button variant="outline" className="w-1/3" asChild>
-                <Link href="/admin/pages">View All Pages</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              <CardDescription>Common tasks and shortcuts</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {quickActions.map((action, index) => (
+                <motion.div
+                  key={action.title}
+                  whileHover={{ x: 4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Button
+                    variant="pixel-outline"
+                    className="w-full justify-start h-auto p-4 group"
+                    asChild
+                  >
+                    <Link href={action.href}>
+                      <div className={`w-10 h-10 bg-pixel-${action.color} pixel-border flex items-center justify-center mr-4 group-hover:pixel-shake`}>
+                        <action.icon className="h-5 w-5" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold">{action.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {action.description}
+                        </div>
+                      </div>
+                    </Link>
+                  </Button>
+                </motion.div>
+              ))}
+            </CardContent>
+          </Card>
+        </FadeIn>
+
+        {/* Your Pages */}
+        <FadeIn delay={0.2}>
+          <Card variant="pixel">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <PixelIcon icon="star" color="pink" />
+                <CardTitle className="font-black">Your Pages</CardTitle>
+              </div>
+              <CardDescription>Overview of your link-it pages</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {mockPages.slice(0, 3).map((page, index) => {
+                const colors = ["pink", "teal", "yellow"]
+                const color = colors[index % colors.length]
+
+                return (
+                  <motion.div
+                    key={page.id}
+                    whileHover={{ scale: 1.01 }}
+                    className="group"
+                  >
+                    <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card">
+                      <div className="flex items-center gap-3">
+                        <PixelBorder variant="solid" className={`p-0.5 bg-pixel-${color}`}>
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
+                            <AvatarFallback className={`font-bold bg-pixel-${color}`}>
+                              {page.name.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                        </PixelBorder>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold truncate">{page.name}</div>
+                          <div className="text-xs text-muted-foreground">@{page.username}</div>
+                        </div>
+                        <Badge variant={page.isActive ? "retro" : "secondary"} className="text-xs">
+                          {page.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" variant="pixel-outline" className="h-8 px-2" asChild>
+                            <Link href="/admin/pages">
+                              <Settings className="h-3 w-3" />
+                            </Link>
+                          </Button>
+                          <Button size="sm" variant="pixel-outline" className="h-8 px-2" asChild>
+                            <Link href={`/${page.username}`} target="_blank" rel="noreferrer">
+                              <ExternalLink className="h-3 w-3" />
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    </PixelBorder>
+                  </motion.div>
+                )
+              })}
+              <div className="pt-2">
+                <Button variant="pixel-secondary" className="w-full" asChild>
+                  <Link href="/admin/pages">
+                    View All Pages
+                    <PixelIcon icon="arrow" className="ml-2 w-4 h-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </FadeIn>
       </div>
+
+      <PixelDivider variant="stars" />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Latest actions across your profiles</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center gap-3 text-sm">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                  <div className="flex-1">
-                    <span className="font-medium">{activity.action}</span>
-                    <span className="text-muted-foreground"> on {activity.profile}</span>
-                  </div>
-                  <span className="text-muted-foreground text-xs">{activity.time}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <FadeIn delay={0.3}>
+          <Card variant="pixel">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <PixelIcon icon="sparkle" color="teal" />
+                <CardTitle className="font-black">Recent Activity</CardTitle>
+              </div>
+              <CardDescription>Latest actions across your pages</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentActivity.map((activity, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="flex items-center gap-3"
+                  >
+                    <div className={`w-2 h-2 bg-pixel-${activity.color} pixel-border`} />
+                    <div className="flex-1 text-sm">
+                      <span className="font-bold">{activity.action}</span>
+                      <span className="text-muted-foreground"> on {activity.page}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">{activity.time}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </FadeIn>
 
         {/* Performance Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Summary</CardTitle>
-            <CardDescription>{`This month's key metrics`}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Profile Views</span>
-                <span>2,847</span>
+        <FadeIn delay={0.4}>
+          <Card variant="pixel">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-2">
+                <PixelIcon icon="lightning" color="mint" />
+                <CardTitle className="font-black">Performance</CardTitle>
               </div>
-              <Progress value={75} className="h-2" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Link Clicks</span>
-                <span>1,234</span>
-              </div>
-              <Progress value={60} className="h-2" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Engagement Rate</span>
-                <span>8.2%</span>
-              </div>
-              <Progress value={82} className="h-2" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Goal Progress</span>
-                <span>67%</span>
-              </div>
-              <Progress value={67} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
+              <CardDescription>This month&apos;s key metrics</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[
+                { label: "Page Views", value: 2847, progress: 75, color: "pink" },
+                { label: "Link Clicks", value: 1234, progress: 60, color: "teal" },
+                { label: "Engagement Rate", value: "8.2%", progress: 82, color: "yellow" },
+                { label: "Goal Progress", value: "67%", progress: 67, color: "mint" },
+              ].map((metric, index) => (
+                <div key={metric.label} className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-bold">{metric.label}</span>
+                    <span className={`text-pixel-${metric.color} font-bold`}>
+                      {typeof metric.value === "number" ? metric.value.toLocaleString() : metric.value}
+                    </span>
+                  </div>
+                  <div className="h-3 bg-muted pixel-border overflow-hidden">
+                    <motion.div
+                      className={`h-full bg-pixel-${metric.color}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${metric.progress}%` }}
+                      transition={{ duration: 1, delay: 0.2 * index, ease: "easeOut" }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </FadeIn>
       </div>
+
+      {/* CTA Banner */}
+      <FadeIn delay={0.5}>
+        <PixelBorder variant="solid" shadow="lg" className="p-6 bg-gradient-to-r from-pixel-pink/10 via-pixel-teal/10 to-pixel-yellow/10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <PixelIcon icon="sparkle" size="lg" color="yellow" />
+              </motion.div>
+              <div>
+                <h3 className="font-black text-lg">Ready to grow?</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create your first page and start sharing your links
+                </p>
+              </div>
+            </div>
+            <Button variant="pixel" size="lg" asChild>
+              <Link href="/admin/pages">
+                <Plus className="h-5 w-5 mr-2" />
+                Create New Page
+              </Link>
+            </Button>
+          </div>
+        </PixelBorder>
+      </FadeIn>
     </div>
   )
 }
