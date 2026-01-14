@@ -3,7 +3,7 @@ description:
 globs: 
 alwaysApply: true
 ---
-- Commits should be no longer than a paragraph
+- Commits should be no longer than a short paragraph
 - Commits should use the following syntax <type>(<scope>): <description>
 | Type       | Meaning                         |
 | ---------- | ------------------------------- |
