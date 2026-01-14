@@ -10,7 +10,7 @@ export default function AdminLayout({
   return (
     <SidebarProvider>
       <AdminSidebar />
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto overflow-x-hidden pb-20 md:pb-0 w-full max-w-full" style={{ boxSizing: 'border-box' }}>{children}</main>
     </SidebarProvider>
   )
 }

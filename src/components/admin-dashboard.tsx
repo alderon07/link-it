@@ -190,8 +190,8 @@ export function AdminDashboard() {
                     className="group"
                   >
                     <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card">
-                      <div className="flex items-center gap-3">
-                        <PixelBorder variant="solid" className={`p-0.5 bg-pixel-${color}`}>
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <PixelBorder variant="solid" className={`p-0.5 bg-pixel-${color} flex-shrink-0`}>
                           <Avatar className="h-10 w-10">
                             <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
                             <AvatarFallback className={`font-bold bg-pixel-${color}`}>
@@ -201,18 +201,18 @@ export function AdminDashboard() {
                         </PixelBorder>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold truncate">{page.name}</div>
-                          <div className="text-xs text-muted-foreground">@{page.username}</div>
+                          <div className="text-xs text-muted-foreground truncate">@{page.username}</div>
                         </div>
-                        <Badge variant={page.isActive ? "retro" : "secondary"} className="text-xs">
+                        <Badge variant={page.isActive ? "retro" : "secondary"} className="text-xs flex-shrink-0 hidden sm:inline-flex">
                           {page.isActive ? "Active" : "Inactive"}
                         </Badge>
-                        <div className="flex items-center gap-1">
-                          <Button size="sm" variant="pixel-outline" className="h-8 px-2" asChild>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
                             <Link href="/admin/pages">
                               <Settings className="h-3 w-3" />
                             </Link>
                           </Button>
-                          <Button size="sm" variant="pixel-outline" className="h-8 px-2" asChild>
+                          <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
                             <Link href={`/${page.username}`} target="_blank" rel="noreferrer">
                               <ExternalLink className="h-3 w-3" />
                             </Link>

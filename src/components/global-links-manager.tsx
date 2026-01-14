@@ -203,18 +203,18 @@ export function GlobalLinksManager() {
           </CardHeader>
           <CardContent className="space-y-4">
             <PixelDivider variant="dashed" className="mb-4" />
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
+            <div className="flex flex-col sm:flex-row gap-4 w-full max-w-full">
+              <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search links, URLs, or profiles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pixel-border"
+                  className="pl-10 pixel-border w-full max-w-full"
                 />
               </div>
               <Select value={selectedPage} onValueChange={setSelectedPage}>
-                <SelectTrigger className="w-[200px] pixel-border">
+                <SelectTrigger className="w-full sm:w-[200px] max-w-full pixel-border">
                   <SelectValue placeholder="Filter by profile" />
                 </SelectTrigger>
                 <SelectContent>
@@ -227,7 +227,7 @@ export function GlobalLinksManager() {
                 </SelectContent>
               </Select>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[150px] pixel-border">
+                <SelectTrigger className="w-full sm:w-[150px] max-w-full pixel-border">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -244,9 +244,9 @@ export function GlobalLinksManager() {
 
       {/* Links List */}
       <SlideUp delay={0.2}>
-        <Card variant="pixel">
-          <CardHeader>
-            <div className="flex items-center justify-between">
+        <Card variant="pixel" className="w-full max-w-full">
+          <CardHeader className="w-full max-w-full">
+            <div className="flex items-center justify-between w-full max-w-full">
               <div>
                 <div className="flex items-center gap-2">
                   <PixelIcon icon="star" size="sm" color="yellow" />
@@ -335,9 +335,9 @@ export function GlobalLinksManager() {
 
                   return (
                     <StaggerItem key={link.id}>
-                      <PixelBorder variant="solid" shadow="sm" className="p-4 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <PixelBorder variant="solid" shadow="sm" className="p-4 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group w-full max-w-full">
+                        <div className="flex items-center justify-between gap-2 w-full max-w-full">
+                          <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                             <div className={`w-10 h-10 ${colorClass} pixel-border flex items-center justify-center text-lg group-hover:pixel-bounce`}>
                               {link.icon}
                             </div>
@@ -349,22 +349,22 @@ export function GlobalLinksManager() {
                                 </Badge>
                               </div>
                               <p className="text-sm text-muted-foreground truncate">{link.url}</p>
-                              <div className="flex items-center gap-4 mt-2 text-xs">
-                                <span className="text-pixel-teal font-medium">Profile: {link.profileName}</span>
+                              <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs flex-wrap">
+                                <span className="text-pixel-teal font-medium truncate">Profile: {link.profileName}</span>
                                 <span className="text-pixel-pink font-medium">{link.clicks} clicks</span>
-                                <span className="text-muted-foreground">Created {new Date(link.createdAt).toLocaleDateString()}</span>
+                                <span className="text-muted-foreground truncate">Created {new Date(link.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button size="sm" variant="pixel-outline" asChild>
+                          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                            <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
                               <a href={link.url} target="_blank" rel="noreferrer">
                                 <ExternalLink className="h-3 w-3" />
                               </a>
                             </Button>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="pixel-outline" size="sm">
+                                <Button variant="pixel-outline" size="sm" className="h-8 w-8 p-0">
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>

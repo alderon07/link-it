@@ -102,7 +102,7 @@ export function PageManager() {
               </Label>
               <PixelBorder variant="solid" shadow="sm" className="bg-card">
                 <Select value={selectedPage || ""} onValueChange={setSelectedPage}>
-                  <SelectTrigger className="w-[250px] border-0 bg-transparent font-bold">
+                  <SelectTrigger className="w-full sm:w-[250px] max-w-full border-0 bg-transparent font-bold">
                     <SelectValue placeholder="Choose an identity to manage">
                       {currentPage && (
                         <div className="flex items-center gap-2">
@@ -214,18 +214,18 @@ export function PageManager() {
             {/* Identity Overview Card */}
             <Card variant="pixel">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-4 min-w-0 flex-1">
                     <PixelBorder variant="solid" shadow="sm" className="p-0.5 bg-pixel-teal">
                       <Avatar className="h-16 w-16 pixel-border">
                         <AvatarImage src={currentPage.avatar || "/placeholder.svg"} alt={currentPage.name} />
                         <AvatarFallback className="text-lg font-bold bg-pixel-teal">{currentPage.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                     </PixelBorder>
-                    <div>
-                      <CardTitle className="text-xl font-black pixel-text-shadow">{currentPage.name}</CardTitle>
-                      <CardDescription className="font-medium">@{currentPage.username}</CardDescription>
-                      <div className="flex gap-2 mt-2">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-xl font-black pixel-text-shadow truncate">{currentPage.name}</CardTitle>
+                      <CardDescription className="font-medium truncate">@{currentPage.username}</CardDescription>
+                      <div className="flex gap-2 mt-2 flex-wrap">
                         <Badge variant={currentPage.isActive ? "retro" : "secondary"}>
                           {currentPage.isActive ? "Active" : "Inactive"}
                         </Badge>
