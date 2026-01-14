@@ -1,3 +1,6 @@
+// Convex availability check
+export { useConvexAvailable } from "@/components/providers/ConvexClientProvider";
+
 // User hooks
 export { useCurrentUser, useUserByUsername, useUsernameAvailable, useUserMutations } from "./useUser";
 

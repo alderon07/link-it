@@ -39,6 +39,17 @@ import { usePage, usePageLinks, usePageLinkStats, useLinkMutations } from "@/hoo
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 
+interface LinkData {
+  _id: Id<"links">;
+  title: string;
+  url: string;
+  description?: string;
+  icon?: string;
+  isActive: boolean;
+  clickCount: number;
+  orderIndex: number;
+}
+
 interface PageLinksManagerProps {
   pageId: Id<"pages">;
 }
@@ -68,8 +79,8 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
     isActive: true,
   });
 
-  const filteredLinks = links?.filter(
-    (link) =>
+  const filteredLinks = (links as LinkData[] | undefined)?.filter(
+    (link: LinkData) =>
       link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       link.url.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
@@ -146,14 +157,15 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
 
   const moveLink = async (linkId: Id<"links">, direction: "up" | "down") => {
     if (!links) return;
+    const typedLinks = links as LinkData[];
 
-    const linkIndex = links.findIndex((l) => l._id === linkId);
+    const linkIndex = typedLinks.findIndex((l: LinkData) => l._id === linkId);
     if (linkIndex === -1) return;
 
     const targetIndex = direction === "up" ? linkIndex - 1 : linkIndex + 1;
-    if (targetIndex < 0 || targetIndex >= links.length) return;
+    if (targetIndex < 0 || targetIndex >= typedLinks.length) return;
 
-    const newLinkIds = links.map((l) => l._id);
+    const newLinkIds = typedLinks.map((l: LinkData) => l._id);
     [newLinkIds[linkIndex], newLinkIds[targetIndex]] = [newLinkIds[targetIndex], newLinkIds[linkIndex]];
 
     try {
@@ -188,23 +200,21 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
   return (
     <div className="space-y-6">
       {/* Profile Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-12 w-12">
-              <AvatarImage src={page.avatarUrl || "/placeholder.svg"} alt={page.name} />
-              <AvatarFallback>{page.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="text-xl font-bold">{page.name}</h2>
-              <p className="text-muted-foreground">/{page.slug}</p>
-            </div>
-            <Badge variant={page.isPublic ? "default" : "secondary"}>
-              {page.isPublic ? "Public" : "Private"}
-            </Badge>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <Avatar className="h-12 w-12 shrink-0">
+            <AvatarImage src={page.avatarUrl || "/placeholder.svg"} alt={page.name} />
+            <AvatarFallback>{page.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-bold truncate">{page.name}</h2>
+            <p className="text-muted-foreground truncate">/{page.slug}</p>
           </div>
+          <Badge variant={page.isPublic ? "default" : "secondary"} className="shrink-0">
+            {page.isPublic ? "Public" : "Private"}
+          </Badge>
         </div>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="w-full sm:w-auto shrink-0">
           <a href={`/${page.slug}`} target="_blank" rel="noreferrer">
             <ExternalLink className="h-4 w-4 mr-2" />
             View Live Page
@@ -263,14 +273,14 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
       {/* Links Management */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Links for {page.name}</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="min-w-0">
+              <CardTitle className="truncate">Links for {page.name}</CardTitle>
               <CardDescription>Manage links for this page</CardDescription>
             </div>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto shrink-0">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Link
                 </Button>
@@ -369,35 +379,34 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
                 <div
                   key={link._id}
                   className={cn(
-                    "flex items-center gap-4 p-4 border rounded-lg transition-all",
+                    "flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 border rounded-lg transition-all",
                     link.isActive ? "bg-background" : "bg-muted/50 opacity-75"
                   )}
                 >
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" className="cursor-grab active:cursor-grabbing p-1 h-8 w-8">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <Button variant="ghost" size="sm" className="cursor-grab active:cursor-grabbing p-1 h-8 w-8 shrink-0 hidden sm:flex">
                       <GripVertical className="h-4 w-4" />
                     </Button>
-                    <div className="text-2xl">{link.icon || "🔗"}</div>
+                    <div className="text-2xl shrink-0">{link.icon || "🔗"}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="font-medium truncate">{link.title}</h3>
+                        <Badge variant={link.isActive ? "default" : "secondary"} className="text-xs shrink-0">
+                          {link.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground truncate">{link.url}</p>
+                      {link.description && (
+                        <p className="text-xs text-muted-foreground mt-1 truncate">{link.description}</p>
+                      )}
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <span>{link.clickCount} clicks</span>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium truncate">{link.title}</h3>
-                      <Badge variant={link.isActive ? "default" : "secondary"} className="text-xs">
-                        {link.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground truncate">{link.url}</p>
-                    {link.description && (
-                      <p className="text-xs text-muted-foreground mt-1 truncate">{link.description}</p>
-                    )}
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>{link.clickCount} clicks</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                    <div className="hidden sm:flex flex-col gap-1">
                       <Button
                         variant="outline"
                         size="sm"
@@ -417,7 +426,7 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
                         ↓
                       </Button>
                     </div>
-                    <Button size="sm" variant="outline" asChild>
+                    <Button size="sm" variant="outline" asChild className="hidden sm:flex">
                       <a href={link.url} target="_blank" rel="noreferrer">
                         <ExternalLink className="h-3 w-3" />
                       </a>
@@ -443,6 +452,26 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Link
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="sm:hidden">
+                          <a href={link.url} target="_blank" rel="noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Open Link
+                          </a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => moveLink(link._id, "up")}
+                          disabled={index === 0}
+                          className="sm:hidden"
+                        >
+                          ↑ Move Up
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => moveLink(link._id, "down")}
+                          disabled={index === filteredLinks.length - 1}
+                          className="sm:hidden"
+                        >
+                          ↓ Move Down
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => toggleLinkStatus(link._id, link.isActive)}

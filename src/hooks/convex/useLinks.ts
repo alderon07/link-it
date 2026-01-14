@@ -1,15 +1,25 @@
 "use client";
 
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
+import { useConvexAvailable } from "@/components/providers/ConvexClientProvider";
+
+// Conditionally import to avoid errors when Convex isn't configured
+let api: any = null;
+try {
+  api = require("../../../convex/_generated/api").api;
+} catch {
+  // Convex not initialized yet
+}
 
 /**
  * Hook to get links for a page (authenticated)
  */
-export function usePageLinks(pageId: Id<"pages"> | undefined) {
+export function usePageLinks(pageId: string | undefined) {
+  const isAvailable = useConvexAvailable();
   return useQuery(
-    api.links.queries.getPageLinks,
+    isAvailable && api?.links?.queries?.getPageLinks && pageId
+      ? api.links.queries.getPageLinks
+      : "skip",
     pageId ? { pageId } : "skip"
   );
 }
@@ -17,9 +27,12 @@ export function usePageLinks(pageId: Id<"pages"> | undefined) {
 /**
  * Hook to get a specific link
  */
-export function useLink(linkId: Id<"links"> | undefined) {
+export function useLink(linkId: string | undefined) {
+  const isAvailable = useConvexAvailable();
   return useQuery(
-    api.links.queries.getLink,
+    isAvailable && api?.links?.queries?.getLink && linkId
+      ? api.links.queries.getLink
+      : "skip",
     linkId ? { linkId } : "skip"
   );
 }
@@ -27,9 +40,12 @@ export function useLink(linkId: Id<"links"> | undefined) {
 /**
  * Hook to get link stats for a page
  */
-export function usePageLinkStats(pageId: Id<"pages"> | undefined) {
+export function usePageLinkStats(pageId: string | undefined) {
+  const isAvailable = useConvexAvailable();
   return useQuery(
-    api.links.queries.getPageLinkStats,
+    isAvailable && api?.links?.queries?.getPageLinkStats && pageId
+      ? api.links.queries.getPageLinkStats
+      : "skip",
     pageId ? { pageId } : "skip"
   );
 }
@@ -37,9 +53,12 @@ export function usePageLinkStats(pageId: Id<"pages"> | undefined) {
 /**
  * Hook to get public links for a page
  */
-export function usePublicPageLinks(pageId: Id<"pages"> | undefined) {
+export function usePublicPageLinks(pageId: string | undefined) {
+  const isAvailable = useConvexAvailable();
   return useQuery(
-    api.links.public.getPublicPageLinks,
+    isAvailable && api?.links?.public?.getPublicPageLinks && pageId
+      ? api.links.public.getPublicPageLinks
+      : "skip",
     pageId ? { pageId } : "skip"
   );
 }
@@ -48,26 +67,73 @@ export function usePublicPageLinks(pageId: Id<"pages"> | undefined) {
  * Hook to get public links by slug
  */
 export function usePublicLinksBySlug(slug: string) {
-  return useQuery(api.links.public.getPublicLinksBySlug, { slug });
+  const isAvailable = useConvexAvailable();
+  return useQuery(
+    isAvailable && api?.links?.public?.getPublicLinksBySlug && slug
+      ? api.links.public.getPublicLinksBySlug
+      : "skip",
+    slug ? { slug } : "skip"
+  );
 }
 
 /**
  * Hook for link mutations
  */
 export function useLinkMutations() {
-  const createLink = useMutation(api.links.mutations.createLink);
-  const updateLink = useMutation(api.links.mutations.updateLink);
-  const deleteLink = useMutation(api.links.mutations.deleteLink);
-  const reorderLinks = useMutation(api.links.mutations.reorderLinks);
-  const trackClick = useMutation(api.links.public.trackClick);
-  const incrementClickCount = useMutation(api.links.public.incrementClickCount);
+  const isAvailable = useConvexAvailable();
+
+  const createLinkMutation = useMutation(
+    isAvailable && api?.links?.mutations?.createLink
+      ? api.links.mutations.createLink
+      : ("skip" as any)
+  );
+  const updateLinkMutation = useMutation(
+    isAvailable && api?.links?.mutations?.updateLink
+      ? api.links.mutations.updateLink
+      : ("skip" as any)
+  );
+  const deleteLinkMutation = useMutation(
+    isAvailable && api?.links?.mutations?.deleteLink
+      ? api.links.mutations.deleteLink
+      : ("skip" as any)
+  );
+  const reorderLinksMutation = useMutation(
+    isAvailable && api?.links?.mutations?.reorderLinks
+      ? api.links.mutations.reorderLinks
+      : ("skip" as any)
+  );
+  const trackClickMutation = useMutation(
+    isAvailable && api?.links?.public?.trackClick
+      ? api.links.public.trackClick
+      : ("skip" as any)
+  );
+  const incrementClickCountMutation = useMutation(
+    isAvailable && api?.links?.public?.incrementClickCount
+      ? api.links.public.incrementClickCount
+      : ("skip" as any)
+  );
+
+  // Return no-op functions if Convex isn't available
+  if (!isAvailable) {
+    const noOp = async () => {
+      console.warn("Convex not configured - mutation skipped");
+    };
+    return {
+      createLink: noOp,
+      updateLink: noOp,
+      deleteLink: noOp,
+      reorderLinks: noOp,
+      trackClick: noOp,
+      incrementClickCount: noOp,
+    };
+  }
 
   return {
-    createLink,
-    updateLink,
-    deleteLink,
-    reorderLinks,
-    trackClick,
-    incrementClickCount,
+    createLink: createLinkMutation,
+    updateLink: updateLinkMutation,
+    deleteLink: deleteLinkMutation,
+    reorderLinks: reorderLinksMutation,
+    trackClick: trackClickMutation,
+    incrementClickCount: incrementClickCountMutation,
   };
 }

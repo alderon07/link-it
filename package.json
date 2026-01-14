@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "npm-run-all --parallel dev:next dev:convex",
+    "dev": "next dev",
+    "dev:convex": "npm-run-all --parallel dev:next convex:dev",
     "dev:next": "next dev",
-    "dev:convex": "convex dev",
-    "build": "convex deploy --cmd 'next build'",
+    "convex:dev": "convex dev",
+    "build": "next build",
+    "build:convex": "convex deploy --cmd 'next build'",
     "start": "next start",
     "lint": "next lint",
     "scan": "next dev & npx react-scan@latest localhost:3000"
