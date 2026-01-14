@@ -9,8 +9,10 @@ Link-It is a "link in bio" application built with Next.js 16, featuring a modern
 ## Commands
 
 ```bash
-pnpm dev          # Start development server
-pnpm build        # Production build
+pnpm dev          # Start Next.js + Convex dev servers in parallel
+pnpm dev:next     # Start Next.js only
+pnpm dev:convex   # Start Convex only
+pnpm build        # Deploy Convex + Production build
 pnpm lint         # Run ESLint
 pnpm scan         # Dev server with React Scan for performance analysis
 ```
@@ -18,41 +20,92 @@ pnpm scan         # Dev server with React Scan for performance analysis
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
-- **Auth**: Clerk
+- **Database**: Convex (reactive, real-time)
+- **Auth**: Clerk (with Convex integration)
 - **UI**: Tailwind CSS v4 + shadcn/ui (new-york style)
 - **Animations**: Framer Motion
-- **Validation**: Zod
+- **Validation**: Zod (client) + Convex validators (server)
 - **Analytics**: PostHog
 - **Toasts**: Sonner
 - **Icons**: Lucide React
 
 ## Architecture
 
-### Data Layer (`src/data/`)
+### Convex Backend (`convex/`)
 
-Three-tier architecture with database abstraction:
+Real-time database with type-safe queries and mutations:
 
 ```
-src/data/
-├── db/
-│   ├── client.ts     # DatabaseClient interface + DummyDatabaseClient
-│   ├── schema.ts     # Zod schemas for User, Page, Link, Theme
-│   └── index.ts      # Exports
+convex/
+├── _generated/           # Auto-generated types (don't edit)
+├── schema.ts             # Table definitions with indexes
+├── auth.config.ts        # Clerk JWT configuration
+├── http.ts               # HTTP routes (Clerk webhooks)
+│
+├── lib/
+│   ├── utils.ts          # Helpers (sanitization, slug generation)
+│   └── validators.ts     # Validation constraints
+│
+├── users/
+│   ├── queries.ts        # getCurrentUser, getUserByClerkId
+│   ├── mutations.ts      # updateUser, updateUsername, deleteUser
+│   └── internal.ts       # createFromClerk (webhook only)
+│
 ├── pages/
-│   ├── pageDAL.ts    # Direct database operations
-│   ├── pageService.ts # Business logic (ownership, slug uniqueness)
-│   └── index.ts
+│   ├── queries.ts        # getPage, getUserPages, isSlugAvailable
+│   ├── mutations.ts      # createPage, updatePage, deletePage
+│   └── public.ts         # getPublicPage, incrementViewCount
+│
 ├── links/
-│   ├── linkDAL.ts    # Direct database operations
-│   ├── linkService.ts # Business logic (ownership, reordering)
-│   └── index.ts
-└── index.ts          # Combined exports
+│   ├── queries.ts        # getLink, getPageLinks
+│   ├── mutations.ts      # createLink, updateLink, deleteLink, reorderLinks
+│   └── public.ts         # getPublicPageLinks, trackClick
+│
+├── themes/
+│   ├── queries.ts        # getTheme, getSystemThemes, getUserThemes
+│   └── mutations.ts      # createTheme, updateTheme, deleteTheme
+│
+└── settings/
+    ├── queries.ts        # getUserSettings, getUserProgress
+    └── mutations.ts      # updateSettings, updateProgress
 ```
 
-- **DAL**: Direct CRUD operations through `getDb()`
-- **Service**: Business logic with ownership verification
-- Currently uses mock data from `src/dummy.json`
-- Designed to swap to Neon PostgreSQL via `DatabaseClient` interface
+### React Hooks (`src/hooks/convex/`)
+
+Custom hooks for Convex integration:
+
+```
+src/hooks/convex/
+├── useUser.ts            # useCurrentUser, useUserMutations
+├── usePages.ts           # useUserPages, usePage, usePublicPage, usePageMutations
+├── useLinks.ts           # usePageLinks, usePublicPageLinks, useLinkMutations
+├── useThemes.ts          # useAllThemes, useThemeMutations
+└── index.ts              # Combined exports
+```
+
+Usage in components:
+```tsx
+import { useUserPages, usePageMutations } from "@/hooks/convex";
+
+function MyComponent() {
+  const pages = useUserPages();
+  const { createPage, updatePage, deletePage } = usePageMutations();
+  // Real-time updates automatically!
+}
+```
+
+### Convex Components (`src/components/convex/`)
+
+Migrated components using Convex hooks:
+- `PageManager` - Identity management with real-time updates
+- `PublicPageComponent` - Public page display with live view counts
+- `PageLinksManager` - Link management with optimistic updates
+
+### Legacy Data Layer (`src/data/`) - DEPRECATED
+
+The old mock data layer is kept for reference but should not be used:
+- Use Convex queries/mutations instead of `getDb()`
+- Use `src/hooks/convex` hooks instead of direct API calls
 
 ### API Layer (`src/lib/api/`)
 
@@ -149,7 +202,12 @@ CSS utilities in `globals.css`:
 
 Clerk handles auth via middleware (`src/middleware.ts`). Public routes are `/` and `/login`. All other routes are protected.
 
-API routes use `requireAuth()` from `@/lib/api/auth` which returns the Clerk user ID.
+**Convex Authentication:**
+- `ConvexClientProvider` wraps the app with Clerk auth integration
+- Convex queries/mutations automatically get auth context via `ctx.auth.getUserIdentity()`
+- Clerk webhooks sync user data to Convex via `convex/http.ts`
+
+**API routes** (legacy): Use `requireAuth()` from `@/lib/api/auth` which returns the Clerk user ID.
 
 ### Security
 
@@ -164,17 +222,19 @@ API routes use `requireAuth()` from `@/lib/api/auth` which returns the Clerk use
 # App
 NEXT_PUBLIC_APP_URL=
 
+# Convex
+NEXT_PUBLIC_CONVEX_URL=           # From Convex dashboard
+CONVEX_DEPLOY_KEY=                # For production deployments
+
 # Clerk
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
 CLERK_SECRET_KEY=
 CLERK_WEBHOOK_SECRET=
+CLERK_JWT_ISSUER_DOMAIN=          # For Convex auth (e.g., https://your-app.clerk.accounts.dev)
 
 # PostHog
 NEXT_PUBLIC_POSTHOG_KEY=
 NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
-
-# Database (future)
-DATABASE_URL=
 ```
 
 ## Commit Convention
