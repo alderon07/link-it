@@ -34,6 +34,29 @@ const iconMap: Record<string, "star" | "heart" | "arrow" | "check" | "cross" | "
 
 const colorVariants = ["pink", "teal", "yellow", "mint", "coral", "purple", "blue", "orange", "green"] as const;
 
+interface LinkData {
+  _id: Id<"links">;
+  title: string;
+  url: string;
+  description?: string;
+  icon?: string;
+  isActive: boolean;
+  clickCount: number;
+}
+
+interface PageData {
+  _id: Id<"pages">;
+  name: string;
+  slug: string;
+  bio?: string;
+  avatarUrl?: string;
+  isPublic: boolean;
+  viewCount: number;
+  user?: {
+    avatarUrl?: string;
+  };
+}
+
 interface PublicPageComponentProps {
   slug: string;
 }
@@ -223,7 +246,7 @@ export function PublicPageComponent({ slug }: PublicPageComponentProps) {
             </FadeIn>
           ) : (
             <StaggerContainer className="space-y-4">
-              {links.map((link, index) => {
+              {(links as LinkData[]).map((link: LinkData, index: number) => {
                 const linkColor = colorVariants[(index + page.slug.charCodeAt(0)) % colorVariants.length];
                 const iconName = iconMap[link.icon || "star"] || "star";
 

@@ -1,15 +1,25 @@
 "use client";
 
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { Id } from "../../../convex/_generated/dataModel";
+import { useConvexAvailable } from "@/components/providers/ConvexClientProvider";
+
+// Conditionally import to avoid errors when Convex isn't configured
+let api: any = null;
+try {
+  api = require("../../../convex/_generated/api").api;
+} catch {
+  // Convex not initialized yet
+}
 
 /**
  * Hook to get a specific theme
  */
-export function useTheme(themeId: Id<"themes"> | undefined) {
+export function useTheme(themeId: string | undefined) {
+  const isAvailable = useConvexAvailable();
   return useQuery(
-    api.themes.queries.getTheme,
+    isAvailable && api?.themes?.queries?.getTheme && themeId
+      ? api.themes.queries.getTheme
+      : "skip",
     themeId ? { themeId } : "skip"
   );
 }
@@ -18,36 +28,82 @@ export function useTheme(themeId: Id<"themes"> | undefined) {
  * Hook to get all system themes
  */
 export function useSystemThemes() {
-  return useQuery(api.themes.queries.getSystemThemes);
+  const isAvailable = useConvexAvailable();
+  return useQuery(
+    isAvailable && api?.themes?.queries?.getSystemThemes
+      ? api.themes.queries.getSystemThemes
+      : "skip"
+  );
 }
 
 /**
  * Hook to get user's custom themes
  */
 export function useUserThemes() {
-  return useQuery(api.themes.queries.getUserThemes);
+  const isAvailable = useConvexAvailable();
+  return useQuery(
+    isAvailable && api?.themes?.queries?.getUserThemes
+      ? api.themes.queries.getUserThemes
+      : "skip"
+  );
 }
 
 /**
  * Hook to get all available themes (system + user custom)
  */
 export function useAllThemes() {
-  return useQuery(api.themes.queries.getAllAvailableThemes);
+  const isAvailable = useConvexAvailable();
+  return useQuery(
+    isAvailable && api?.themes?.queries?.getAllAvailableThemes
+      ? api.themes.queries.getAllAvailableThemes
+      : "skip"
+  );
 }
 
 /**
  * Hook for theme mutations
  */
 export function useThemeMutations() {
-  const createTheme = useMutation(api.themes.mutations.createTheme);
-  const updateTheme = useMutation(api.themes.mutations.updateTheme);
-  const deleteTheme = useMutation(api.themes.mutations.deleteTheme);
-  const duplicateTheme = useMutation(api.themes.mutations.duplicateTheme);
+  const isAvailable = useConvexAvailable();
+
+  const createThemeMutation = useMutation(
+    isAvailable && api?.themes?.mutations?.createTheme
+      ? api.themes.mutations.createTheme
+      : ("skip" as any)
+  );
+  const updateThemeMutation = useMutation(
+    isAvailable && api?.themes?.mutations?.updateTheme
+      ? api.themes.mutations.updateTheme
+      : ("skip" as any)
+  );
+  const deleteThemeMutation = useMutation(
+    isAvailable && api?.themes?.mutations?.deleteTheme
+      ? api.themes.mutations.deleteTheme
+      : ("skip" as any)
+  );
+  const duplicateThemeMutation = useMutation(
+    isAvailable && api?.themes?.mutations?.duplicateTheme
+      ? api.themes.mutations.duplicateTheme
+      : ("skip" as any)
+  );
+
+  // Return no-op functions if Convex isn't available
+  if (!isAvailable) {
+    const noOp = async () => {
+      console.warn("Convex not configured - mutation skipped");
+    };
+    return {
+      createTheme: noOp,
+      updateTheme: noOp,
+      deleteTheme: noOp,
+      duplicateTheme: noOp,
+    };
+  }
 
   return {
-    createTheme,
-    updateTheme,
-    deleteTheme,
-    duplicateTheme,
+    createTheme: createThemeMutation,
+    updateTheme: updateThemeMutation,
+    deleteTheme: deleteThemeMutation,
+    duplicateTheme: duplicateThemeMutation,
   };
 }

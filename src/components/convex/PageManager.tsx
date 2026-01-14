@@ -30,6 +30,16 @@ import { useUserPages, usePageMutations, useSlugAvailable } from "@/hooks/convex
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 
+interface PageData {
+  _id: Id<"pages">;
+  name: string;
+  slug: string;
+  bio?: string;
+  avatarUrl?: string;
+  isPublic: boolean;
+  viewCount: number;
+}
+
 export function PageManager() {
   const pages = useUserPages();
   const { createPage, updatePage, deletePage } = usePageMutations();
@@ -47,7 +57,8 @@ export function PageManager() {
   // Check slug availability
   const slugAvailable = useSlugAvailable(newPage.slug);
 
-  const currentPage = selectedPageId ? pages?.find((p) => p._id === selectedPageId) : null;
+  const typedPages = pages as PageData[] | undefined;
+  const currentPage = selectedPageId ? typedPages?.find((p: PageData) => p._id === selectedPageId) : null;
 
   const handleCreatePage = async () => {
     if (!newPage.name || !newPage.slug) {
@@ -102,7 +113,7 @@ export function PageManager() {
     }
   };
 
-  if (pages === undefined) {
+  if (typedPages === undefined) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -114,26 +125,27 @@ export function PageManager() {
     <div className="space-y-6">
       {/* Identity Selection Header */}
       <FadeIn>
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-          <div className="flex items-center gap-4">
-            <PixelBorder variant="solid" shadow="sm" className="px-3 py-1.5 bg-card">
-              <div className="flex items-center gap-2 text-sm">
-                <PixelIcon icon="star" size="xs" color="teal" />
-                <CountUp value={pages.length} duration={0.5} />
-                <span className="text-muted-foreground">identities</span>
-              </div>
-            </PixelBorder>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="identity-select" className="text-sm font-bold">
-                Select Identity:
-              </Label>
-              <PixelBorder variant="solid" shadow="sm" className="bg-card">
-                <Select
-                  value={selectedPageId || ""}
-                  onValueChange={(value) => setSelectedPageId(value as Id<"pages">)}
-                >
-                  <SelectTrigger className="w-full sm:w-[250px] max-w-full border-0 bg-transparent font-bold">
-                    <SelectValue placeholder="Choose an identity to manage">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center w-full">
+            <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+              <PixelBorder variant="solid" shadow="sm" className="px-3 py-1.5 bg-card shrink-0">
+                <div className="flex items-center gap-2 text-sm">
+                  <PixelIcon icon="star" size="xs" color="teal" />
+                  <CountUp value={typedPages.length} duration={0.5} />
+                  <span className="text-muted-foreground">identities</span>
+                </div>
+              </PixelBorder>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto min-w-0">
+                <Label htmlFor="identity-select" className="text-sm font-bold shrink-0">
+                  Select Identity:
+                </Label>
+                <PixelBorder variant="solid" shadow="sm" className="bg-card w-full sm:w-auto min-w-0">
+                  <Select
+                    value={selectedPageId || ""}
+                    onValueChange={(value) => setSelectedPageId(value as Id<"pages">)}
+                  >
+                    <SelectTrigger className="w-full sm:w-[250px] border-0 bg-transparent font-bold">
+                      <SelectValue placeholder="Choose an identity to manage">
                       {currentPage && (
                         <div className="flex items-center gap-2">
                           <Avatar className="h-5 w-5 pixel-border">
@@ -146,7 +158,7 @@ export function PageManager() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="pixel-border">
-                    {pages.map((page) => (
+                    {typedPages.map((page: PageData) => (
                       <SelectItem key={page._id} value={page._id} className="font-medium">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-5 w-5">
@@ -165,13 +177,14 @@ export function PageManager() {
               </PixelBorder>
             </div>
           </div>
+          </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="pixel">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Identity
-              </Button>
-            </DialogTrigger>
+              <DialogTrigger asChild>
+                <Button variant="pixel" className="w-full sm:w-auto shrink-0">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Identity
+                </Button>
+              </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle className="font-black pixel-text-shadow">Create New Identity</DialogTitle>
@@ -398,7 +411,7 @@ export function PageManager() {
                     Choose an identity from the dropdown above to edit its settings, manage links, and customize its theme.
                   </p>
                 </div>
-                {pages.length === 0 && (
+                {typedPages.length === 0 && (
                   <Button variant="pixel" onClick={() => setIsCreateDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Your First Identity
@@ -423,7 +436,7 @@ export function PageManager() {
           <CardContent>
             <PixelDivider variant="dashed" className="mb-4" />
             <StaggerContainer className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {pages.map((page, index) => {
+              {typedPages.map((page: PageData, index: number) => {
                 const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"];
                 const colorClass = colors[index % colors.length];
 

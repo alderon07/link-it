@@ -24,11 +24,11 @@ export function AnalyticsDashboard() {
     <div className="space-y-6">
       {/* Time Period Selector */}
       <FadeIn>
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-          <div className="flex items-center gap-4">
-            <PixelBorder variant="solid" shadow="sm" className="bg-card">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 w-full">
+            <PixelBorder variant="solid" shadow="sm" className="bg-card w-full sm:w-auto">
               <Select defaultValue="30d">
-                <SelectTrigger className="w-[180px] border-0 bg-transparent font-bold">
+                <SelectTrigger className="w-full sm:w-[180px] border-0 bg-transparent font-bold">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
                 <SelectContent className="pixel-border">
@@ -39,9 +39,9 @@ export function AnalyticsDashboard() {
                 </SelectContent>
               </Select>
             </PixelBorder>
-            <PixelBorder variant="solid" shadow="sm" className="bg-card">
+            <PixelBorder variant="solid" shadow="sm" className="bg-card w-full sm:w-auto">
               <Select defaultValue="all">
-                <SelectTrigger className="w-[200px] border-0 bg-transparent font-bold">
+                <SelectTrigger className="w-full sm:w-[200px] border-0 bg-transparent font-bold">
                   <SelectValue placeholder="Filter by identity" />
                 </SelectTrigger>
                 <SelectContent className="pixel-border">
@@ -55,12 +55,12 @@ export function AnalyticsDashboard() {
               </Select>
             </PixelBorder>
           </div>
-          <div className="flex gap-2">
-            <Button variant="pixel-outline">
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="pixel-outline" className="flex-1 sm:flex-none">
               <Filter className="h-4 w-4 mr-2" />
               Filters
             </Button>
-            <Button variant="pixel-outline">
+            <Button variant="pixel-outline" className="flex-1 sm:flex-none">
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
@@ -136,7 +136,7 @@ export function AnalyticsDashboard() {
 
       <SlideUp delay={0.2}>
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 pixel-border">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 pixel-border">
             <TabsTrigger value="overview" className="font-bold">Overview</TabsTrigger>
             <TabsTrigger value="profiles" className="font-bold">Identities</TabsTrigger>
             <TabsTrigger value="links" className="font-bold">Top Links</TabsTrigger>
@@ -237,23 +237,23 @@ export function AnalyticsDashboard() {
                     return (
                       <StaggerItem key={page.id}>
                         <PixelBorder variant="solid" shadow="sm" className="p-4 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <PixelBorder variant="solid" shadow="sm" className={`p-0.5 ${colorClass}`}>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <PixelBorder variant="solid" shadow="sm" className={`p-0.5 ${colorClass} shrink-0`}>
                                 <Avatar className="h-12 w-12 pixel-border">
                                   <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
                                   <AvatarFallback className={`font-bold ${colorClass}`}>{page.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                               </PixelBorder>
-                              <div>
-                                <h3 className="font-bold group-hover:text-pixel-pink transition-colors">{page.name}</h3>
-                                <p className="text-sm text-muted-foreground">@{page.username}</p>
+                              <div className="min-w-0 flex-1">
+                                <h3 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{page.name}</h3>
+                                <p className="text-sm text-muted-foreground truncate">@{page.username}</p>
                               </div>
-                              <Badge variant="retro" className="capitalize">
+                              <Badge variant="retro" className="capitalize shrink-0 hidden sm:inline-flex">
                                 {page.category}
                               </Badge>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right shrink-0">
                               <div className="font-black text-pixel-pink">{page.views.toLocaleString()} views</div>
                               <div className="text-sm text-muted-foreground font-medium">{page.linkCount} links</div>
                             </div>
@@ -292,17 +292,17 @@ export function AnalyticsDashboard() {
                     return (
                       <StaggerItem key={index}>
                         <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-8 h-8 ${colorClass} pixel-border flex items-center justify-center text-sm font-black group-hover:pixel-bounce`}>
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={`w-8 h-8 ${colorClass} pixel-border flex items-center justify-center text-sm font-black group-hover:pixel-bounce shrink-0`}>
                                 {index + 1}
                               </div>
-                              <div>
-                                <h4 className="font-bold group-hover:text-pixel-pink transition-colors">{link.title}</h4>
-                                <p className="text-sm text-muted-foreground">{link.profile}</p>
+                              <div className="min-w-0">
+                                <h4 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{link.title}</h4>
+                                <p className="text-sm text-muted-foreground truncate">{link.profile}</p>
                               </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right shrink-0">
                               <div className="font-black text-pixel-teal">{link.clicks} clicks</div>
                               <div className="text-sm text-muted-foreground font-medium">{link.ctr} CTR</div>
                             </div>

@@ -9,13 +9,28 @@ Link-It is a "link in bio" application built with Next.js 16, featuring a modern
 ## Commands
 
 ```bash
-pnpm dev          # Start Next.js + Convex dev servers in parallel
-pnpm dev:next     # Start Next.js only
-pnpm dev:convex   # Start Convex only
-pnpm build        # Deploy Convex + Production build
+# Without Convex credentials (uses mock data layer)
+pnpm dev          # Start Next.js dev server only
+pnpm build        # Production build (Next.js only)
+
+# With Convex credentials
+pnpm dev:convex   # Start Next.js + Convex dev servers in parallel
+pnpm build:convex # Deploy Convex + Production build
+
+# Other
 pnpm lint         # Run ESLint
 pnpm scan         # Dev server with React Scan for performance analysis
 ```
+
+## Convex Configuration (Optional)
+
+Convex is optional for local development. The app can run without Convex credentials using the legacy mock data layer.
+
+**Without Convex**: Set no `NEXT_PUBLIC_CONVEX_URL` - app shows warning but works with mock data.
+
+**With Convex**: Set `NEXT_PUBLIC_CONVEX_URL` in `.env.local` and use `pnpm dev:convex` / `pnpm build:convex`.
+
+The `convex/` folder is excluded from TypeScript compilation in `tsconfig.json` because Convex has its own build process. The `convex/_generated/` folder contains stub files that allow the app to compile without running `npx convex dev`.
 
 ## Tech Stack
 
