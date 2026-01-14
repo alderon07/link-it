@@ -181,6 +181,8 @@ function Sidebar({
   }
 
   if (isMobile) {
+    // On mobile, render the sidebar sheet for backward compatibility
+    // But typically bottom nav is used instead
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent

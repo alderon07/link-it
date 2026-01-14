@@ -26,8 +26,8 @@ export default function RootLayout({
         baseTheme: [neobrutalism],
       }
     }>
-      <html lang="en">
-        <body className={`${inter.className} min-h-screen bg-background text-text`}>
+      <html lang="en" className="overflow-x-hidden">
+        <body className={`${inter.className} min-h-screen bg-background text-text overflow-x-hidden max-w-full`}>
           {/* <ReactScan /> */}
           <Suspense fallback={null}>
             <PostHogProvider>

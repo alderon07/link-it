@@ -37,6 +37,8 @@ import { Upload, Save, Eye, EyeOff, CreditCard, LinkIcon } from "lucide-react"
 import { useUser, useClerk } from "@clerk/nextjs"
 import { NavUser } from "./ui/nav-user"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
+import { BottomNav } from "@/components/ui/bottom-nav"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 const data = {
   navMain: [
@@ -88,12 +90,25 @@ const data = {
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const isMobile = useIsMobile()
   const [accountDialogOpen, setAccountDialogOpen] = React.useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = React.useState(false)
   const [showNewPassword, setShowNewPassword] = React.useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
   const { user, isLoaded } = useUser();
   const { signOut, openUserProfile } = useClerk();
+
+  // Flatten navigation items for bottom nav
+  const bottomNavItems = React.useMemo(() => {
+    return data.navMain.flatMap((group) =>
+      group.items.map((item) => ({
+        title: item.title,
+        url: item.url,
+        pixelIcon: item.pixelIcon,
+        color: item.color,
+      }))
+    )
+  }, [])
 
   const [accountData, setAccountData] = React.useState({
     name: "Alex Johnson",
@@ -145,7 +160,12 @@ export function AdminSidebar() {
   };
   return (
     <>
-      <Sidebar>
+      {/* Bottom Navigation for Mobile */}
+      {isMobile && <BottomNav items={bottomNavItems} />}
+      
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <Sidebar>
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -206,6 +226,7 @@ export function AdminSidebar() {
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
+      )}
 
       <Dialog open={accountDialogOpen} onOpenChange={setAccountDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
