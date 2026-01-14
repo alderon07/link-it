@@ -6,6 +6,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { neobrutalism } from '@clerk/themes'
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { PostHogProvider } from "@/components/providers/PostHogProvider";
+import { ConvexClientProvider } from "@/components/providers/ConvexClientProvider";
 import { Toaster } from "sonner";
 import { Suspense } from "react";
 
@@ -29,27 +30,29 @@ export default function RootLayout({
       <html lang="en" className="overflow-x-hidden">
         <body className={`${inter.className} min-h-screen bg-background text-text overflow-x-hidden max-w-full`}>
           {/* <ReactScan /> */}
-          <Suspense fallback={null}>
-            <PostHogProvider>
-              <SidebarProvider>
-                <main className="flex-1">
-                  {children}
-                </main>
-              </SidebarProvider>
-              <Toaster
-                position="bottom-right"
-                toastOptions={{
-                  classNames: {
-                    toast: "pixel-shadow pixel-border bg-card",
-                    title: "font-bold",
-                    description: "text-muted-foreground",
-                    success: "bg-[--pixel-mint] text-foreground",
-                    error: "bg-[--pixel-coral] text-foreground",
-                  },
-                }}
-              />
-            </PostHogProvider>
-          </Suspense>
+          <ConvexClientProvider>
+            <Suspense fallback={null}>
+              <PostHogProvider>
+                <SidebarProvider>
+                  <main className="flex-1">
+                    {children}
+                  </main>
+                </SidebarProvider>
+                <Toaster
+                  position="bottom-right"
+                  toastOptions={{
+                    classNames: {
+                      toast: "pixel-shadow pixel-border bg-card",
+                      title: "font-bold",
+                      description: "text-muted-foreground",
+                      success: "bg-[--pixel-mint] text-foreground",
+                      error: "bg-[--pixel-coral] text-foreground",
+                    },
+                  }}
+                />
+              </PostHogProvider>
+            </Suspense>
+          </ConvexClientProvider>
         </body>
       </html>
     </ClerkProvider>
