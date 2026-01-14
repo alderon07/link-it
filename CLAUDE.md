@@ -140,7 +140,7 @@ CSS utilities in `globals.css`:
 - `/[username]` - Public user profile page (increments view count)
 - `/login` - Clerk authentication (catch-all route)
 - `/admin/*` - Protected admin routes with sidebar layout
-  - `/admin/pages` - Manage pages
+  - `/admin/pages` - Manage identities
   - `/admin/pages/[pageId]/links` - Manage links for a page
   - `/admin/pages/[pageId]/themes` - Theme customization
   - `/admin/analytics` - Analytics dashboard

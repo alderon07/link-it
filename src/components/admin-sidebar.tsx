@@ -47,21 +47,27 @@ const data = {
           title: "Dashboard",
           url: "/admin",
           icon: Home,
+          pixelIcon: "star" as const,
+          color: "bg-pixel-pink",
         },
         {
           title: "Analytics",
           url: "/admin/analytics",
           icon: BarChart3,
+          pixelIcon: "cursor" as const,
+          color: "bg-pixel-teal",
         },
       ],
     },
     {
-      title: "Page Management",
+      title: "Identity Management",
       items: [
         {
-          title: "Pages",
+          title: "Identities",
           url: "/admin/pages",
           icon: Users,
+          pixelIcon: "star" as const,
+          color: "bg-pixel-yellow",
         },
       ],
     },
@@ -72,6 +78,8 @@ const data = {
           title: "All Links",
           url: "/admin/links",
           icon: Link,
+          pixelIcon: "link" as const,
+          color: "bg-pixel-mint",
         },
       ],
     },
@@ -155,16 +163,24 @@ export function AdminSidebar() {
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>
-          {data.navMain.map((item) => (
-            <SidebarGroup key={item.title}>
-              <SidebarGroupLabel>{item.title}</SidebarGroupLabel>
+          {data.navMain.map((group) => (
+            <SidebarGroup key={group.title}>
+              <SidebarGroupLabel className="text-xs font-black uppercase tracking-wider text-muted-foreground px-3">
+                {group.title}
+              </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {item.items.map((item) => (
+                  {group.items.map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild isActive={pathname === item.url}>
-                        <a href={item.url}>
-                          <item.icon />
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname === item.url}
+                        variant="pixel"
+                      >
+                        <a href={item.url} className="flex items-center gap-3">
+                          <div className={`w-6 h-6 ${item.color} pixel-border flex items-center justify-center`}>
+                            <PixelIcon icon={item.pixelIcon} size="xs" />
+                          </div>
                           <span>{item.title}</span>
                         </a>
                       </SidebarMenuButton>

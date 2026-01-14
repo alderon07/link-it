@@ -40,9 +40,9 @@ export function PageManager() {
 
   const currentPage= selectedPage ? pages.find((p) => p.id === selectedPage) : null
 
-  const handleCreateProfile = () => {
+  const handleCreateIdentity = () => {
     const page = {
-      id: `profile-${Date.now()}`,
+      id: `identity-${Date.now()}`,
       ...newPage,
       avatar: "/placeholder.svg?height=300&width=300",
       isActive: true,
@@ -73,7 +73,7 @@ export function PageManager() {
     if (originalPage) {
       const duplicatedPage = {
         ...originalPage,
-        id: `profile-${Date.now()}`,
+        id: `identity-${Date.now()}`,
         name: `${originalPage.name} (Copy)`,
         username: `${originalPage.username}-copy`,
         views: 0,
@@ -85,7 +85,7 @@ export function PageManager() {
 
   return (
     <div className="space-y-6">
-      {/* Profile Selection Header */}
+      {/* Identity Selection Header */}
       <FadeIn>
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
           <div className="flex items-center gap-4">
@@ -93,94 +93,99 @@ export function PageManager() {
               <div className="flex items-center gap-2 text-sm">
                 <PixelIcon icon="star" size="xs" color="teal" />
                 <CountUp value={pages.length} duration={0.5} />
-                <span className="text-muted-foreground">pages</span>
+                <span className="text-muted-foreground">identities</span>
               </div>
             </PixelBorder>
             <div className="flex items-center gap-2">
-              <Label htmlFor="profile-select" className="text-sm font-bold">
-                Select Profile:
+              <Label htmlFor="identity-select" className="text-sm font-bold">
+                Select Identity:
               </Label>
-              <Select value={selectedPage || ""} onValueChange={setSelectedPage}>
-                <SelectTrigger className="w-[250px] pixel-border">
-                  <SelectValue placeholder="Choose a profile to manage">
-                    {currentPage && (
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-5 w-5 pixel-border">
-                          <AvatarImage src={currentPage.avatar || "/placeholder.svg"} alt={currentPage.name} />
-                          <AvatarFallback className="text-xs">{currentPage.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{currentPage.name}</span>
-                      </div>
-                    )}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {pages.map((page) => (
-                    <SelectItem key={page.id} value={page.id}>
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
-                          <AvatarFallback className="text-xs">{page.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span>{page.name}</span>
-                        <Badge variant={page.isActive ? "retro" : "secondary"} className="text-xs ml-auto">
-                          {page.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <PixelBorder variant="solid" shadow="sm" className="bg-card">
+                <Select value={selectedPage || ""} onValueChange={setSelectedPage}>
+                  <SelectTrigger className="w-[250px] border-0 bg-transparent font-bold">
+                    <SelectValue placeholder="Choose an identity to manage">
+                      {currentPage && (
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-5 w-5 pixel-border">
+                            <AvatarImage src={currentPage.avatar || "/placeholder.svg"} alt={currentPage.name} />
+                            <AvatarFallback className="text-xs">{currentPage.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-bold">{currentPage.name}</span>
+                        </div>
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="pixel-border">
+                    {pages.map((page) => (
+                      <SelectItem key={page.id} value={page.id} className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-5 w-5">
+                            <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
+                            <AvatarFallback className="text-xs">{page.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span>{page.name}</span>
+                          <Badge variant={page.isActive ? "retro" : "secondary"} className="text-xs ml-auto">
+                            {page.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </PixelBorder>
             </div>
           </div>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="pixel">
                 <Plus className="h-4 w-4 mr-2" />
-                Create Profile
+                Create Identity
               </Button>
             </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Profile</DialogTitle>
-              <DialogDescription>Set up a new profile for different purposes or audiences</DialogDescription>
+              <DialogTitle className="font-black pixel-text-shadow">Create New Identity</DialogTitle>
+              <DialogDescription>Set up a new identity for different purposes or audiences</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Display Name</Label>
+                <Label htmlFor="name" className="font-bold">Display Name</Label>
                 <Input
                   id="name"
                   value={newPage.name}
                   onChange={(e) => setNewPage({ ...newPage, name: e.target.value })}
                   placeholder="Alex Johnson"
+                  className="pixel-border"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username" className="font-bold">Username</Label>
                 <Input
                   id="username"
                   value={newPage.username}
                   onChange={(e) => setNewPage({ ...newPage, username: e.target.value })}
                   placeholder="alexcreates"
+                  className="pixel-border"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
+                <Label htmlFor="bio" className="font-bold">Bio</Label>
                 <Textarea
                   id="bio"
                   value={newPage.bio}
                   onChange={(e) => setNewPage({ ...newPage, bio: e.target.value })}
                   placeholder="Tell people about yourself..."
                   rows={3}
+                  className="pixel-border"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category" className="font-bold">Category</Label>
                 <select
                   id="category"
                   value={newPage.category}
                   onChange={(e) => setNewPage({ ...newPage, category: e.target.value })}
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2 pixel-border bg-background font-medium"
                 >
                   <option value="personal">Personal</option>
                   <option value="business">Business</option>
@@ -189,8 +194,8 @@ export function PageManager() {
                 </select>
               </div>
               <div className="flex gap-2 pt-4">
-                <Button variant="pixel" onClick={handleCreateProfile} className="flex-1">
-                  Create Profile
+                <Button variant="pixel" onClick={handleCreateIdentity} className="flex-1">
+                  Create Identity
                 </Button>
                 <Button variant="pixel-outline" onClick={() => setIsCreateDialogOpen(false)} className="flex-1">
                   Cancel
@@ -202,11 +207,11 @@ export function PageManager() {
         </div>
       </FadeIn>
 
-      {/* Selected Profile Management */}
+      {/* Selected Identity Management */}
       {currentPage ? (
         <SlideUp delay={0.1}>
           <div className="space-y-6">
-            {/* Profile Overview Card */}
+            {/* Identity Overview Card */}
             <Card variant="pixel">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -240,13 +245,13 @@ export function PageManager() {
                       <DropdownMenuItem asChild>
                         <a href={`/admin/pages/${currentPage.id}`}>
                           <Edit className="h-4 w-4 mr-2" />
-                          Edit Profile
+                          Edit Identity
                         </a>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <a href={`/${currentPage.username}`} target="_blank" rel="noreferrer">
                           <Eye className="h-4 w-4 mr-2" />
-                          View Profile
+                          View Identity
                         </a>
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => duplicatePage(currentPage.id)}>
@@ -285,7 +290,7 @@ export function PageManager() {
               </CardContent>
             </Card>
 
-            {/* Profile Management Actions */}
+            {/* Identity Management Actions */}
             <StaggerContainer className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <StaggerItem>
                 <Card variant="pixel-interactive" className="cursor-pointer group">
@@ -296,8 +301,8 @@ export function PageManager() {
                           <PixelIcon icon="star" size="sm" />
                         </div>
                         <div>
-                          <h3 className="font-bold group-hover:text-pixel-pink transition-colors">Edit Profile</h3>
-                          <p className="text-sm text-muted-foreground">Update profile information</p>
+                          <h3 className="font-bold group-hover:text-pixel-pink transition-colors">Edit Identity</h3>
+                          <p className="text-sm text-muted-foreground">Update identity information</p>
                         </div>
                       </div>
                     </a>
@@ -350,7 +355,7 @@ export function PageManager() {
                           <PixelIcon icon="arrow" size="sm" />
                         </div>
                         <div>
-                          <h3 className="font-bold group-hover:text-pixel-pink transition-colors">View Live Profile</h3>
+                          <h3 className="font-bold group-hover:text-pixel-pink transition-colors">View Live Page</h3>
                           <p className="text-sm text-muted-foreground">See public page</p>
                         </div>
                       </div>
@@ -362,7 +367,7 @@ export function PageManager() {
           </div>
         </SlideUp>
       ) : (
-        /* No Profile Selected State */
+        /* No Identity Selected State */
         <FadeIn>
           <Card variant="pixel">
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -371,15 +376,15 @@ export function PageManager() {
                   <PixelIcon icon="cursor" size="lg" />
                 </PixelBorder>
                 <div>
-                  <h3 className="text-lg font-black pixel-text-shadow">Select a Profile to Manage</h3>
+                  <h3 className="text-lg font-black pixel-text-shadow">Select an Identity to Manage</h3>
                   <p className="text-muted-foreground">
-                    Choose a profile from the dropdown above to edit its settings, manage links, and customize its theme.
+                    Choose an identity from the dropdown above to edit its settings, manage links, and customize its theme.
                   </p>
                 </div>
                 {pages.length === 0 && (
                   <Button variant="pixel" onClick={() => setIsCreateDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Your First Profile
+                    Create Your First Identity
                   </Button>
                 )}
               </div>
@@ -388,15 +393,15 @@ export function PageManager() {
         </FadeIn>
       )}
 
-      {/* All Profiles Overview */}
+      {/* All Identities Overview */}
       <SlideUp delay={0.2}>
         <Card variant="pixel">
           <CardHeader>
             <div className="flex items-center gap-2">
               <PixelIcon icon="star" size="sm" color="yellow" />
-              <CardTitle className="font-black">All Profiles</CardTitle>
+              <CardTitle className="font-black">All Identities</CardTitle>
             </div>
-            <CardDescription>Overview of all your profiles</CardDescription>
+            <CardDescription>Overview of all your identities</CardDescription>
           </CardHeader>
           <CardContent>
             <PixelDivider variant="dashed" className="mb-4" />

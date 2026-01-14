@@ -29,7 +29,7 @@ export default function PageLinksPage({ params }: PageLinksPageProps) {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink href="/admin/pages">Pages</BreadcrumbLink>
+              <BreadcrumbLink href="/admin/pages">Identities</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
