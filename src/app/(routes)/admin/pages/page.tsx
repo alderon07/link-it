@@ -23,14 +23,14 @@ export default function PagesPage() {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Manage Pages</BreadcrumbPage>
+              <BreadcrumbPage>Manage Identities</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
       </header>
       <div className="flex flex-1 flex-col gap-4 p-4">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Manage Pages</h1>
+          <h1 className="text-2xl font-bold">Manage Identities</h1>
           <p className="text-muted-foreground">Create, edit, and manage your link-it pages</p>
         </div>
         <PageManager />

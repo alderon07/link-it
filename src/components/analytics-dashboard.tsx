@@ -26,30 +26,34 @@ export function AnalyticsDashboard() {
       <FadeIn>
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
           <div className="flex items-center gap-4">
-            <Select defaultValue="30d">
-              <SelectTrigger className="w-[180px] pixel-border">
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7d">Last 7 days</SelectItem>
-                <SelectItem value="30d">Last 30 days</SelectItem>
-                <SelectItem value="90d">Last 90 days</SelectItem>
-                <SelectItem value="1y">Last year</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue="all">
-              <SelectTrigger className="w-[200px] pixel-border">
-                <SelectValue placeholder="Filter by profile" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Profiles</SelectItem>
-                {mockPages.map((page) => (
-                  <SelectItem key={page.id} value={page.id}>
-                    {page.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <PixelBorder variant="solid" shadow="sm" className="bg-card">
+              <Select defaultValue="30d">
+                <SelectTrigger className="w-[180px] border-0 bg-transparent font-bold">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent className="pixel-border">
+                  <SelectItem value="7d" className="font-medium">Last 7 days</SelectItem>
+                  <SelectItem value="30d" className="font-medium">Last 30 days</SelectItem>
+                  <SelectItem value="90d" className="font-medium">Last 90 days</SelectItem>
+                  <SelectItem value="1y" className="font-medium">Last year</SelectItem>
+                </SelectContent>
+              </Select>
+            </PixelBorder>
+            <PixelBorder variant="solid" shadow="sm" className="bg-card">
+              <Select defaultValue="all">
+                <SelectTrigger className="w-[200px] border-0 bg-transparent font-bold">
+                  <SelectValue placeholder="Filter by identity" />
+                </SelectTrigger>
+                <SelectContent className="pixel-border">
+                  <SelectItem value="all" className="font-medium">All Identities</SelectItem>
+                  {mockPages.map((page) => (
+                    <SelectItem key={page.id} value={page.id} className="font-medium">
+                      {page.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PixelBorder>
           </div>
           <div className="flex gap-2">
             <Button variant="pixel-outline">
@@ -134,7 +138,7 @@ export function AnalyticsDashboard() {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 pixel-border">
             <TabsTrigger value="overview" className="font-bold">Overview</TabsTrigger>
-            <TabsTrigger value="profiles" className="font-bold">Profiles</TabsTrigger>
+            <TabsTrigger value="profiles" className="font-bold">Identities</TabsTrigger>
             <TabsTrigger value="links" className="font-bold">Top Links</TabsTrigger>
             <TabsTrigger value="traffic" className="font-bold">Traffic</TabsTrigger>
           </TabsList>
@@ -219,9 +223,9 @@ export function AnalyticsDashboard() {
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <PixelIcon icon="star" size="sm" color="teal" />
-                  <CardTitle className="font-black">Profile Performance</CardTitle>
+                  <CardTitle className="font-black">Identity Performance</CardTitle>
                 </div>
-                <CardDescription>Analytics breakdown by profile</CardDescription>
+                <CardDescription>Analytics breakdown by identity</CardDescription>
               </CardHeader>
               <CardContent>
                 <PixelDivider variant="dashed" className="mb-4" />
@@ -270,7 +274,7 @@ export function AnalyticsDashboard() {
                   <PixelIcon icon="link" size="sm" color="pink" />
                   <CardTitle className="font-black">Top Performing Links</CardTitle>
                 </div>
-                <CardDescription>Your most clicked links across all profiles</CardDescription>
+                <CardDescription>Your most clicked links across all identities</CardDescription>
               </CardHeader>
               <CardContent>
                 <PixelDivider variant="dashed" className="mb-4" />
