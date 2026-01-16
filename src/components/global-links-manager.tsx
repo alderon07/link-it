@@ -48,11 +48,19 @@ interface LinkData {
 export function GlobalLinksManager() {
   const allLinksData = useAllUserLinks();
   const pages = useUserPages();
-  const { updateLink, deleteLink: deleteLinkMutation } = useLinkMutations();
+  const { createLink, updateLink, deleteLink: deleteLinkMutation } = useLinkMutations();
 
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedPage, setSelectedPage] = React.useState("all")
   const [sortBy, setSortBy] = React.useState("recent")
+
+  // Add Link dialog state
+  const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false)
+  const [newLinkPageId, setNewLinkPageId] = React.useState("")
+  const [newLinkTitle, setNewLinkTitle] = React.useState("")
+  const [newLinkUrl, setNewLinkUrl] = React.useState("")
+  const [newLinkDescription, setNewLinkDescription] = React.useState("")
+  const [isCreating, setIsCreating] = React.useState(false)
 
   const isLoading = allLinksData === undefined || pages === undefined;
 
@@ -113,6 +121,44 @@ export function GlobalLinksManager() {
       toast.error("Failed to update link");
       console.error(error);
     }
+  }
+
+  const handleCreateLink = async () => {
+    if (!newLinkPageId || !newLinkTitle || !newLinkUrl) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      await createLink({
+        pageId: newLinkPageId as Id<"pages">,
+        title: newLinkTitle,
+        url: newLinkUrl,
+        description: newLinkDescription || undefined,
+        type: "link",
+        isActive: true,
+      });
+      toast.success("Link created successfully");
+      // Reset form and close dialog
+      setNewLinkPageId("");
+      setNewLinkTitle("");
+      setNewLinkUrl("");
+      setNewLinkDescription("");
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to create link");
+      console.error(error);
+    } finally {
+      setIsCreating(false);
+    }
+  }
+
+  const resetAddLinkForm = () => {
+    setNewLinkPageId("");
+    setNewLinkTitle("");
+    setNewLinkUrl("");
+    setNewLinkDescription("");
   }
 
   if (isLoading) {
@@ -265,7 +311,10 @@ export function GlobalLinksManager() {
                     : `Showing links for ${typedPages.find((p) => p._id === selectedPage)?.name}`}
                 </CardDescription>
               </div>
-              <Dialog>
+              <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+                setIsAddDialogOpen(open);
+                if (!open) resetAddLinkForm();
+              }}>
                 <DialogTrigger asChild>
                   <Button variant="pixel">
                     <Plus className="h-4 w-4 mr-2" />
@@ -280,7 +329,7 @@ export function GlobalLinksManager() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="profile" className="font-bold">Identity</Label>
-                      <Select>
+                      <Select value={newLinkPageId} onValueChange={setNewLinkPageId}>
                         <SelectTrigger className="pixel-border">
                           <SelectValue placeholder="Select an identity" />
                         </SelectTrigger>
@@ -300,19 +349,56 @@ export function GlobalLinksManager() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="title" className="font-bold">Title</Label>
-                      <Input id="title" placeholder="My Awesome Link" className="pixel-border" />
+                      <Input
+                        id="title"
+                        placeholder="My Awesome Link"
+                        className="pixel-border"
+                        value={newLinkTitle}
+                        onChange={(e) => setNewLinkTitle(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="url" className="font-bold">URL</Label>
-                      <Input id="url" placeholder="https://example.com" className="pixel-border" />
+                      <Input
+                        id="url"
+                        placeholder="https://example.com"
+                        className="pixel-border"
+                        value={newLinkUrl}
+                        onChange={(e) => setNewLinkUrl(e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="description" className="font-bold">Description (optional)</Label>
-                      <Input id="description" placeholder="Brief description of the link" className="pixel-border" />
+                      <Input
+                        id="description"
+                        placeholder="Brief description of the link"
+                        className="pixel-border"
+                        value={newLinkDescription}
+                        onChange={(e) => setNewLinkDescription(e.target.value)}
+                      />
                     </div>
                     <div className="flex gap-2 pt-4">
-                      <Button variant="pixel" className="flex-1">Add Link</Button>
-                      <Button variant="pixel-outline" className="flex-1">
+                      <Button
+                        variant="pixel"
+                        className="flex-1"
+                        onClick={handleCreateLink}
+                        disabled={isCreating || !newLinkPageId || !newLinkTitle || !newLinkUrl}
+                      >
+                        {isCreating ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          "Add Link"
+                        )}
+                      </Button>
+                      <Button
+                        variant="pixel-outline"
+                        className="flex-1"
+                        onClick={() => setIsAddDialogOpen(false)}
+                        disabled={isCreating}
+                      >
                         Cancel
                       </Button>
                     </div>

@@ -61,6 +61,19 @@ export function useAllThemes() {
 }
 
 /**
+ * Hook to check if the current user can edit a theme
+ */
+export function useCanEditTheme(themeId: string | undefined) {
+  const isAvailable = useConvexAvailable();
+  return useQuery(
+    isAvailable && api?.themes?.queries?.canEditTheme && themeId
+      ? api.themes.queries.canEditTheme
+      : "skip",
+    themeId ? { themeId } : "skip"
+  );
+}
+
+/**
  * Hook for theme mutations
  */
 export function useThemeMutations() {

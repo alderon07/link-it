@@ -37,15 +37,30 @@ export function useUserByUsername(username: string) {
 }
 
 /**
- * Hook to check if a username is available
+ * Hook to get user by Clerk ID
  */
-export function useUsernameAvailable(username: string) {
+export function useUserByClerkId(clerkUserId: string | undefined) {
+  const isAvailable = useConvexAvailable();
+  return useQuery(
+    isAvailable && api?.users?.queries?.getUserByClerkId && clerkUserId
+      ? api.users.queries.getUserByClerkId
+      : "skip",
+    clerkUserId ? { clerkUserId } : "skip"
+  );
+}
+
+/**
+ * Hook to check if a username is available
+ * @param username - The username to check
+ * @param excludeUserId - Optional user ID to exclude from the check (useful for updates)
+ */
+export function useUsernameAvailable(username: string, excludeUserId?: string) {
   const isAvailable = useConvexAvailable();
   return useQuery(
     isAvailable && api?.users?.queries?.isUsernameAvailable && username
       ? api.users.queries.isUsernameAvailable
       : "skip",
-    username ? { username } : "skip"
+    username ? { username, excludeUserId } : "skip"
   );
 }
 

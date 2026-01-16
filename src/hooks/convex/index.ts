@@ -2,7 +2,7 @@
 export { useConvexAvailable } from "@/components/providers/ConvexClientProvider";
 
 // User hooks
-export { useCurrentUser, useUserByUsername, useUsernameAvailable, useUserMutations } from "./useUser";
+export { useCurrentUser, useUserByUsername, useUserByClerkId, useUsernameAvailable, useUserMutations } from "./useUser";
 
 // Page hooks
 export {
@@ -32,6 +32,7 @@ export {
   useSystemThemes,
   useUserThemes,
   useAllThemes,
+  useCanEditTheme,
   useThemeMutations,
 } from "./useThemes";
 
@@ -43,3 +44,11 @@ export {
   useRecentActivity,
   useSeedMutations,
 } from "./useAnalytics";
+
+// Settings hooks
+export {
+  useUserSettings,
+  useUserProgress,
+  useUserData,
+  useSettingsMutations,
+} from "./useSettings";
