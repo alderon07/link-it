@@ -160,7 +160,7 @@ export function GlobalLinksManager() {
                 <div className="text-2xl font-black pixel-text-shadow">
                   <CountUp value={totalClicks} duration={0.8} />
                 </div>
-                <p className="text-xs text-muted-foreground">Across all profiles</p>
+                <p className="text-xs text-muted-foreground">Across all identities</p>
               </CardContent>
             </Card>
           </StaggerItem>
@@ -199,7 +199,7 @@ export function GlobalLinksManager() {
               <PixelIcon icon="link" size="sm" color="teal" />
               <CardTitle className="font-black">All Links</CardTitle>
             </div>
-            <CardDescription>Manage links across all your profiles</CardDescription>
+            <CardDescription>Manage links across all your identities</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <PixelDivider variant="dashed" className="mb-4" />
@@ -207,7 +207,7 @@ export function GlobalLinksManager() {
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search links, URLs, or profiles..."
+                  placeholder="Search links, URLs, or identities..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 pixel-border w-full max-w-full"
@@ -215,10 +215,10 @@ export function GlobalLinksManager() {
               </div>
               <Select value={selectedPage} onValueChange={setSelectedPage}>
                 <SelectTrigger className="w-full sm:w-[200px] max-w-full pixel-border">
-                  <SelectValue placeholder="Filter by profile" />
+                  <SelectValue placeholder="Filter by identity" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Profiles</SelectItem>
+                  <SelectItem value="all">All Identities</SelectItem>
                   {mockPages.map((page) => (
                     <SelectItem key={page.id} value={page.id}>
                       {page.name}
@@ -234,7 +234,7 @@ export function GlobalLinksManager() {
                   <SelectItem value="recent">Most Recent</SelectItem>
                   <SelectItem value="clicks">Most Clicks</SelectItem>
                   <SelectItem value="title">Title A-Z</SelectItem>
-                  <SelectItem value="profile">Profile</SelectItem>
+                  <SelectItem value="profile">Identity</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -254,7 +254,7 @@ export function GlobalLinksManager() {
                 </div>
                 <CardDescription>
                   {selectedPage === "all"
-                    ? "Showing all links across profiles"
+                    ? "Showing all links across identities"
                     : `Showing links for ${mockPages.find((p) => p.id === selectedPage)?.name}`}
                 </CardDescription>
               </div>
@@ -268,14 +268,14 @@ export function GlobalLinksManager() {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle className="font-black pixel-text-shadow">Add New Link</DialogTitle>
-                    <DialogDescription>Create a new link for one of your profiles</DialogDescription>
+                    <DialogDescription>Create a new link for one of your identities</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="profile" className="font-bold">Profile</Label>
+                      <Label htmlFor="profile" className="font-bold">Identity</Label>
                       <Select>
                         <SelectTrigger className="pixel-border">
-                          <SelectValue placeholder="Select a profile" />
+                          <SelectValue placeholder="Select an identity" />
                         </SelectTrigger>
                         <SelectContent>
                           {mockPages.map((page) => (
@@ -350,7 +350,7 @@ export function GlobalLinksManager() {
                               </div>
                               <p className="text-sm text-muted-foreground truncate">{link.url}</p>
                               <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs flex-wrap">
-                                <span className="text-pixel-teal font-medium truncate">Profile: {link.profileName}</span>
+                                <span className="text-pixel-teal font-medium truncate">Identity: {link.profileName}</span>
                                 <span className="text-pixel-pink font-medium">{link.clicks} clicks</span>
                                 <span className="text-muted-foreground truncate">Created {new Date(link.createdAt).toLocaleDateString()}</span>
                               </div>

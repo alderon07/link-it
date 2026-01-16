@@ -52,26 +52,30 @@ export default defineSchema({
   // LINKS - Individual links on a page
   // ═══════════════════════════════════════════════════════════════
   links: defineTable({
-    pageId: v.id("pages"),
+    pageId: v.optional(v.id("pages")),
     title: v.string(),
-    url: v.string(),
-    type: v.union(
+    url: v.optional(v.string()),
+    type: v.optional(v.union(
       v.literal("link"),
       v.literal("header"),
       v.literal("divider")
-    ),
+    )),
     description: v.optional(v.string()),
     icon: v.optional(v.string()),
-    isActive: v.boolean(),
-    orderIndex: v.number(),
-    clickCount: v.number(),
+    isActive: v.optional(v.boolean()),
+    orderIndex: v.optional(v.number()),
+    clickCount: v.optional(v.number()),
+
+    // Legacy fields (to be removed after migration)
+    order: v.optional(v.number()),
+    userId: v.optional(v.string()),
 
     // Scheduling
     visibleFrom: v.optional(v.number()),
     visibleUntil: v.optional(v.number()),
 
     deletionTime: v.optional(v.number()),
-    updatedAt: v.number(),
+    updatedAt: v.optional(v.number()),
   })
     .index("by_page", ["pageId", "deletionTime", "orderIndex"])
     .index("by_page_active", ["pageId", "isActive", "deletionTime"]),

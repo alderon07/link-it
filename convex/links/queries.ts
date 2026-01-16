@@ -35,8 +35,14 @@ export const getLink = query({
     }
 
     // Get the page to verify ownership
+    if (!link.pageId) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Link has no associated page",
+      });
+    }
     const page = await ctx.db.get(link.pageId);
-    if (!page || page.deletionTime || page.userId !== user._id) {
+    if (!page || ("deletionTime" in page && page.deletionTime) || ("userId" in page && page.userId !== user._id)) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "You don't have access to this link",
@@ -90,7 +96,7 @@ export const getPageLinks = query({
       .collect();
 
     // Sort by orderIndex
-    return links.sort((a, b) => a.orderIndex - b.orderIndex);
+    return links.sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   },
 });
 
@@ -137,9 +143,9 @@ export const getPageLinkStats = query({
       .collect();
 
     const activeLinks = links.filter((l) => l.isActive);
-    const totalClicks = links.reduce((sum, l) => sum + l.clickCount, 0);
+    const totalClicks = links.reduce((sum, l) => sum + (l.clickCount ?? 0), 0);
     const topLinks = [...links]
-      .sort((a, b) => b.clickCount - a.clickCount)
+      .sort((a, b) => (b.clickCount ?? 0) - (a.clickCount ?? 0))
       .slice(0, 5);
 
     return {

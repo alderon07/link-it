@@ -450,3 +450,98 @@
   .border-pixel-coral { border-color: var(--pixel-coral); }
   .border-pixel-purple { border-color: var(--pixel-purple); }
 }
+
+/* ============================================
+   CLERK COMPONENT OVERRIDES
+   Force readable text in Clerk modals
+   ============================================ */
+
+/* Consistent background colors */
+.cl-modalContent,
+.cl-card,
+.cl-navbar,
+.cl-navbarButtons,
+.cl-pageScrollBox,
+.cl-scrollBox,
+.cl-page,
+.cl-profilePage,
+.cl-profileSection,
+.cl-accordionContent,
+.cl-menuList,
+.cl-userProfile-root,
+.cl-userProfile-root > div,
+.cl-main,
+.cl-footer {
+  background-color: #1f1f2e !important;
+  background-image: none !important;
+  background: #1f1f2e !important;
+}
+
+/* Base text colors for all Clerk elements */
+.cl-rootBox,
+.cl-card,
+.cl-modalContent,
+.cl-userProfile-root,
+.cl-profilePage,
+.cl-profileSection {
+  color: #f5f5f5 !important;
+}
+
+/* All text elements */
+.cl-userProfile-root *,
+.cl-modalContent * {
+  color: #f5f5f5;
+}
+
+/* Secondary/muted text */
+.cl-userProfile-root p,
+.cl-userProfile-root span:not(.cl-badge),
+.cl-formFieldHintText,
+.cl-footerActionText {
+  color: #a0a0a0 !important;
+}
+
+/* Headers and titles */
+.cl-headerTitle,
+.cl-headerSubtitle,
+.cl-profileSectionTitle,
+.cl-profileSectionTitleText,
+.cl-formFieldLabel {
+  color: #f5f5f5 !important;
+}
+
+/* Profile section content */
+.cl-profileSectionContent,
+.cl-profileSectionContent * {
+  color: #f5f5f5 !important;
+}
+
+/* Active devices section */
+.cl-activeDeviceListItem,
+.cl-activeDeviceListItem * {
+  color: #f5f5f5 !important;
+}
+
+/* Accordion content */
+.cl-accordionContent,
+.cl-accordionContent * {
+  color: #f5f5f5 !important;
+}
+
+/* Navbar buttons text */
+.cl-navbarButton {
+  color: #f5f5f5 !important;
+}
+
+/* Links and actions - use accent color */
+.cl-profileSectionPrimaryButton,
+.cl-formButtonReset,
+.cl-footerActionLink {
+  color: #FF6B9D !important;
+}
+
+/* Badge styling */
+.cl-badge {
+  background-color: #A855F7 !important;
+  color: #ffffff !important;
+}
