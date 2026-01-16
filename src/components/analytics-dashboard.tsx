@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart3, TrendingUp, Users, Eye, MousePointer, Download, Filter, Loader2 } from "lucide-react"
-import { useDashboardStats, useGlobalAnalytics, useUserPages } from "@/hooks/convex"
+import { useDashboardStats, useGlobalAnalytics, usePageAnalytics, useUserPages } from "@/hooks/convex"
 import { PixelBorder } from "@/components/pixel-art/PixelBorder"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 import { PixelDivider } from "@/components/pixel-art/PixelDivider"
@@ -45,15 +45,30 @@ interface DashboardStats {
   engagementRate: number;
 }
 
+interface PageAnalyticsData {
+  totalViews: number;
+  totalClicks: number;
+  viewsOverTime: Array<{ date: string; count: number }>;
+  clicksByLink: Array<{ linkId: string; title: string; clicks: number }>;
+  referrerBreakdown: Array<{ referrer: string; count: number }>;
+  deviceBreakdown: Array<{ device: string; count: number }>;
+  countryBreakdown: Array<{ country: string; count: number }>;
+}
+
 export function AnalyticsDashboard() {
   const [days, setDays] = React.useState(30);
   const [selectedPage, setSelectedPage] = React.useState("all");
 
   const stats = useDashboardStats() as DashboardStats | null | undefined;
   const globalAnalytics = useGlobalAnalytics(days) as GlobalAnalyticsData | null | undefined;
+  const pageAnalytics = usePageAnalytics(
+    selectedPage !== "all" ? selectedPage : undefined,
+    days
+  ) as PageAnalyticsData | null | undefined;
   const pages = useUserPages();
 
-  const isLoading = stats === undefined || globalAnalytics === undefined || pages === undefined;
+  const isShowingPageAnalytics = selectedPage !== "all";
+  const isLoading = stats === undefined || globalAnalytics === undefined || pages === undefined || (isShowingPageAnalytics && pageAnalytics === undefined);
 
   const typedPages = (pages || []) as Array<{
     _id: string;
@@ -64,9 +79,19 @@ export function AnalyticsDashboard() {
     isPublic: boolean;
   }>;
 
-  const totalViews = stats?.totalViews ?? 0;
-  const totalClicks = stats?.totalClicks ?? 0;
-  const avgEngagement = stats?.engagementRate ?? 0;
+  // Use page-specific data when a page is selected, otherwise use global stats
+  const totalViews = isShowingPageAnalytics
+    ? (pageAnalytics?.totalViews ?? 0)
+    : (stats?.totalViews ?? 0);
+  const totalClicks = isShowingPageAnalytics
+    ? (pageAnalytics?.totalClicks ?? 0)
+    : (stats?.totalClicks ?? 0);
+  const avgEngagement = isShowingPageAnalytics
+    ? (totalViews > 0 ? Math.round((totalClicks / totalViews) * 1000) / 10 : 0)
+    : (stats?.engagementRate ?? 0);
+
+  // Get the selected page name for display
+  const selectedPageData = typedPages.find((p) => p._id === selectedPage);
 
   if (isLoading) {
     return (
@@ -187,15 +212,17 @@ export function AnalyticsDashboard() {
         <StaggerItem>
           <Card variant="pixel">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold">This Month</CardTitle>
+              <CardTitle className="text-sm font-bold">
+                {isShowingPageAnalytics ? selectedPageData?.name : "This Month"}
+              </CardTitle>
               <PixelIcon icon="star" size="xs" color="coral" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-black pixel-text-shadow">
-                <CountUp value={stats?.viewsThisMonth ?? 0} duration={0.8} />
+                <CountUp value={isShowingPageAnalytics ? totalViews : (stats?.viewsThisMonth ?? 0)} duration={0.8} />
               </div>
               <p className="text-xs text-muted-foreground">
-                Views in last 30 days
+                {isShowingPageAnalytics ? `Views for ${selectedPageData?.name}` : "Views in last 30 days"}
               </p>
             </CardContent>
           </Card>
@@ -345,40 +372,80 @@ export function AnalyticsDashboard() {
                   <PixelIcon icon="link" size="sm" color="pink" />
                   <CardTitle className="font-black">Top Performing Links</CardTitle>
                 </div>
-                <CardDescription>Your most clicked links across all identities</CardDescription>
+                <CardDescription>
+                  {isShowingPageAnalytics
+                    ? `Most clicked links for ${selectedPageData?.name}`
+                    : "Your most clicked links across all identities"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <PixelDivider variant="dashed" className="mb-4" />
-                {!globalAnalytics?.topLinks || globalAnalytics.topLinks.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">No link data yet</p>
-                ) : (
-                  <StaggerContainer className="space-y-4">
-                    {globalAnalytics.topLinks.slice(0, 5).map((item, index) => {
-                      const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
-                      const colorClass = colors[index % colors.length]
+                {isShowingPageAnalytics ? (
+                  // Page-specific top links
+                  !pageAnalytics?.clicksByLink || pageAnalytics.clicksByLink.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No link data yet</p>
+                  ) : (
+                    <StaggerContainer className="space-y-4">
+                      {pageAnalytics.clicksByLink.slice(0, 5).map((item, index) => {
+                        const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
+                        const colorClass = colors[index % colors.length]
 
-                      return (
-                        <StaggerItem key={index}>
-                          <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className={`w-8 h-8 ${colorClass} pixel-border flex items-center justify-center text-sm font-black group-hover:pixel-bounce shrink-0`}>
-                                  {index + 1}
+                        return (
+                          <StaggerItem key={item.linkId}>
+                            <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={`w-8 h-8 ${colorClass} pixel-border flex items-center justify-center text-sm font-black group-hover:pixel-bounce shrink-0`}>
+                                    {index + 1}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h4 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{item.title}</h4>
+                                    <p className="text-sm text-muted-foreground truncate">{selectedPageData?.name}</p>
+                                  </div>
                                 </div>
-                                <div className="min-w-0">
-                                  <h4 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{item.link.title}</h4>
-                                  <p className="text-sm text-muted-foreground truncate">{item.page?.name}</p>
+                                <div className="text-right shrink-0">
+                                  <div className="font-black text-pixel-teal">{item.clicks} clicks</div>
                                 </div>
                               </div>
-                              <div className="text-right shrink-0">
-                                <div className="font-black text-pixel-teal">{item.clicks} clicks</div>
+                            </PixelBorder>
+                          </StaggerItem>
+                        )
+                      })}
+                    </StaggerContainer>
+                  )
+                ) : (
+                  // Global top links
+                  !globalAnalytics?.topLinks || globalAnalytics.topLinks.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No link data yet</p>
+                  ) : (
+                    <StaggerContainer className="space-y-4">
+                      {globalAnalytics.topLinks.slice(0, 5).map((item, index) => {
+                        const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
+                        const colorClass = colors[index % colors.length]
+
+                        return (
+                          <StaggerItem key={index}>
+                            <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={`w-8 h-8 ${colorClass} pixel-border flex items-center justify-center text-sm font-black group-hover:pixel-bounce shrink-0`}>
+                                    {index + 1}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h4 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{item.link.title}</h4>
+                                    <p className="text-sm text-muted-foreground truncate">{item.page?.name}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <div className="font-black text-pixel-teal">{item.clicks} clicks</div>
+                                </div>
                               </div>
-                            </div>
-                          </PixelBorder>
-                        </StaggerItem>
-                      )
-                    })}
-                  </StaggerContainer>
+                            </PixelBorder>
+                          </StaggerItem>
+                        )
+                      })}
+                    </StaggerContainer>
+                  )
                 )}
               </CardContent>
             </Card>
