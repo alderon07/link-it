@@ -25,6 +25,36 @@ export default function RootLayout({
   return (
     <ClerkProvider appearance={{
         baseTheme: [neobrutalism],
+        variables: {
+          colorPrimary: 'var(--primary)',
+          colorBackground: 'var(--card)',
+          colorText: 'var(--foreground)',
+          colorInputBackground: 'var(--input)',
+          colorInputText: 'var(--foreground)',
+          colorTextOnPrimaryBackground: 'var(--primary-foreground)',
+          colorTextSecondary: 'var(--muted-foreground)',
+          colorDanger: 'var(--destructive)',
+          borderRadius: '0px',
+        },
+        elements: {
+          card: 'pixel-border pixel-shadow bg-card',
+          formButtonPrimary: 'pixel-shadow bg-pixel-pink hover:bg-pixel-coral border-3 border-[var(--shadow-color)]',
+          formFieldInput: 'pixel-border bg-background',
+          formFieldLabel: 'text-foreground',
+          socialButtonsBlockButton: 'pixel-border pixel-shadow bg-card hover:bg-accent',
+          socialButtonsBlockButtonText: 'text-foreground',
+          footerActionLink: 'text-pixel-teal hover:text-pixel-mint',
+          dividerLine: 'bg-border',
+          dividerText: 'text-muted-foreground',
+          identityPreviewEditButton: 'text-pixel-teal hover:text-pixel-mint',
+          identityPreviewText: 'text-foreground',
+          userPreviewMainIdentifier: 'text-foreground',
+          userPreviewSecondaryIdentifier: 'text-muted-foreground',
+          formHeaderTitle: 'text-foreground',
+          formHeaderSubtitle: 'text-muted-foreground',
+          headerTitle: 'text-foreground',
+          headerSubtitle: 'text-muted-foreground',
+        }
       }
     }>
       <html lang="en" className="overflow-x-hidden">

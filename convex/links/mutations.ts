@@ -71,7 +71,7 @@ export const createLink = mutation({
       .collect();
 
     const maxOrder = pageLinks.length > 0
-      ? Math.max(...pageLinks.map((l) => l.orderIndex))
+      ? Math.max(...pageLinks.map((l) => l.orderIndex ?? 0))
       : -1;
 
     // Create the link
@@ -153,8 +153,14 @@ export const updateLink = mutation({
     }
 
     // Verify page ownership
+    if (!link.pageId) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Link has no associated page",
+      });
+    }
     const page = await ctx.db.get(link.pageId);
-    if (!page || page.deletionTime || page.userId !== user._id) {
+    if (!page || ("deletionTime" in page && page.deletionTime) || ("userId" in page && page.userId !== user._id)) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "You don't have access to this link",
@@ -231,8 +237,14 @@ export const deleteLink = mutation({
     }
 
     // Verify page ownership
+    if (!link.pageId) {
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Link has no associated page",
+      });
+    }
     const page = await ctx.db.get(link.pageId);
-    if (!page || page.deletionTime || page.userId !== user._id) {
+    if (!page || ("deletionTime" in page && page.deletionTime) || ("userId" in page && page.userId !== user._id)) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "You don't have access to this link",

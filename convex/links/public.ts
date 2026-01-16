@@ -35,7 +35,7 @@ export const getPublicPageLinks = query({
     });
 
     // Sort by orderIndex
-    return visibleLinks.sort((a, b) => a.orderIndex - b.orderIndex);
+    return visibleLinks.sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   },
 });
 
@@ -74,7 +74,7 @@ export const getPublicLinksBySlug = query({
     });
 
     // Sort by orderIndex
-    return visibleLinks.sort((a, b) => a.orderIndex - b.orderIndex);
+    return visibleLinks.sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
   },
 });
 
@@ -92,19 +92,19 @@ export const trackClick = mutation({
   handler: async (ctx, args) => {
     const link = await ctx.db.get(args.linkId);
 
-    if (!link || link.deletionTime) {
+    if (!link || link.deletionTime || !link.pageId) {
       return { success: false };
     }
 
     // Get the page to verify it's public
     const page = await ctx.db.get(link.pageId);
-    if (!page || page.deletionTime || !page.isPublic) {
+    if (!page || ("deletionTime" in page && page.deletionTime) || !("isPublic" in page && page.isPublic)) {
       return { success: false };
     }
 
     // Increment click count
     await ctx.db.patch(args.linkId, {
-      clickCount: link.clickCount + 1,
+      clickCount: (link.clickCount ?? 0) + 1,
       updatedAt: now(),
     });
 
@@ -131,18 +131,18 @@ export const incrementClickCount = mutation({
   handler: async (ctx, args) => {
     const link = await ctx.db.get(args.linkId);
 
-    if (!link || link.deletionTime) {
+    if (!link || link.deletionTime || !link.pageId) {
       return { success: false };
     }
 
     // Get the page to verify it's public
     const page = await ctx.db.get(link.pageId);
-    if (!page || page.deletionTime || !page.isPublic) {
+    if (!page || ("deletionTime" in page && page.deletionTime) || !("isPublic" in page && page.isPublic)) {
       return { success: false };
     }
 
     await ctx.db.patch(args.linkId, {
-      clickCount: link.clickCount + 1,
+      clickCount: (link.clickCount ?? 0) + 1,
       updatedAt: now(),
     });
 

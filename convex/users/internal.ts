@@ -110,15 +110,9 @@ export const updateFromClerk = internalMutation({
       .first();
 
     if (!user || user.deletionTime) {
-      // User doesn't exist or is deleted, create them
-      return ctx.runMutation({} as never, {
-        clerkUserId: args.clerkUserId,
-        email: args.email || "",
-        username: args.username,
-        firstName: args.firstName,
-        lastName: args.lastName,
-        imageUrl: args.imageUrl,
-      });
+      // User doesn't exist or is deleted - they should be created via webhook
+      // This shouldn't happen in normal flow
+      return null;
     }
 
     const updates: Record<string, unknown> = {
