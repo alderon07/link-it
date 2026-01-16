@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
+import { Skeleton } from "@/components/ui/skeleton"
 import {
   Users,
   LinkIcon,
@@ -16,10 +17,11 @@ import {
   Settings,
   Zap,
   Sparkles,
+  Loader2,
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { mockPages } from "@/lib/mock-pages"
+import { useUserPages, useDashboardStats, useRecentActivity } from "@/hooks/convex"
 import { PixelBorder } from "@/components/pixel-art/PixelBorder"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 import { PixelDivider } from "@/components/pixel-art/PixelDivider"
@@ -27,34 +29,53 @@ import { FadeIn } from "@/components/animations/PageTransition"
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer"
 import { CountUp } from "@/components/animations/CountUp"
 
-const statsConfig = [
+interface DashboardStats {
+  totalPages: number;
+  totalLinks: number;
+  totalActiveLinks: number;
+  totalViews: number;
+  totalClicks: number;
+  viewsThisMonth: number;
+  clicksThisMonth: number;
+  engagementRate: number;
+  topPages: Array<{
+    _id: string;
+    name: string;
+    slug: string;
+    viewCount: number;
+    avatarUrl?: string;
+    isPublic: boolean;
+  }>;
+}
+
+const getStatsConfig = (stats: DashboardStats | null | undefined) => [
   {
     title: "Total Pages",
     icon: Users,
     color: "pink",
-    getValue: (pages: typeof mockPages) => pages.length,
-    getSubtext: (pages: typeof mockPages) => `${pages.filter(p => p.isActive).length} active`,
+    value: stats?.totalPages ?? 0,
+    subtext: `${stats?.totalPages ?? 0} identities`,
   },
   {
     title: "Total Links",
     icon: LinkIcon,
     color: "teal",
-    getValue: (pages: typeof mockPages) => pages.reduce((sum, p) => sum + p.linkCount, 0),
-    getSubtext: () => "Across all pages",
+    value: stats?.totalLinks ?? 0,
+    subtext: `${stats?.totalActiveLinks ?? 0} active`,
   },
   {
     title: "Total Views",
     icon: Eye,
     color: "yellow",
-    getValue: (pages: typeof mockPages) => pages.reduce((sum, p) => sum + p.views, 0),
-    getSubtext: () => "+12% from last month",
+    value: stats?.totalViews ?? 0,
+    subtext: `${stats?.viewsThisMonth ?? 0} this month`,
   },
   {
     title: "Engagement",
     icon: TrendingUp,
     color: "mint",
-    getValue: () => 8.2,
-    getSubtext: () => "+2.1% from last week",
+    value: stats?.engagementRate ?? 0,
+    subtext: `${stats?.clicksThisMonth ?? 0} clicks this month`,
     suffix: "%",
   },
 ]
@@ -83,14 +104,52 @@ const quickActions = [
   },
 ]
 
-const recentActivity = [
-  { action: "Page viewed", page: "Alex Johnson", time: "2 min ago", color: "teal" },
-  { action: "Link clicked", page: "Sarah Chen", time: "5 min ago", color: "pink" },
-  { action: "New page created", page: "Mike Rodriguez", time: "1 hour ago", color: "yellow" },
-  { action: "Theme updated", page: "Alex Johnson", time: "2 hours ago", color: "purple" },
-]
+function formatTimeAgo(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 export function AdminDashboard() {
+  const pages = useUserPages();
+  const stats = useDashboardStats() as DashboardStats | null | undefined;
+  const recentActivity = useRecentActivity(10);
+
+  const isLoading = pages === undefined || stats === undefined;
+  const statsConfig = getStatsConfig(stats);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} variant="pixel">
+              <CardContent className="p-4">
+                <Skeleton className="h-10 w-10 mb-3" />
+                <Skeleton className="h-8 w-20 mb-1" />
+                <Skeleton className="h-4 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const typedPages = (pages || []) as Array<{
+    _id: string;
+    name: string;
+    slug: string;
+    viewCount: number;
+    avatarUrl?: string;
+    isPublic: boolean;
+  }>;
+
   return (
     <div className="space-y-8">
       {/* Stats Overview */}
@@ -110,13 +169,13 @@ export function AdminDashboard() {
                   </div>
                   <div className="text-3xl font-black mb-1">
                     <CountUp
-                      value={stat.getValue(mockPages)}
+                      value={stat.value}
                       suffix={stat.suffix}
                       duration={1.5}
                     />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {stat.getSubtext(mockPages)}
+                    {stat.subtext}
                   </p>
                 </CardContent>
               </Card>
@@ -179,50 +238,62 @@ export function AdminDashboard() {
               <CardDescription>Overview of your link-it pages</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {mockPages.slice(0, 3).map((page, index) => {
-                const colors = ["pink", "teal", "yellow"]
-                const color = colors[index % colors.length]
+              {typedPages.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground mb-4">No identities yet</p>
+                  <Button variant="pixel" size="sm" asChild>
+                    <Link href="/admin/pages">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Identity
+                    </Link>
+                  </Button>
+                </div>
+              ) : (
+                typedPages.slice(0, 3).map((page, index) => {
+                  const colors = ["pink", "teal", "yellow"]
+                  const color = colors[index % colors.length]
 
-                return (
-                  <motion.div
-                    key={page.id}
-                    whileHover={{ scale: 1.01 }}
-                    className="group"
-                  >
-                    <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <PixelBorder variant="solid" className={`p-0.5 bg-pixel-${color} shrink-0`}>
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
-                            <AvatarFallback className={`font-bold bg-pixel-${color}`}>
-                              {page.name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                        </PixelBorder>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-bold truncate">{page.name}</div>
-                          <div className="text-xs text-muted-foreground truncate">@{page.username}</div>
+                  return (
+                    <motion.div
+                      key={page._id}
+                      whileHover={{ scale: 1.01 }}
+                      className="group"
+                    >
+                      <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <PixelBorder variant="solid" className={`p-0.5 bg-pixel-${color} shrink-0`}>
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={page.avatarUrl || "/placeholder.svg"} alt={page.name} />
+                              <AvatarFallback className={`font-bold bg-pixel-${color}`}>
+                                {page.name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                          </PixelBorder>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold truncate">{page.name}</div>
+                            <div className="text-xs text-muted-foreground truncate">/{page.slug}</div>
+                          </div>
+                          <Badge variant={page.isPublic ? "retro" : "secondary"} className="text-xs shrink-0 hidden sm:inline-flex">
+                            {page.isPublic ? "Public" : "Private"}
+                          </Badge>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
+                              <Link href={`/admin/pages/${page._id}`}>
+                                <Settings className="h-3 w-3" />
+                              </Link>
+                            </Button>
+                            <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
+                              <Link href={`/${page.slug}`} target="_blank" rel="noreferrer">
+                                <ExternalLink className="h-3 w-3" />
+                              </Link>
+                            </Button>
+                          </div>
                         </div>
-                        <Badge variant={page.isActive ? "retro" : "secondary"} className="text-xs shrink-0 hidden sm:inline-flex">
-                          {page.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
-                            <Link href="/admin/pages">
-                              <Settings className="h-3 w-3" />
-                            </Link>
-                          </Button>
-                          <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
-                            <Link href={`/${page.username}`} target="_blank" rel="noreferrer">
-                              <ExternalLink className="h-3 w-3" />
-                            </Link>
-                          </Button>
-                        </div>
-                      </div>
-                    </PixelBorder>
-                  </motion.div>
-                )
-              })}
+                      </PixelBorder>
+                    </motion.div>
+                  )
+                })
+              )}
               <div className="pt-2">
                 <Button variant="pixel-secondary" className="w-full" asChild>
                   <Link href="/admin/pages">
@@ -251,22 +322,36 @@ export function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentActivity.map((activity, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="flex items-center gap-3"
-                  >
-                    <div className={`w-2 h-2 bg-pixel-${activity.color} pixel-border`} />
-                    <div className="flex-1 text-sm">
-                      <span className="font-bold">{activity.action}</span>
-                      <span className="text-muted-foreground"> on {activity.page}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">{activity.time}</span>
-                  </motion.div>
-                ))}
+                {!recentActivity || recentActivity.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+                ) : (
+                  (recentActivity as Array<{
+                    type: "view" | "click";
+                    timestamp: number;
+                    pageName: string;
+                    linkTitle?: string;
+                  }>).slice(0, 5).map((activity, index) => {
+                    const colors = activity.type === "view" ? "teal" : "pink";
+                    const action = activity.type === "view" ? "Page viewed" : `Link clicked${activity.linkTitle ? `: ${activity.linkTitle}` : ""}`;
+
+                    return (
+                      <motion.div
+                        key={`${activity.type}-${activity.timestamp}-${index}`}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        className="flex items-center gap-3"
+                      >
+                        <div className={`w-2 h-2 bg-pixel-${colors} pixel-border`} />
+                        <div className="flex-1 text-sm min-w-0">
+                          <span className="font-bold truncate">{action}</span>
+                          <span className="text-muted-foreground"> on {activity.pageName}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground shrink-0">{formatTimeAgo(activity.timestamp)}</span>
+                      </motion.div>
+                    );
+                  })
+                )}
               </div>
             </CardContent>
           </Card>
@@ -284,10 +369,30 @@ export function AdminDashboard() {
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { label: "Page Views", value: 2847, progress: 75, color: "pink" },
-                { label: "Link Clicks", value: 1234, progress: 60, color: "teal" },
-                { label: "Engagement Rate", value: "8.2%", progress: 82, color: "yellow" },
-                { label: "Goal Progress", value: "67%", progress: 67, color: "mint" },
+                {
+                  label: "Page Views",
+                  value: stats?.viewsThisMonth ?? 0,
+                  progress: Math.min(100, ((stats?.viewsThisMonth ?? 0) / Math.max(1, stats?.totalViews ?? 1)) * 100),
+                  color: "pink",
+                },
+                {
+                  label: "Link Clicks",
+                  value: stats?.clicksThisMonth ?? 0,
+                  progress: Math.min(100, ((stats?.clicksThisMonth ?? 0) / Math.max(1, stats?.totalClicks ?? 1)) * 100),
+                  color: "teal",
+                },
+                {
+                  label: "Engagement Rate",
+                  value: `${stats?.engagementRate ?? 0}%`,
+                  progress: Math.min(100, stats?.engagementRate ?? 0),
+                  color: "yellow",
+                },
+                {
+                  label: "Active Links",
+                  value: `${stats?.totalActiveLinks ?? 0}/${stats?.totalLinks ?? 0}`,
+                  progress: stats?.totalLinks ? ((stats.totalActiveLinks ?? 0) / stats.totalLinks) * 100 : 0,
+                  color: "mint",
+                },
               ].map((metric, index) => (
                 <div key={metric.label} className="space-y-2">
                   <div className="flex justify-between text-sm">

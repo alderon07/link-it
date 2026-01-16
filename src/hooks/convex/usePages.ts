@@ -92,6 +92,18 @@ export function usePublicPageByUsername(username: string) {
 }
 
 /**
+ * Hook to get all links across all user pages (for All Links page)
+ */
+export function useAllUserLinks() {
+  const isAvailable = useConvexAvailable();
+  return useQuery(
+    isAvailable && api?.pages?.queries?.getAllUserLinks
+      ? api.pages.queries.getAllUserLinks
+      : "skip"
+  );
+}
+
+/**
  * Hook for page mutations
  */
 export function usePageMutations() {

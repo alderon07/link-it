@@ -1,13 +1,15 @@
 "use client"
 
+import * as React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart3, TrendingUp, Users, Eye, MousePointer, Download, Filter } from "lucide-react"
-import { mockPages } from "@/lib/mock-pages"
+import { BarChart3, TrendingUp, Users, Eye, MousePointer, Download, Filter, Loader2 } from "lucide-react"
+import { useDashboardStats, useGlobalAnalytics, useUserPages } from "@/hooks/convex"
 import { PixelBorder } from "@/components/pixel-art/PixelBorder"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 import { PixelDivider } from "@/components/pixel-art/PixelDivider"
@@ -15,10 +17,73 @@ import { FadeIn, SlideUp } from "@/components/animations/PageTransition"
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer"
 import { CountUp } from "@/components/animations/CountUp"
 
+interface GlobalAnalyticsData {
+  totalViews: number;
+  totalClicks: number;
+  viewsOverTime: Array<{ date: string; count: number }>;
+  clicksOverTime: Array<{ date: string; count: number }>;
+  topLinks: Array<{
+    link: { title: string; url: string };
+    page: { name: string };
+    clicks: number;
+  }>;
+  trafficSources: Array<{ source: string; count: number }>;
+  topPages: Array<{
+    page: { _id: string; name: string; slug: string; viewCount: number; avatarUrl?: string };
+    views: number;
+  }>;
+}
+
+interface DashboardStats {
+  totalPages: number;
+  totalLinks: number;
+  totalActiveLinks: number;
+  totalViews: number;
+  totalClicks: number;
+  viewsThisMonth: number;
+  clicksThisMonth: number;
+  engagementRate: number;
+}
+
 export function AnalyticsDashboard() {
-  const totalViews = mockPages.reduce((sum, profile) => sum + profile.views, 0)
-  const totalClicks = 1205 // Mock data
-  const avgEngagement = 8.2 // Mock data
+  const [days, setDays] = React.useState(30);
+  const [selectedPage, setSelectedPage] = React.useState("all");
+
+  const stats = useDashboardStats() as DashboardStats | null | undefined;
+  const globalAnalytics = useGlobalAnalytics(days) as GlobalAnalyticsData | null | undefined;
+  const pages = useUserPages();
+
+  const isLoading = stats === undefined || globalAnalytics === undefined || pages === undefined;
+
+  const typedPages = (pages || []) as Array<{
+    _id: string;
+    name: string;
+    slug: string;
+    viewCount: number;
+    avatarUrl?: string;
+    isPublic: boolean;
+  }>;
+
+  const totalViews = stats?.totalViews ?? 0;
+  const totalClicks = stats?.totalClicks ?? 0;
+  const avgEngagement = stats?.engagementRate ?? 0;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} variant="pixel">
+              <CardContent className="p-4">
+                <Skeleton className="h-6 w-24 mb-2" />
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -27,27 +92,30 @@ export function AnalyticsDashboard() {
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row gap-4 w-full">
             <PixelBorder variant="solid" shadow="sm" className="bg-card w-full sm:w-auto">
-              <Select defaultValue="30d">
+              <Select
+                value={days.toString()}
+                onValueChange={(v) => setDays(parseInt(v))}
+              >
                 <SelectTrigger className="w-full sm:w-[180px] border-0 bg-transparent font-bold">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
                 <SelectContent className="pixel-border">
-                  <SelectItem value="7d" className="font-medium">Last 7 days</SelectItem>
-                  <SelectItem value="30d" className="font-medium">Last 30 days</SelectItem>
-                  <SelectItem value="90d" className="font-medium">Last 90 days</SelectItem>
-                  <SelectItem value="1y" className="font-medium">Last year</SelectItem>
+                  <SelectItem value="7" className="font-medium">Last 7 days</SelectItem>
+                  <SelectItem value="30" className="font-medium">Last 30 days</SelectItem>
+                  <SelectItem value="90" className="font-medium">Last 90 days</SelectItem>
+                  <SelectItem value="365" className="font-medium">Last year</SelectItem>
                 </SelectContent>
               </Select>
             </PixelBorder>
             <PixelBorder variant="solid" shadow="sm" className="bg-card w-full sm:w-auto">
-              <Select defaultValue="all">
+              <Select value={selectedPage} onValueChange={setSelectedPage}>
                 <SelectTrigger className="w-full sm:w-[200px] border-0 bg-transparent font-bold">
                   <SelectValue placeholder="Filter by identity" />
                 </SelectTrigger>
                 <SelectContent className="pixel-border">
                   <SelectItem value="all" className="font-medium">All Identities</SelectItem>
-                  {mockPages.map((page) => (
-                    <SelectItem key={page.id} value={page.id} className="font-medium">
+                  {typedPages.map((page) => (
+                    <SelectItem key={page._id} value={page._id} className="font-medium">
                       {page.name}
                     </SelectItem>
                   ))}
@@ -119,15 +187,15 @@ export function AnalyticsDashboard() {
         <StaggerItem>
           <Card variant="pixel">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold">Unique Visitors</CardTitle>
+              <CardTitle className="text-sm font-bold">This Month</CardTitle>
               <PixelIcon icon="star" size="xs" color="coral" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-black pixel-text-shadow">
-                <CountUp value={8429} duration={0.8} />
+                <CountUp value={stats?.viewsThisMonth ?? 0} duration={0.8} />
               </div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-pixel-teal font-bold">+15.3%</span> from last month
+                Views in last 30 days
               </p>
             </CardContent>
           </Card>
@@ -229,40 +297,43 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <PixelDivider variant="dashed" className="mb-4" />
-                <StaggerContainer className="space-y-4">
-                  {mockPages.map((page, index) => {
-                    const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
-                    const colorClass = colors[index % colors.length]
+                {typedPages.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No identities yet</p>
+                ) : (
+                  <StaggerContainer className="space-y-4">
+                    {typedPages.map((page, index) => {
+                      const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
+                      const colorClass = colors[index % colors.length]
 
-                    return (
-                      <StaggerItem key={page.id}>
-                        <PixelBorder variant="solid" shadow="sm" className="p-4 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <PixelBorder variant="solid" shadow="sm" className={`p-0.5 ${colorClass} shrink-0`}>
-                                <Avatar className="h-12 w-12 pixel-border">
-                                  <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
-                                  <AvatarFallback className={`font-bold ${colorClass}`}>{page.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                              </PixelBorder>
-                              <div className="min-w-0 flex-1">
-                                <h3 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{page.name}</h3>
-                                <p className="text-sm text-muted-foreground truncate">@{page.username}</p>
+                      return (
+                        <StaggerItem key={page._id}>
+                          <PixelBorder variant="solid" shadow="sm" className="p-4 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <PixelBorder variant="solid" shadow="sm" className={`p-0.5 ${colorClass} shrink-0`}>
+                                  <Avatar className="h-12 w-12 pixel-border">
+                                    <AvatarImage src={page.avatarUrl || "/placeholder.svg"} alt={page.name} />
+                                    <AvatarFallback className={`font-bold ${colorClass}`}>{page.name.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                </PixelBorder>
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{page.name}</h3>
+                                  <p className="text-sm text-muted-foreground truncate">/{page.slug}</p>
+                                </div>
+                                <Badge variant={page.isPublic ? "retro" : "secondary"} className="capitalize shrink-0 hidden sm:inline-flex">
+                                  {page.isPublic ? "Public" : "Private"}
+                                </Badge>
                               </div>
-                              <Badge variant="retro" className="capitalize shrink-0 hidden sm:inline-flex">
-                                {page.category}
-                              </Badge>
+                              <div className="text-right shrink-0">
+                                <div className="font-black text-pixel-pink">{page.viewCount.toLocaleString()} views</div>
+                              </div>
                             </div>
-                            <div className="text-right shrink-0">
-                              <div className="font-black text-pixel-pink">{page.views.toLocaleString()} views</div>
-                              <div className="text-sm text-muted-foreground font-medium">{page.linkCount} links</div>
-                            </div>
-                          </div>
-                        </PixelBorder>
-                      </StaggerItem>
-                    )
-                  })}
-                </StaggerContainer>
+                          </PixelBorder>
+                        </StaggerItem>
+                      )
+                    })}
+                  </StaggerContainer>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -278,40 +349,37 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <PixelDivider variant="dashed" className="mb-4" />
-                <StaggerContainer className="space-y-4">
-                  {[
-                    { title: "Spotify Music", clicks: 312, profile: "Mike Rodriguez", ctr: "12.4%" },
-                    { title: "Portfolio Website", clicks: 245, profile: "Alex Johnson", ctr: "9.8%" },
-                    { title: "Tech Blog", clicks: 203, profile: "Sarah Chen", ctr: "8.1%" },
-                    { title: "YouTube Channel", clicks: 189, profile: "Alex Johnson", ctr: "7.6%" },
-                    { title: "GitHub Profile", clicks: 156, profile: "Sarah Chen", ctr: "6.2%" },
-                  ].map((link, index) => {
-                    const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
-                    const colorClass = colors[index % colors.length]
+                {!globalAnalytics?.topLinks || globalAnalytics.topLinks.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No link data yet</p>
+                ) : (
+                  <StaggerContainer className="space-y-4">
+                    {globalAnalytics.topLinks.slice(0, 5).map((item, index) => {
+                      const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
+                      const colorClass = colors[index % colors.length]
 
-                    return (
-                      <StaggerItem key={index}>
-                        <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className={`w-8 h-8 ${colorClass} pixel-border flex items-center justify-center text-sm font-black group-hover:pixel-bounce shrink-0`}>
-                                {index + 1}
+                      return (
+                        <StaggerItem key={index}>
+                          <PixelBorder variant="solid" shadow="sm" className="p-3 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={`w-8 h-8 ${colorClass} pixel-border flex items-center justify-center text-sm font-black group-hover:pixel-bounce shrink-0`}>
+                                  {index + 1}
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{item.link.title}</h4>
+                                  <p className="text-sm text-muted-foreground truncate">{item.page?.name}</p>
+                                </div>
                               </div>
-                              <div className="min-w-0">
-                                <h4 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{link.title}</h4>
-                                <p className="text-sm text-muted-foreground truncate">{link.profile}</p>
+                              <div className="text-right shrink-0">
+                                <div className="font-black text-pixel-teal">{item.clicks} clicks</div>
                               </div>
                             </div>
-                            <div className="text-right shrink-0">
-                              <div className="font-black text-pixel-teal">{link.clicks} clicks</div>
-                              <div className="text-sm text-muted-foreground font-medium">{link.ctr} CTR</div>
-                            </div>
-                          </div>
-                        </PixelBorder>
-                      </StaggerItem>
-                    )
-                  })}
-                </StaggerContainer>
+                          </PixelBorder>
+                        </StaggerItem>
+                      )
+                    })}
+                  </StaggerContainer>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -328,25 +396,31 @@ export function AnalyticsDashboard() {
                 </CardHeader>
                 <CardContent>
                   <PixelDivider variant="dashed" className="mb-4" />
-                  <div className="space-y-4">
-                    {[
-                      { source: "Direct", percentage: 45, visitors: 3789, color: "bg-pixel-pink" },
-                      { source: "Social Media", percentage: 28, visitors: 2356, color: "bg-pixel-teal" },
-                      { source: "Search Engines", percentage: 15, visitors: 1264, color: "bg-pixel-yellow" },
-                      { source: "Referrals", percentage: 12, visitors: 1020, color: "bg-pixel-mint" },
-                    ].map((source) => (
-                      <div key={source.source} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-4 h-4 ${source.color} pixel-border`} />
-                          <span className="font-bold">{source.source}</span>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-black text-pixel-pink">{source.percentage}%</div>
-                          <div className="text-sm text-muted-foreground">{source.visitors.toLocaleString()} visitors</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  {!globalAnalytics?.trafficSources || globalAnalytics.trafficSources.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">No traffic data yet</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {(() => {
+                        const total = globalAnalytics.trafficSources.reduce((sum, s) => sum + s.count, 0);
+                        const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint"];
+                        return globalAnalytics.trafficSources.slice(0, 4).map((source, index) => {
+                          const percentage = total > 0 ? Math.round((source.count / total) * 100) : 0;
+                          return (
+                            <div key={source.source} className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-4 h-4 ${colors[index % colors.length]} pixel-border`} />
+                                <span className="font-bold">{source.source}</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-black text-pixel-pink">{percentage}%</div>
+                                <div className="text-sm text-muted-foreground">{source.count.toLocaleString()} visitors</div>
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
