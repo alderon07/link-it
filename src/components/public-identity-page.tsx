@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ExternalLink, Share2, Heart, Eye, LinkIcon, Star } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { PixelBorder } from "@/components/pixel-art/PixelBorder"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 import { PixelDivider } from "@/components/pixel-art/PixelDivider"
@@ -15,180 +15,9 @@ import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerCo
 import { CountUp } from "@/components/animations/CountUp"
 import { trackEvent } from "@/lib/analytics/posthog-client"
 import { AnalyticsEvents } from "@/lib/analytics/events"
-
-// Mock links data for profiles
-const mockPageLinks = {
-  "page-1": [
-    {
-      id: "link-1",
-      title: "My Portfolio",
-      url: "https://alexjohnson.dev",
-      description: "Check out my latest creative work",
-      icon: "star",
-      isActive: true,
-      clicks: 245,
-      order: 1,
-    },
-    {
-      id: "link-2",
-      title: "YouTube Channel",
-      url: "https://youtube.com/@alexcreates",
-      description: "Creative tutorials and behind-the-scenes",
-      icon: "play",
-      isActive: true,
-      clicks: 189,
-      order: 2,
-    },
-    {
-      id: "link-3",
-      title: "Instagram",
-      url: "https://instagram.com/alexcreates",
-      description: "Daily inspiration and updates",
-      icon: "heart",
-      isActive: true,
-      clicks: 156,
-      order: 3,
-    },
-    {
-      id: "link-4",
-      title: "Shop My Prints",
-      url: "https://shop.alexjohnson.dev",
-      description: "Limited edition art prints",
-      icon: "sparkle",
-      isActive: false,
-      clicks: 89,
-      order: 4,
-    },
-  ],
-  "page-2": [
-    {
-      id: "link-5",
-      title: "GitHub",
-      url: "https://github.com/sarahchen",
-      description: "Open source projects and contributions",
-      icon: "code",
-      isActive: true,
-      clicks: 203,
-      order: 1,
-    },
-    {
-      id: "link-6",
-      title: "Tech Blog",
-      url: "https://sarahtech.blog",
-      description: "Latest insights on web development",
-      icon: "document",
-      isActive: true,
-      clicks: 178,
-      order: 2,
-    },
-    {
-      id: "link-7",
-      title: "LinkedIn",
-      url: "https://linkedin.com/in/sarahchen",
-      description: "Professional network and updates",
-      icon: "user",
-      isActive: true,
-      clicks: 134,
-      order: 3,
-    },
-  ],
-  "page-3": [
-    {
-      id: "link-8",
-      title: "Spotify",
-      url: "https://spotify.com/artist/mikemusic",
-      description: "Latest tracks and albums",
-      icon: "music",
-      isActive: true,
-      clicks: 312,
-      order: 1,
-    },
-    {
-      id: "link-9",
-      title: "SoundCloud",
-      url: "https://soundcloud.com/mikerodriguez",
-      description: "Unreleased tracks and demos",
-      icon: "play",
-      isActive: true,
-      clicks: 198,
-      order: 2,
-    },
-    {
-      id: "link-10",
-      title: "Apple Music",
-      url: "https://music.apple.com/artist/mikerodriguez",
-      description: "Stream on Apple Music",
-      icon: "heart",
-      isActive: true,
-      clicks: 167,
-      order: 3,
-    },
-  ],
-  "page-4": [
-    {
-      id: "link-11",
-      title: "Fitness Programs",
-      url: "https://emmafitness.com/programs",
-      description: "Personalized workout plans",
-      icon: "bolt",
-      isActive: true,
-      clicks: 189,
-      order: 1,
-    },
-    {
-      id: "link-12",
-      title: "Nutrition Guide",
-      url: "https://emmafitness.com/nutrition",
-      description: "Healthy eating made simple",
-      icon: "check",
-      isActive: true,
-      clicks: 156,
-      order: 2,
-    },
-    {
-      id: "link-13",
-      title: "Instagram",
-      url: "https://instagram.com/emmafitness",
-      description: "Daily motivation and tips",
-      icon: "heart",
-      isActive: true,
-      clicks: 234,
-      order: 3,
-    },
-  ],
-  "page-5": [
-    {
-      id: "link-14",
-      title: "Recipe Collection",
-      url: "https://davidcooks.com/recipes",
-      description: "My favorite recipes to share",
-      icon: "star",
-      isActive: true,
-      clicks: 278,
-      order: 1,
-    },
-    {
-      id: "link-15",
-      title: "Cooking Classes",
-      url: "https://davidcooks.com/classes",
-      description: "Learn to cook like a pro",
-      icon: "play",
-      isActive: true,
-      clicks: 145,
-      order: 2,
-    },
-    {
-      id: "link-16",
-      title: "Instagram",
-      url: "https://instagram.com/davidcooks",
-      description: "Food photography and tips",
-      icon: "heart",
-      isActive: true,
-      clicks: 198,
-      order: 3,
-    },
-  ],
-}
+import { useMutation } from "convex/react"
+import { api } from "../../convex/_generated/api"
+import { Id, Doc } from "../../convex/_generated/dataModel"
 
 const iconMap: Record<string, "star" | "heart" | "arrow" | "check" | "cross" | "plus" | "minus" | "sparkle" | "diamond" | "coin" | "lightning" | "fire" | "link" | "cursor"> = {
   star: "star",
@@ -202,54 +31,95 @@ const iconMap: Record<string, "star" | "heart" | "arrow" | "check" | "cross" | "
   check: "check",
   user: "star",
   fire: "fire",
+  "bar-chart": "coin",
+  ticket: "sparkle",
+  "shopping-bag": "diamond",
+  lock: "cross",
+  github: "link",
+  linkedin: "star",
+  twitter: "heart",
+  instagram: "heart",
 }
 
 const colorVariants = ["pink", "teal", "yellow", "mint", "coral", "purple", "blue", "orange", "green"] as const
 
-interface PublicPageProps {
-  page: {
-    id: string
-    name: string
+interface IdentityWithUser {
+  _id: Id<"identities">
+  name: string
+  slug: string
+  bio?: string
+  avatarUrl?: string
+  isPublic: boolean
+  viewCount: number
+  themeId?: Id<"themes">
+  user: {
     username: string
-    bio?: string
-    avatar?: string
-    category?: string
-    views: number
-    verified?: boolean
+    displayName?: string
+    avatarUrl?: string
   }
+  theme?: Doc<"themes"> | null
 }
 
-export function PublicPageComponent({ page }: PublicPageProps) {
-  const [viewCount, setViewCount] = React.useState<number>(page.views)
+interface Link {
+  _id: Id<"links">
+  title: string
+  url?: string
+  type?: "link" | "header" | "divider"
+  description?: string
+  icon?: string
+  isActive?: boolean
+  orderIndex?: number
+  clickCount?: number
+}
+
+interface PublicIdentityPageProps {
+  identity: IdentityWithUser
+  links: Link[]
+  onView?: () => void
+}
+
+export function PublicIdentityPage({ identity, links, onView }: PublicIdentityPageProps) {
+  const [viewCount, setViewCount] = React.useState<number>(identity.viewCount || 0)
   const [shareSuccess, setShareSuccess] = React.useState(false)
-  const links = (mockPageLinks[page.id as keyof typeof mockPageLinks] || [])
-    .filter((link) => link.isActive)
-    .sort((a, b) => a.order - b.order)
+  const trackClick = useMutation(api.links.public.trackClick)
+
+  // Sort and filter links
+  const activeLinks = links
+    .filter((link) => link.isActive !== false && link.type !== "divider")
+    .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
 
   // Track page view on mount
   React.useEffect(() => {
     setViewCount((prev) => prev + 1)
+    onView?.()
+    
     // Track in PostHog
     trackEvent(AnalyticsEvents.PAGE_VIEW, {
-      page_id: parseInt(page.id.replace("page-", "")),
-      page_slug: page.username,
-      page_name: page.name,
+      page_id: identity._id,
+      page_slug: identity.slug,
+      page_name: identity.name,
       is_public: true,
     })
-  }, [page.id, page.username, page.name])
+  }, [identity._id, identity.slug, identity.name, onView])
 
-  const handleLinkClick = (link: typeof links[0], index: number) => {
+  const handleLinkClick = async (link: Link, index: number) => {
     // Track click in PostHog
     trackEvent(AnalyticsEvents.LINK_CLICK, {
-      link_id: parseInt(link.id.replace("link-", "")),
-      page_id: parseInt(page.id.replace("page-", "")),
-      page_slug: page.username,
+      link_id: link._id,
+      page_id: identity._id,
+      page_slug: identity.slug,
       link_url: link.url,
       link_title: link.title,
       link_position: index,
     })
+
+    // Track click in Convex
+    await trackClick({ linkId: link._id })
+
     // Open link
-    window.open(link.url, "_blank", "noopener,noreferrer")
+    if (link.url) {
+      window.open(link.url, "_blank", "noopener,noreferrer")
+    }
   }
 
   const handleShare = async () => {
@@ -257,8 +127,8 @@ export function PublicPageComponent({ page }: PublicPageProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${page.name} - link-it`,
-          text: page.bio,
+          title: `${identity.name} - link-it`,
+          text: identity.bio,
           url: url,
         })
       } catch (error) {
@@ -271,11 +141,24 @@ export function PublicPageComponent({ page }: PublicPageProps) {
     }
   }
 
-  // Get a consistent color based on page id
-  const pageColor = colorVariants[parseInt(page.id.replace("page-", "")) % colorVariants.length]
+  // Get a consistent color based on identity id hash
+  const idHash = identity._id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  const pageColor = colorVariants[idHash % colorVariants.length]
+
+  // Apply theme styles if available
+  const themeStyles = identity.theme
+    ? {
+        "--theme-bg": identity.theme.bgColor,
+        "--theme-text": identity.theme.textColor,
+        "--theme-accent": identity.theme.accentColor,
+      } as React.CSSProperties
+    : {}
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
+    <div 
+      className="min-h-screen bg-background text-foreground relative overflow-hidden"
+      style={themeStyles}
+    >
       {/* Pixel Grid Background */}
       <div className="fixed inset-0 pixel-grid opacity-20 pointer-events-none" />
 
@@ -330,38 +213,27 @@ export function PublicPageComponent({ page }: PublicPageProps) {
             >
               <PixelBorder variant="solid" shadow="default" className={`p-1 bg-pixel-${pageColor}`}>
                 <Avatar className="w-24 h-24 pixel-border">
-                  <AvatarImage src={page.avatar || "/placeholder.svg?height=200&width=200"} alt={page.name} />
+                  <AvatarImage 
+                    src={identity.avatarUrl || identity.user.avatarUrl || "/placeholder.svg?height=200&width=200"} 
+                    alt={identity.name} 
+                  />
                   <AvatarFallback className={`text-2xl font-bold bg-pixel-${pageColor}`}>
-                    {page.name.charAt(0)}
+                    {identity.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
               </PixelBorder>
             </motion.div>
 
             {/* Name & Username */}
-            <h1 className="text-2xl font-black mb-1 pixel-text-shadow">{page.name}</h1>
+            <h1 className="text-2xl font-black mb-1 pixel-text-shadow">{identity.name}</h1>
             <p className="text-muted-foreground mb-3 flex items-center justify-center gap-1">
-              @{page.username}
-              {page.verified && (
-                <span className="inline-flex items-center justify-center w-5 h-5 bg-pixel-yellow pixel-border ml-1">
-                  <Star className="w-3 h-3 fill-current" />
-                </span>
-              )}
+              @{identity.user.username}
             </p>
 
-            {/* Category Badge */}
-            {page.category && (
-              <div className="flex justify-center mb-4">
-                <Badge variant="retro" className="capitalize">
-                  {page.category}
-                </Badge>
-              </div>
-            )}
-
             {/* Bio */}
-            {page.bio && (
+            {identity.bio && (
               <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
-                {page.bio}
+                {identity.bio}
               </p>
             )}
           </div>
@@ -371,7 +243,7 @@ export function PublicPageComponent({ page }: PublicPageProps) {
 
         {/* Links */}
         <div className="mb-8">
-          {links.length === 0 ? (
+          {activeLinks.length === 0 ? (
             <FadeIn>
               <PixelBorder variant="solid" shadow="default" className="p-8 bg-card text-center">
                 <PixelIcon icon="cross" size="lg" color="coral" className="mx-auto mb-4" />
@@ -383,12 +255,12 @@ export function PublicPageComponent({ page }: PublicPageProps) {
             </FadeIn>
           ) : (
             <StaggerContainer className="space-y-4">
-              {links.map((link, index) => {
-                const linkColor = colorVariants[(index + parseInt(page.id.replace("page-", ""))) % colorVariants.length]
-                const iconName = iconMap[link.icon] || "star"
+              {activeLinks.map((link, index) => {
+                const linkColor = colorVariants[(index + idHash) % colorVariants.length]
+                const iconName = iconMap[link.icon || "star"] || "star"
 
                 return (
-                  <StaggerItem key={link.id}>
+                  <StaggerItem key={link._id}>
                     <motion.div
                       whileHover={{ scale: 1.02, x: -2, y: -2 }}
                       whileTap={{ scale: 0.98 }}
