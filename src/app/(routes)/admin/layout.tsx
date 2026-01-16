@@ -1,6 +1,7 @@
 import type React from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { UserSyncProvider } from "./user-sync-provider"
 
 export default function AdminLayout({
   children,
@@ -8,11 +9,13 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider>
-      <AdminSidebar />
-      <SidebarInset>
-        <main className="flex-1 overflow-auto overflow-x-hidden pb-20 md:pb-0 w-full max-w-full" style={{ boxSizing: 'border-box' }}>{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <UserSyncProvider>
+      <SidebarProvider>
+        <AdminSidebar />
+        <SidebarInset>
+          <main className="flex-1 overflow-auto overflow-x-hidden pb-20 md:pb-0 w-full max-w-full" style={{ boxSizing: 'border-box' }}>{children}</main>
+        </SidebarInset>
+      </SidebarProvider>
+    </UserSyncProvider>
   )
 }

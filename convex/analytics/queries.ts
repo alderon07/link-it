@@ -9,39 +9,39 @@ import { Doc, Id } from "../_generated/dataModel";
 export const getDashboardStats = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       return null;
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
       return null;
     }
 
-    // Get all user pages
-    const pages = await ctx.db
-      .query("pages")
+    // Get all user identities
+    const identities = await ctx.db
+      .query("identities")
       .withIndex("by_user", (q) =>
         q.eq("userId", user._id).eq("deletionTime", undefined)
       )
       .collect();
 
-    // Get all links across all pages
+    // Get all links across all identities
     let totalLinks = 0;
     let totalActiveLinks = 0;
     let totalClicks = 0;
 
-    const pageIds = pages.map((p) => p._id);
-    for (const pageId of pageIds) {
+    const identityIds = identities.map((p) => p._id);
+    for (const identityId of identityIds) {
       const links = await ctx.db
         .query("links")
-        .withIndex("by_page", (q) =>
-          q.eq("pageId", pageId).eq("deletionTime", undefined)
+        .withIndex("by_identity", (q) =>
+          q.eq("identityId", identityId).eq("deletionTime", undefined)
         )
         .collect();
 
@@ -51,7 +51,7 @@ export const getDashboardStats = query({
     }
 
     // Calculate total views
-    const totalViews = pages.reduce((sum, p) => sum + p.viewCount, 0);
+    const totalViews = identities.reduce((sum, p) => sum + p.viewCount, 0);
 
     // Get views and clicks this month
     const now = Date.now();
@@ -60,22 +60,22 @@ export const getDashboardStats = query({
     let viewsThisMonth = 0;
     let clicksThisMonth = 0;
 
-    for (const pageId of pageIds) {
+    for (const identityId of identityIds) {
       const recentViews = await ctx.db
-        .query("pageViews")
-        .withIndex("by_page", (q) => q.eq("pageId", pageId).gte("viewedAt", thirtyDaysAgo))
+        .query("identityViews")
+        .withIndex("by_identity", (q) => q.eq("identityId", identityId).gte("viewedAt", thirtyDaysAgo))
         .collect();
       viewsThisMonth += recentViews.length;
 
       const recentClicks = await ctx.db
         .query("linkClicks")
-        .withIndex("by_page", (q) => q.eq("pageId", pageId).gte("clickedAt", thirtyDaysAgo))
+        .withIndex("by_identity", (q) => q.eq("identityId", identityId).gte("clickedAt", thirtyDaysAgo))
         .collect();
       clicksThisMonth += recentClicks.length;
     }
 
-    // Get top pages by view count
-    const topPages = [...pages]
+    // Get top identities by view count
+    const topIdentities = [...identities]
       .sort((a, b) => b.viewCount - a.viewCount)
       .slice(0, 5);
 
@@ -83,7 +83,7 @@ export const getDashboardStats = query({
     const engagementRate = totalViews > 0 ? (totalClicks / totalViews) * 100 : 0;
 
     return {
-      totalPages: pages.length,
+      totalIdentities: identities.length,
       totalLinks,
       totalActiveLinks,
       totalViews,
@@ -91,22 +91,22 @@ export const getDashboardStats = query({
       viewsThisMonth,
       clicksThisMonth,
       engagementRate: Math.round(engagementRate * 10) / 10,
-      topPages,
+      topIdentities,
     };
   },
 });
 
 /**
- * Get analytics for a specific page
+ * Get analytics for a specific identity
  */
-export const getPageAnalytics = query({
+export const getIdentityAnalytics = query({
   args: {
-    pageId: v.id("pages"),
+    identityId: v.id("identities"),
     days: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       throw new ConvexError({
         code: "UNAUTHORIZED",
         message: "You must be logged in to view analytics",
@@ -115,7 +115,7 @@ export const getPageAnalytics = query({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
@@ -125,12 +125,12 @@ export const getPageAnalytics = query({
       });
     }
 
-    // Verify page ownership
-    const page = await ctx.db.get(args.pageId);
-    if (!page || page.deletionTime || page.userId !== user._id) {
+    // Verify identity ownership
+    const identity = await ctx.db.get(args.identityId);
+    if (!identity || identity.deletionTime || identity.userId !== user._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You don't have access to this page",
+        message: "You don't have access to this identity",
       });
     }
 
@@ -138,21 +138,21 @@ export const getPageAnalytics = query({
     const days = args.days ?? 30;
     const startTime = now - days * 24 * 60 * 60 * 1000;
 
-    // Get page views
-    const pageViews = await ctx.db
-      .query("pageViews")
-      .withIndex("by_page", (q) => q.eq("pageId", args.pageId).gte("viewedAt", startTime))
+    // Get identity views
+    const identityViews = await ctx.db
+      .query("identityViews")
+      .withIndex("by_identity", (q) => q.eq("identityId", args.identityId).gte("viewedAt", startTime))
       .collect();
 
     // Get link clicks
     const linkClicks = await ctx.db
       .query("linkClicks")
-      .withIndex("by_page", (q) => q.eq("pageId", args.pageId).gte("clickedAt", startTime))
+      .withIndex("by_identity", (q) => q.eq("identityId", args.identityId).gte("clickedAt", startTime))
       .collect();
 
     // Group views by date
     const viewsByDate = new Map<string, number>();
-    for (const view of pageViews) {
+    for (const view of identityViews) {
       const date = new Date(view.viewedAt).toISOString().split("T")[0];
       viewsByDate.set(date, (viewsByDate.get(date) ?? 0) + 1);
     }
@@ -170,8 +170,8 @@ export const getPageAnalytics = query({
     // Get clicks by link
     const links = await ctx.db
       .query("links")
-      .withIndex("by_page", (q) =>
-        q.eq("pageId", args.pageId).eq("deletionTime", undefined)
+      .withIndex("by_identity", (q) =>
+        q.eq("identityId", args.identityId).eq("deletionTime", undefined)
       )
       .collect();
 
@@ -189,7 +189,7 @@ export const getPageAnalytics = query({
 
     // Referrer breakdown
     const referrerCounts = new Map<string, number>();
-    for (const view of pageViews) {
+    for (const view of identityViews) {
       const referrer = view.referrer || "direct";
       referrerCounts.set(referrer, (referrerCounts.get(referrer) ?? 0) + 1);
     }
@@ -200,7 +200,7 @@ export const getPageAnalytics = query({
 
     // Device breakdown (from user agent)
     const deviceCounts = new Map<string, number>();
-    for (const view of pageViews) {
+    for (const view of identityViews) {
       let device = "Unknown";
       const ua = view.userAgent?.toLowerCase() ?? "";
       if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
@@ -218,7 +218,7 @@ export const getPageAnalytics = query({
 
     // Country breakdown
     const countryCounts = new Map<string, number>();
-    for (const view of pageViews) {
+    for (const view of identityViews) {
       const country = view.country || "Unknown";
       countryCounts.set(country, (countryCounts.get(country) ?? 0) + 1);
     }
@@ -228,7 +228,7 @@ export const getPageAnalytics = query({
       .slice(0, 10);
 
     return {
-      totalViews: pageViews.length,
+      totalViews: identityViews.length,
       totalClicks: linkClicks.length,
       viewsOverTime,
       clicksByLink,
@@ -240,21 +240,21 @@ export const getPageAnalytics = query({
 });
 
 /**
- * Get global analytics across all user pages
+ * Get global analytics across all user identities
  */
 export const getGlobalAnalytics = query({
   args: {
     days: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       return null;
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
@@ -265,39 +265,39 @@ export const getGlobalAnalytics = query({
     const days = args.days ?? 30;
     const startTime = now - days * 24 * 60 * 60 * 1000;
 
-    // Get all user pages
-    const pages = await ctx.db
-      .query("pages")
+    // Get all user identities
+    const identities = await ctx.db
+      .query("identities")
       .withIndex("by_user", (q) =>
         q.eq("userId", user._id).eq("deletionTime", undefined)
       )
       .collect();
 
-    const pageIds = pages.map((p) => p._id);
-    const pageMap = new Map(pages.map((p) => [p._id.toString(), p]));
+    const identityIds = identities.map((p) => p._id);
+    const identityMap = new Map(identities.map((p) => [p._id.toString(), p]));
 
     // Collect all views and clicks
-    const allViews: Doc<"pageViews">[] = [];
+    const allViews: Doc<"identityViews">[] = [];
     const allClicks: Doc<"linkClicks">[] = [];
     const allLinks: Doc<"links">[] = [];
 
-    for (const pageId of pageIds) {
+    for (const identityId of identityIds) {
       const views = await ctx.db
-        .query("pageViews")
-        .withIndex("by_page", (q) => q.eq("pageId", pageId).gte("viewedAt", startTime))
+        .query("identityViews")
+        .withIndex("by_identity", (q) => q.eq("identityId", identityId).gte("viewedAt", startTime))
         .collect();
       allViews.push(...views);
 
       const clicks = await ctx.db
         .query("linkClicks")
-        .withIndex("by_page", (q) => q.eq("pageId", pageId).gte("clickedAt", startTime))
+        .withIndex("by_identity", (q) => q.eq("identityId", identityId).gte("clickedAt", startTime))
         .collect();
       allClicks.push(...clicks);
 
       const links = await ctx.db
         .query("links")
-        .withIndex("by_page", (q) =>
-          q.eq("pageId", pageId).eq("deletionTime", undefined)
+        .withIndex("by_identity", (q) =>
+          q.eq("identityId", identityId).eq("deletionTime", undefined)
         )
         .collect();
       allLinks.push(...links);
@@ -347,11 +347,11 @@ export const getGlobalAnalytics = query({
     const topLinks = Array.from(linkClickCounts.entries())
       .map(([linkId, clicks]) => {
         const link = linkMap.get(linkId);
-        if (!link || !link.pageId) return null;
-        const page = pageMap.get(link.pageId.toString());
+        if (!link || !link.identityId) return null;
+        const identity = identityMap.get(link.identityId.toString());
         return {
           link,
-          page,
+          identity,
           clicks,
         };
       })
@@ -379,17 +379,17 @@ export const getGlobalAnalytics = query({
       .map(([source, count]) => ({ source, count }))
       .sort((a, b) => b.count - a.count);
 
-    // Top pages by views (recent)
-    const pageViewCounts = new Map<string, number>();
+    // Top identities by views (recent)
+    const identityViewCounts = new Map<string, number>();
     for (const view of allViews) {
-      const key = view.pageId.toString();
-      pageViewCounts.set(key, (pageViewCounts.get(key) ?? 0) + 1);
+      const key = view.identityId.toString();
+      identityViewCounts.set(key, (identityViewCounts.get(key) ?? 0) + 1);
     }
 
-    const topPages = Array.from(pageViewCounts.entries())
-      .map(([pageId, views]) => {
-        const page = pageMap.get(pageId);
-        return page ? { page, views } : null;
+    const topIdentities = Array.from(identityViewCounts.entries())
+      .map(([identityId, views]) => {
+        const identity = identityMap.get(identityId);
+        return identity ? { identity, views } : null;
       })
       .filter((item): item is NonNullable<typeof item> => item !== null)
       .sort((a, b) => b.views - a.views)
@@ -402,7 +402,7 @@ export const getGlobalAnalytics = query({
       clicksOverTime,
       topLinks,
       trafficSources,
-      topPages,
+      topIdentities,
     };
   },
 });
@@ -415,14 +415,14 @@ export const getRecentActivity = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       return [];
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
@@ -433,51 +433,51 @@ export const getRecentActivity = query({
     const now = Date.now();
     const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
 
-    // Get all user pages
-    const pages = await ctx.db
-      .query("pages")
+    // Get all user identities
+    const identities = await ctx.db
+      .query("identities")
       .withIndex("by_user", (q) =>
         q.eq("userId", user._id).eq("deletionTime", undefined)
       )
       .collect();
 
-    const pageMap = new Map(pages.map((p) => [p._id.toString(), p]));
-    const pageIds = pages.map((p) => p._id);
+    const identityMap = new Map(identities.map((p) => [p._id.toString(), p]));
+    const identityIds = identities.map((p) => p._id);
 
     // Collect recent views and clicks
     type Activity = {
       type: "view" | "click";
       timestamp: number;
-      pageId: Id<"pages">;
-      pageName: string;
+      identityId: Id<"identities">;
+      identityName: string;
       linkTitle?: string;
     };
 
     const activities: Activity[] = [];
 
-    for (const pageId of pageIds) {
-      const page = pageMap.get(pageId.toString());
-      if (!page) continue;
+    for (const identityId of identityIds) {
+      const identity = identityMap.get(identityId.toString());
+      if (!identity) continue;
 
       // Get recent views
       const views = await ctx.db
-        .query("pageViews")
-        .withIndex("by_page", (q) => q.eq("pageId", pageId).gte("viewedAt", sevenDaysAgo))
+        .query("identityViews")
+        .withIndex("by_identity", (q) => q.eq("identityId", identityId).gte("viewedAt", sevenDaysAgo))
         .collect();
 
       for (const view of views) {
         activities.push({
           type: "view",
           timestamp: view.viewedAt,
-          pageId,
-          pageName: page.name,
+          identityId,
+          identityName: identity.name,
         });
       }
 
       // Get recent clicks
       const clicks = await ctx.db
         .query("linkClicks")
-        .withIndex("by_page", (q) => q.eq("pageId", pageId).gte("clickedAt", sevenDaysAgo))
+        .withIndex("by_identity", (q) => q.eq("identityId", identityId).gte("clickedAt", sevenDaysAgo))
         .collect();
 
       for (const click of clicks) {
@@ -485,8 +485,8 @@ export const getRecentActivity = query({
         activities.push({
           type: "click",
           timestamp: click.clickedAt,
-          pageId,
-          pageName: page.name,
+          identityId,
+          identityName: identity.name,
           linkTitle: link?.title,
         });
       }

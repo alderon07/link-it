@@ -1,7 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
-import { now, sanitizeText } from "../lib/utils";
+import { now, sanitizeText, getOrCreateUser } from "../lib/utils";
 import { validateLength, validateHexColor, CONSTRAINTS } from "../lib/validators";
 
 /**
@@ -17,25 +17,8 @@ export const createTheme = mutation({
     fontFamily: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to create a theme",
-      });
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
     // Validate inputs
     validateLength(args.name, "Name", CONSTRAINTS.themeName);
@@ -74,25 +57,8 @@ export const updateTheme = mutation({
     fontFamily: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to update a theme",
-      });
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
     const theme = await ctx.db.get(args.themeId);
 
@@ -157,25 +123,8 @@ export const updateTheme = mutation({
 export const deleteTheme = mutation({
   args: { themeId: v.id("themes") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to delete a theme",
-      });
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
     const theme = await ctx.db.get(args.themeId);
 
@@ -202,14 +151,14 @@ export const deleteTheme = mutation({
       });
     }
 
-    // Remove theme from any pages using it
-    const pagesUsingTheme = await ctx.db
-      .query("pages")
+    // Remove theme from any identities using it
+    const identitiesUsingTheme = await ctx.db
+      .query("identities")
       .filter((q) => q.eq(q.field("themeId"), args.themeId))
       .collect();
 
-    for (const page of pagesUsingTheme) {
-      await ctx.db.patch(page._id, {
+    for (const identity of identitiesUsingTheme) {
+      await ctx.db.patch(identity._id, {
         themeId: undefined,
         updatedAt: now(),
       });
@@ -231,25 +180,8 @@ export const duplicateTheme = mutation({
     newName: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to duplicate a theme",
-      });
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
     const theme = await ctx.db.get(args.themeId);
 

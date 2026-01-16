@@ -12,15 +12,15 @@ try {
 }
 
 /**
- * Hook to get links for a page (authenticated)
+ * Hook to get links for an identity (authenticated)
  */
-export function usePageLinks(pageId: string | undefined) {
+export function useIdentityLinks(identityId: string | undefined) {
   const isAvailable = useConvexAvailable();
   return useQuery(
-    isAvailable && api?.links?.queries?.getPageLinks && pageId
-      ? api.links.queries.getPageLinks
+    isAvailable && api?.links?.queries?.getIdentityLinks && identityId
+      ? api.links.queries.getIdentityLinks
       : "skip",
-    pageId ? { pageId } : "skip"
+    identityId ? { identityId } : "skip"
   );
 }
 
@@ -38,28 +38,28 @@ export function useLink(linkId: string | undefined) {
 }
 
 /**
- * Hook to get link stats for a page
+ * Hook to get link stats for an identity
  */
-export function usePageLinkStats(pageId: string | undefined) {
+export function useIdentityLinkStats(identityId: string | undefined) {
   const isAvailable = useConvexAvailable();
   return useQuery(
-    isAvailable && api?.links?.queries?.getPageLinkStats && pageId
-      ? api.links.queries.getPageLinkStats
+    isAvailable && api?.links?.queries?.getIdentityLinkStats && identityId
+      ? api.links.queries.getIdentityLinkStats
       : "skip",
-    pageId ? { pageId } : "skip"
+    identityId ? { identityId } : "skip"
   );
 }
 
 /**
- * Hook to get public links for a page
+ * Hook to get public links for an identity
  */
-export function usePublicPageLinks(pageId: string | undefined) {
+export function usePublicIdentityLinks(identityId: string | undefined) {
   const isAvailable = useConvexAvailable();
   return useQuery(
-    isAvailable && api?.links?.public?.getPublicPageLinks && pageId
-      ? api.links.public.getPublicPageLinks
+    isAvailable && api?.links?.public?.getPublicIdentityLinks && identityId
+      ? api.links.public.getPublicIdentityLinks
       : "skip",
-    pageId ? { pageId } : "skip"
+    identityId ? { identityId } : "skip"
   );
 }
 

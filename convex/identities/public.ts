@@ -3,34 +3,34 @@ import { v } from "convex/values";
 import { now } from "../lib/utils";
 
 /**
- * Get a public page by slug (no authentication required)
+ * Get a public identity by slug (no authentication required)
  */
-export const getPublicPage = query({
+export const getPublicIdentity = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
-    const page = await ctx.db
-      .query("pages")
+    const identity = await ctx.db
+      .query("identities")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
 
-    if (!page || page.deletionTime || !page.isPublic) {
+    if (!identity || identity.deletionTime || !identity.isPublic) {
       return null;
     }
 
     // Get the user info
-    const user = await ctx.db.get(page.userId);
+    const user = await ctx.db.get(identity.userId);
     if (!user || user.deletionTime) {
       return null;
     }
 
     // Get the theme if it exists
     let theme = null;
-    if (page.themeId) {
-      theme = await ctx.db.get(page.themeId);
+    if (identity.themeId) {
+      theme = await ctx.db.get(identity.themeId);
     }
 
     return {
-      ...page,
+      ...identity,
       user: {
         username: user.username,
         displayName: user.displayName,
@@ -42,10 +42,10 @@ export const getPublicPage = query({
 });
 
 /**
- * Get a public page by username (no authentication required)
- * This looks up the user's default or first public page
+ * Get a public identity by username (no authentication required)
+ * This looks up the user's default or first public identity
  */
-export const getPublicPageByUsername = query({
+export const getPublicIdentityByUsername = query({
   args: { username: v.string() },
   handler: async (ctx, args) => {
     const user = await ctx.db
@@ -57,46 +57,46 @@ export const getPublicPageByUsername = query({
       return null;
     }
 
-    // Get user settings to find default page
+    // Get user settings to find default identity
     const settings = await ctx.db
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .first();
 
-    let page = null;
+    let identity = null;
 
-    // Try to get the default page first
-    if (settings?.defaultPageId) {
-      page = await ctx.db.get(settings.defaultPageId);
-      if (page && (page.deletionTime || !page.isPublic)) {
-        page = null;
+    // Try to get the default identity first
+    if (settings?.defaultIdentityId) {
+      identity = await ctx.db.get(settings.defaultIdentityId);
+      if (identity && (identity.deletionTime || !identity.isPublic)) {
+        identity = null;
       }
     }
 
-    // If no default page, get the first public page
-    if (!page) {
-      const userPages = await ctx.db
-        .query("pages")
+    // If no default identity, get the first public identity
+    if (!identity) {
+      const userIdentities = await ctx.db
+        .query("identities")
         .withIndex("by_user", (q) =>
           q.eq("userId", user._id).eq("deletionTime", undefined)
         )
         .collect();
 
-      page = userPages.find((p) => p.isPublic) || null;
+      identity = userIdentities.find((p) => p.isPublic) || null;
     }
 
-    if (!page) {
+    if (!identity) {
       return null;
     }
 
     // Get the theme if it exists
     let theme = null;
-    if (page.themeId) {
-      theme = await ctx.db.get(page.themeId);
+    if (identity.themeId) {
+      theme = await ctx.db.get(identity.themeId);
     }
 
     return {
-      ...page,
+      ...identity,
       user: {
         username: user.username,
         displayName: user.displayName,
@@ -108,19 +108,19 @@ export const getPublicPageByUsername = query({
 });
 
 /**
- * Increment view count for a public page
+ * Increment view count for a public identity
  */
 export const incrementViewCount = mutation({
-  args: { pageId: v.id("pages") },
+  args: { identityId: v.id("identities") },
   handler: async (ctx, args) => {
-    const page = await ctx.db.get(args.pageId);
+    const identity = await ctx.db.get(args.identityId);
 
-    if (!page || page.deletionTime || !page.isPublic) {
+    if (!identity || identity.deletionTime || !identity.isPublic) {
       return { success: false };
     }
 
-    await ctx.db.patch(args.pageId, {
-      viewCount: page.viewCount + 1,
+    await ctx.db.patch(args.identityId, {
+      viewCount: identity.viewCount + 1,
       updatedAt: now(),
     });
 
@@ -129,11 +129,11 @@ export const incrementViewCount = mutation({
 });
 
 /**
- * Record a page view for analytics (future use)
+ * Record an identity view for analytics (future use)
  */
-export const recordPageView = mutation({
+export const recordIdentityView = mutation({
   args: {
-    pageId: v.id("pages"),
+    identityId: v.id("identities"),
     visitorId: v.optional(v.string()),
     userAgent: v.optional(v.string()),
     referrer: v.optional(v.string()),
@@ -141,21 +141,21 @@ export const recordPageView = mutation({
     city: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const page = await ctx.db.get(args.pageId);
+    const identity = await ctx.db.get(args.identityId);
 
-    if (!page || page.deletionTime || !page.isPublic) {
+    if (!identity || identity.deletionTime || !identity.isPublic) {
       return { success: false };
     }
 
     // Increment view count
-    await ctx.db.patch(args.pageId, {
-      viewCount: page.viewCount + 1,
+    await ctx.db.patch(args.identityId, {
+      viewCount: identity.viewCount + 1,
       updatedAt: now(),
     });
 
     // Record detailed analytics
-    await ctx.db.insert("pageViews", {
-      pageId: args.pageId,
+    await ctx.db.insert("identityViews", {
+      identityId: args.identityId,
       viewedAt: now(),
       visitorId: args.visitorId,
       userAgent: args.userAgent,

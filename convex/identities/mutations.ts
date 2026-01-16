@@ -1,13 +1,13 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
-import { now, sanitizeText } from "../lib/utils";
+import { now, sanitizeText, getOrCreateUser } from "../lib/utils";
 import { validateLength, validateSlug, CONSTRAINTS } from "../lib/validators";
 
 /**
- * Create a new page
+ * Create a new identity
  */
-export const createPage = mutation({
+export const createIdentity = mutation({
   args: {
     name: v.string(),
     slug: v.string(),
@@ -21,25 +21,8 @@ export const createPage = mutation({
     ogImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to create a page",
-      });
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
     // Validate inputs
     validateLength(args.name, "Name", CONSTRAINTS.pageName);
@@ -59,20 +42,20 @@ export const createPage = mutation({
     }
 
     // Check slug availability
-    const existingPage = await ctx.db
-      .query("pages")
+    const existingIdentity = await ctx.db
+      .query("identities")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
 
-    if (existingPage && !existingPage.deletionTime) {
+    if (existingIdentity && !existingIdentity.deletionTime) {
       throw new ConvexError({
         code: "CONFLICT",
         message: "This slug is already taken",
       });
     }
 
-    // Create the page
-    const pageId = await ctx.db.insert("pages", {
+    // Create the identity
+    const identityId = await ctx.db.insert("identities", {
       userId: user._id,
       name: sanitizeText(args.name),
       slug: args.slug.toLowerCase(),
@@ -88,29 +71,29 @@ export const createPage = mutation({
       updatedAt: now(),
     });
 
-    // Update user progress if this is their first page
+    // Update user progress if this is their first identity
     const userProgress = await ctx.db
       .query("userProgress")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .first();
 
-    if (userProgress && !userProgress.publishedPage && args.isPublic) {
+    if (userProgress && !userProgress.publishedIdentity && args.isPublic) {
       await ctx.db.patch(userProgress._id, {
-        publishedPage: true,
+        publishedIdentity: true,
         updatedAt: now(),
       });
     }
 
-    return ctx.db.get(pageId);
+    return ctx.db.get(identityId);
   },
 });
 
 /**
- * Update an existing page
+ * Update an existing identity
  */
-export const updatePage = mutation({
+export const updateIdentity = mutation({
   args: {
-    pageId: v.id("pages"),
+    identityId: v.id("identities"),
     name: v.optional(v.string()),
     slug: v.optional(v.string()),
     bio: v.optional(v.string()),
@@ -123,40 +106,23 @@ export const updatePage = mutation({
     ogImageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to update a page",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
+    const identity = await ctx.db.get(args.identityId);
 
-    if (!user || user.deletionTime) {
+    if (!identity || identity.deletionTime) {
       throw new ConvexError({
         code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
-
-    const page = await ctx.db.get(args.pageId);
-
-    if (!page || page.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Page not found",
+        message: "Identity not found",
       });
     }
 
     // Verify ownership
-    if (page.userId !== user._id) {
+    if (identity.userId !== user._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You don't have permission to update this page",
+        message: "You don't have permission to update this identity",
       });
     }
 
@@ -167,13 +133,13 @@ export const updatePage = mutation({
     if (args.slug !== undefined) {
       validateSlug(args.slug);
 
-      // Check slug availability (excluding current page)
-      const existingPage = await ctx.db
-        .query("pages")
+      // Check slug availability (excluding current identity)
+      const existingIdentity = await ctx.db
+        .query("identities")
         .withIndex("by_slug", (q) => q.eq("slug", args.slug!))
         .first();
 
-      if (existingPage && existingPage._id !== args.pageId && !existingPage.deletionTime) {
+      if (existingIdentity && existingIdentity._id !== args.identityId && !existingIdentity.deletionTime) {
         throw new ConvexError({
           code: "CONFLICT",
           message: "This slug is already taken",
@@ -209,72 +175,55 @@ export const updatePage = mutation({
     if (args.seoDescription !== undefined) updates.seoDescription = sanitizeText(args.seoDescription);
     if (args.ogImageUrl !== undefined) updates.ogImageUrl = args.ogImageUrl;
 
-    await ctx.db.patch(args.pageId, updates);
+    await ctx.db.patch(args.identityId, updates);
 
-    return ctx.db.get(args.pageId);
+    return ctx.db.get(args.identityId);
   },
 });
 
 /**
- * Delete a page (soft delete)
+ * Delete an identity (soft delete)
  */
-export const deletePage = mutation({
-  args: { pageId: v.id("pages") },
+export const deleteIdentity = mutation({
+  args: { identityId: v.id("identities") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to delete a page",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
+    const identity = await ctx.db.get(args.identityId);
 
-    if (!user || user.deletionTime) {
+    if (!identity || identity.deletionTime) {
       throw new ConvexError({
         code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
-
-    const page = await ctx.db.get(args.pageId);
-
-    if (!page || page.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "Page not found",
+        message: "Identity not found",
       });
     }
 
     // Verify ownership
-    if (page.userId !== user._id) {
+    if (identity.userId !== user._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You don't have permission to delete this page",
+        message: "You don't have permission to delete this identity",
       });
     }
 
     const deletionTime = now();
 
-    // Soft delete the page
-    await ctx.db.patch(args.pageId, {
+    // Soft delete the identity
+    await ctx.db.patch(args.identityId, {
       deletionTime,
       updatedAt: deletionTime,
     });
 
-    // Soft delete all links on the page
-    const pageLinks = await ctx.db
+    // Soft delete all links on the identity
+    const identityLinks = await ctx.db
       .query("links")
-      .withIndex("by_page", (q) =>
-        q.eq("pageId", args.pageId).eq("deletionTime", undefined)
+      .withIndex("by_identity", (q) =>
+        q.eq("identityId", args.identityId).eq("deletionTime", undefined)
       )
       .collect();
 
-    for (const link of pageLinks) {
+    for (const link of identityLinks) {
       await ctx.db.patch(link._id, {
         deletionTime,
         updatedAt: deletionTime,

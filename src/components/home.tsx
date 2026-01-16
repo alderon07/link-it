@@ -89,38 +89,39 @@ const features = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden max-w-full">
       {/* Pixel Grid Background */}
       <div className="fixed inset-0 pixel-grid opacity-30 pointer-events-none" />
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm pixel-border border-x-0 border-t-0">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+        <div className="container mx-auto px-4 py-4 max-w-full overflow-hidden">
+          <div className="flex items-center justify-between gap-2">
             <motion.div
-              className="flex items-center gap-3"
+              className="flex items-center gap-2 sm:gap-3 shrink-0"
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex items-center justify-center w-12 h-12 bg-pixel-pink pixel-border pixel-shadow-sm">
-                <LinkIcon className="w-6 h-6 text-foreground"/>
+              <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-pixel-pink pixel-border pixel-shadow-sm">
+                <LinkIcon className="w-5 h-5 sm:w-6 sm:h-6 text-foreground"/>
               </div>
-              <span className="text-2xl font-bold pixel-text-shadow">link-it</span>
+              <span className="text-xl sm:text-2xl font-bold pixel-text-shadow">link-it</span>
             </motion.div>
             <motion.div
-              className="flex items-center gap-4"
+              className="flex items-center gap-2 sm:gap-4"
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <Button variant="ghost" asChild className="font-bold uppercase text-sm tracking-wide">
+              <Button variant="ghost" asChild className="font-bold uppercase text-xs sm:text-sm tracking-wide px-2 sm:px-4">
                 <Link href="/login">Sign In</Link>
               </Button>
-              <Button variant="pixel" asChild>
+              <Button variant="pixel" asChild className="text-xs sm:text-sm px-3 sm:px-4">
                 <Link href="/admin">
-                  Get Started
-                  <PixelIcon icon="arrow" className="w-4 h-4 ml-2" />
+                  <span className="hidden sm:inline">Get Started</span>
+                  <span className="sm:hidden">Start</span>
+                  <PixelIcon icon="arrow" className="w-4 h-4 ml-1 sm:ml-2" />
                 </Link>
               </Button>
             </motion.div>
@@ -156,9 +157,9 @@ export default function HomePage() {
         <div className="container mx-auto text-center relative z-10">
           <div className="max-w-5xl mx-auto">
             <FadeIn delay={0.2}>
-              <div className="flex justify-center mb-8">
-                <Badge variant="retro" className="px-6 py-2 text-sm pixel-bounce">
-                  <Sparkles className="h-4 w-4 mr-2" />
+              <div className="flex justify-center mb-8 px-4">
+                <Badge variant="retro" className="px-4 sm:px-6 py-2 text-xs sm:text-sm pixel-bounce whitespace-normal text-center">
+                  <Sparkles className="h-4 w-4 mr-2 shrink-0" />
                   New: Pixel Art Themes & Analytics
                 </Badge>
               </div>
@@ -197,32 +198,32 @@ export default function HomePage() {
 
             {/* Stats */}
             <FadeIn delay={0.7}>
-              <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-                <PixelBorder variant="solid" shadow="sm" className="px-6 py-3 bg-card">
-                  <div className="flex items-center gap-3">
-                    <Users className="w-5 h-5 text-pixel-pink" />
-                    <span className="font-bold">
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-8 md:gap-12">
+                <PixelBorder variant="solid" shadow="sm" className="px-3 sm:px-6 py-2 sm:py-3 bg-card">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-pixel-pink" />
+                    <span className="font-bold text-sm sm:text-base">
                       <CountUp value={10000} suffix="+" />
                     </span>
-                    <span className="text-muted-foreground text-sm">creators</span>
+                    <span className="text-muted-foreground text-xs sm:text-sm">creators</span>
                   </div>
                 </PixelBorder>
-                <PixelBorder variant="solid" shadow="sm" className="px-6 py-3 bg-card">
-                  <div className="flex items-center gap-3">
-                    <TrendingUp className="w-5 h-5 text-pixel-teal" />
-                    <span className="font-bold">
+                <PixelBorder variant="solid" shadow="sm" className="px-3 sm:px-6 py-2 sm:py-3 bg-card">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-pixel-teal" />
+                    <span className="font-bold text-sm sm:text-base">
                       <CountUp value={1000000} suffix="+" />
                     </span>
-                    <span className="text-muted-foreground text-sm">clicks</span>
+                    <span className="text-muted-foreground text-xs sm:text-sm">clicks</span>
                   </div>
                 </PixelBorder>
-                <PixelBorder variant="solid" shadow="sm" className="px-6 py-3 bg-card">
-                  <div className="flex items-center gap-3">
-                    <Palette className="w-5 h-5 text-pixel-yellow" />
-                    <span className="font-bold">
+                <PixelBorder variant="solid" shadow="sm" className="px-3 sm:px-6 py-2 sm:py-3 bg-card">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Palette className="w-4 h-4 sm:w-5 sm:h-5 text-pixel-yellow" />
+                    <span className="font-bold text-sm sm:text-base">
                       <CountUp value={50} suffix="+" />
                     </span>
-                    <span className="text-muted-foreground text-sm">themes</span>
+                    <span className="text-muted-foreground text-xs sm:text-sm">themes</span>
                   </div>
                 </PixelBorder>
               </div>

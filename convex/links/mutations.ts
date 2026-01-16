@@ -1,7 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
-import { now, sanitizeText } from "../lib/utils";
+import { now, sanitizeText, getOrCreateUser } from "../lib/utils";
 import { validateLength, validateUrl, CONSTRAINTS } from "../lib/validators";
 
 /**
@@ -9,7 +9,7 @@ import { validateLength, validateUrl, CONSTRAINTS } from "../lib/validators";
  */
 export const createLink = mutation({
   args: {
-    pageId: v.id("pages"),
+    identityId: v.id("identities"),
     title: v.string(),
     url: v.string(),
     type: v.optional(v.union(v.literal("link"), v.literal("header"), v.literal("divider"))),
@@ -21,32 +21,15 @@ export const createLink = mutation({
     visibleUntil: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to create a link",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
-
-    // Verify page ownership
-    const page = await ctx.db.get(args.pageId);
-    if (!page || page.deletionTime || page.userId !== user._id) {
+    // Verify identity ownership
+    const identity = await ctx.db.get(args.identityId);
+    if (!identity || identity.deletionTime || identity.userId !== user._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You don't have access to this page",
+        message: "You don't have access to this identity",
       });
     }
 
@@ -62,21 +45,21 @@ export const createLink = mutation({
       validateLength(args.description, "Description", CONSTRAINTS.linkDescription);
     }
 
-    // Get the max order index for this page
-    const pageLinks = await ctx.db
+    // Get the max order index for this identity
+    const identityLinks = await ctx.db
       .query("links")
-      .withIndex("by_page", (q) =>
-        q.eq("pageId", args.pageId).eq("deletionTime", undefined)
+      .withIndex("by_identity", (q) =>
+        q.eq("identityId", args.identityId).eq("deletionTime", undefined)
       )
       .collect();
 
-    const maxOrder = pageLinks.length > 0
-      ? Math.max(...pageLinks.map((l) => l.orderIndex ?? 0))
+    const maxOrder = identityLinks.length > 0
+      ? Math.max(...identityLinks.map((l) => l.orderIndex ?? 0))
       : -1;
 
     // Create the link
     const linkId = await ctx.db.insert("links", {
-      pageId: args.pageId,
+      identityId: args.identityId,
       title: sanitizeText(args.title),
       url: args.url,
       type: linkType,
@@ -124,25 +107,8 @@ export const updateLink = mutation({
     visibleUntil: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to update a link",
-      });
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
     const link = await ctx.db.get(args.linkId);
     if (!link || link.deletionTime) {
@@ -152,15 +118,15 @@ export const updateLink = mutation({
       });
     }
 
-    // Verify page ownership
-    if (!link.pageId) {
+    // Verify identity ownership
+    if (!link.identityId) {
       throw new ConvexError({
         code: "NOT_FOUND",
-        message: "Link has no associated page",
+        message: "Link has no associated identity",
       });
     }
-    const page = await ctx.db.get(link.pageId);
-    if (!page || ("deletionTime" in page && page.deletionTime) || ("userId" in page && page.userId !== user._id)) {
+    const identity = await ctx.db.get(link.identityId);
+    if (!identity || ("deletionTime" in identity && identity.deletionTime) || ("userId" in identity && identity.userId !== user._id)) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "You don't have access to this link",
@@ -208,25 +174,8 @@ export const updateLink = mutation({
 export const deleteLink = mutation({
   args: { linkId: v.id("links") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to delete a link",
-      });
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
     const link = await ctx.db.get(args.linkId);
     if (!link || link.deletionTime) {
@@ -236,15 +185,15 @@ export const deleteLink = mutation({
       });
     }
 
-    // Verify page ownership
-    if (!link.pageId) {
+    // Verify identity ownership
+    if (!link.identityId) {
       throw new ConvexError({
         code: "NOT_FOUND",
-        message: "Link has no associated page",
+        message: "Link has no associated identity",
       });
     }
-    const page = await ctx.db.get(link.pageId);
-    if (!page || ("deletionTime" in page && page.deletionTime) || ("userId" in page && page.userId !== user._id)) {
+    const identity = await ctx.db.get(link.identityId);
+    if (!identity || ("deletionTime" in identity && identity.deletionTime) || ("userId" in identity && identity.userId !== user._id)) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "You don't have access to this link",
@@ -263,40 +212,23 @@ export const deleteLink = mutation({
 });
 
 /**
- * Reorder links on a page
+ * Reorder links on an identity
  */
 export const reorderLinks = mutation({
   args: {
-    pageId: v.id("pages"),
+    identityId: v.id("identities"),
     linkIds: v.array(v.id("links")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to reorder links",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
-
-    // Verify page ownership
-    const page = await ctx.db.get(args.pageId);
-    if (!page || page.deletionTime || page.userId !== user._id) {
+    // Verify identity ownership
+    const identity = await ctx.db.get(args.identityId);
+    if (!identity || identity.deletionTime || identity.userId !== user._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You don't have access to this page",
+        message: "You don't have access to this identity",
       });
     }
 
@@ -305,8 +237,8 @@ export const reorderLinks = mutation({
     for (let i = 0; i < args.linkIds.length; i++) {
       const link = await ctx.db.get(args.linkIds[i]);
 
-      // Verify link belongs to this page
-      if (!link || link.deletionTime || link.pageId !== args.pageId) {
+      // Verify link belongs to this identity
+      if (!link || link.deletionTime || link.identityId !== args.identityId) {
         continue;
       }
 

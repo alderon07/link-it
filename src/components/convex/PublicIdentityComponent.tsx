@@ -15,7 +15,7 @@ import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerCo
 import { CountUp } from "@/components/animations/CountUp";
 import { trackEvent } from "@/lib/analytics/posthog-client";
 import { AnalyticsEvents } from "@/lib/analytics/events";
-import { usePublicPage, usePublicPageLinks, usePageMutations, useLinkMutations } from "@/hooks/convex";
+import { usePublicIdentity, usePublicIdentityLinks, useIdentityMutations, useLinkMutations } from "@/hooks/convex";
 import { Id } from "../../../convex/_generated/dataModel";
 
 const iconMap: Record<string, "star" | "heart" | "arrow" | "check" | "cross" | "plus" | "minus" | "sparkle" | "diamond" | "coin" | "lightning" | "fire" | "link" | "cursor"> = {
@@ -44,8 +44,8 @@ interface LinkData {
   clickCount: number;
 }
 
-interface PageData {
-  _id: Id<"pages">;
+interface IdentityData {
+  _id: Id<"identities">;
   name: string;
   slug: string;
   bio?: string;
@@ -57,37 +57,37 @@ interface PageData {
   };
 }
 
-interface PublicPageComponentProps {
+interface PublicIdentityComponentProps {
   slug: string;
 }
 
-export function PublicPageComponent({ slug }: PublicPageComponentProps) {
-  const page = usePublicPage(slug);
-  const links = usePublicPageLinks(page?._id);
-  const { incrementViewCount } = usePageMutations();
+export function PublicIdentityComponent({ slug }: PublicIdentityComponentProps) {
+  const identity = usePublicIdentity(slug);
+  const links = usePublicIdentityLinks(identity?._id);
+  const { incrementViewCount } = useIdentityMutations();
   const { incrementClickCount } = useLinkMutations();
 
   const [shareSuccess, setShareSuccess] = React.useState(false);
   const [viewTracked, setViewTracked] = React.useState(false);
 
-  // Track page view on mount
+  // Track identity view on mount
   React.useEffect(() => {
-    if (page && !viewTracked) {
+    if (identity && !viewTracked) {
       setViewTracked(true);
-      incrementViewCount({ pageId: page._id });
+      incrementViewCount({ identityId: identity._id });
 
       // Track in PostHog
       trackEvent(AnalyticsEvents.PAGE_VIEW, {
-        page_id: page._id,
-        page_slug: page.slug,
-        page_name: page.name,
+        identity_id: identity._id,
+        identity_slug: identity.slug,
+        identity_name: identity.name,
         is_public: true,
       });
     }
-  }, [page, viewTracked, incrementViewCount]);
+  }, [identity, viewTracked, incrementViewCount]);
 
   const handleLinkClick = async (linkId: Id<"links">, url: string, title: string, index: number) => {
-    if (!page) return;
+    if (!identity) return;
 
     // Track click
     incrementClickCount({ linkId });
@@ -95,8 +95,8 @@ export function PublicPageComponent({ slug }: PublicPageComponentProps) {
     // Track in PostHog
     trackEvent(AnalyticsEvents.LINK_CLICK, {
       link_id: linkId,
-      page_id: page._id,
-      page_slug: page.slug,
+      identity_id: identity._id,
+      identity_slug: identity.slug,
       link_url: url,
       link_title: title,
       link_position: index,
@@ -107,14 +107,14 @@ export function PublicPageComponent({ slug }: PublicPageComponentProps) {
   };
 
   const handleShare = async () => {
-    if (!page) return;
+    if (!identity) return;
 
     const url = window.location.href;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${page.name} - link-it`,
-          text: page.bio || "",
+          title: `${identity.name} - link-it`,
+          text: identity.bio || "",
           url: url,
         });
       } catch (error) {
@@ -127,7 +127,7 @@ export function PublicPageComponent({ slug }: PublicPageComponentProps) {
     }
   };
 
-  if (page === undefined || links === undefined) {
+  if (identity === undefined || links === undefined) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -135,21 +135,21 @@ export function PublicPageComponent({ slug }: PublicPageComponentProps) {
     );
   }
 
-  if (page === null) {
+  if (identity === null) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card variant="pixel" className="max-w-md mx-4">
           <CardContent className="text-center py-12">
             <PixelIcon icon="cross" size="lg" color="coral" className="mx-auto mb-4" />
             <h1 className="text-2xl font-black mb-2">Page Not Found</h1>
-            <p className="text-muted-foreground">This page doesn&apos;t exist or is not public.</p>
+            <p className="text-muted-foreground">This identity doesn&apos;t exist or is not public.</p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const pageColor = colorVariants[Math.abs(page.slug.charCodeAt(0)) % colorVariants.length];
+  const identityColor = colorVariants[Math.abs(identity.slug.charCodeAt(0)) % colorVariants.length];
 
   return (
     <div className="min-h-screen bg-background text-foreground relative overflow-hidden">
@@ -179,7 +179,7 @@ export function PublicPageComponent({ slug }: PublicPageComponentProps) {
             <PixelBorder variant="solid" shadow="sm" className="px-3 py-1.5 bg-card">
               <div className="flex items-center gap-2 text-sm">
                 <Eye className="h-4 w-4 text-pixel-teal" />
-                <CountUp value={page.viewCount} duration={1} />
+                <CountUp value={identity.viewCount} duration={1} />
                 <span className="text-muted-foreground">views</span>
               </div>
             </PixelBorder>
@@ -205,26 +205,26 @@ export function PublicPageComponent({ slug }: PublicPageComponentProps) {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
             >
-              <PixelBorder variant="solid" shadow="default" className={`p-1 bg-pixel-${pageColor}`}>
+              <PixelBorder variant="solid" shadow="default" className={`p-1 bg-pixel-${identityColor}`}>
                 <Avatar className="w-24 h-24 pixel-border">
-                  <AvatarImage src={page.avatarUrl || page.user?.avatarUrl || "/placeholder.svg"} alt={page.name} />
-                  <AvatarFallback className={`text-2xl font-bold bg-pixel-${pageColor}`}>
-                    {page.name.charAt(0)}
+                  <AvatarImage src={identity.avatarUrl || identity.user?.avatarUrl || "/placeholder.svg"} alt={identity.name} />
+                  <AvatarFallback className={`text-2xl font-bold bg-pixel-${identityColor}`}>
+                    {identity.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
               </PixelBorder>
             </motion.div>
 
             {/* Name & Username */}
-            <h1 className="text-2xl font-black mb-1 pixel-text-shadow">{page.name}</h1>
+            <h1 className="text-2xl font-black mb-1 pixel-text-shadow">{identity.name}</h1>
             <p className="text-muted-foreground mb-3 flex items-center justify-center gap-1">
-              /{page.slug}
+              /{identity.slug}
             </p>
 
             {/* Bio */}
-            {page.bio && (
+            {identity.bio && (
               <p className="text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto">
-                {page.bio}
+                {identity.bio}
               </p>
             )}
           </div>
@@ -240,14 +240,14 @@ export function PublicPageComponent({ slug }: PublicPageComponentProps) {
                 <PixelIcon icon="cross" size="lg" color="coral" className="mx-auto mb-4" />
                 <h3 className="text-lg font-bold mb-2">No Links Yet</h3>
                 <p className="text-muted-foreground text-sm">
-                  This page doesn&apos;t have any active links yet.
+                  This identity doesn&apos;t have any active links yet.
                 </p>
               </PixelBorder>
             </FadeIn>
           ) : (
             <StaggerContainer className="space-y-4">
               {(links as LinkData[]).map((link: LinkData, index: number) => {
-                const linkColor = colorVariants[(index + page.slug.charCodeAt(0)) % colorVariants.length];
+                const linkColor = colorVariants[(index + identity.slug.charCodeAt(0)) % colorVariants.length];
                 const iconName = iconMap[link.icon || "star"] || "star";
 
                 return (

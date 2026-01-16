@@ -3,22 +3,22 @@ import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 
 /**
- * Get a page by ID (authenticated, requires ownership)
+ * Get an identity by ID (authenticated, requires ownership)
  */
-export const getPage = query({
-  args: { pageId: v.id("pages") },
+export const getIdentity = query({
+  args: { identityId: v.id("identities") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       throw new ConvexError({
         code: "UNAUTHORIZED",
-        message: "You must be logged in to view this page",
+        message: "You must be logged in to view this identity",
       });
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
@@ -28,52 +28,52 @@ export const getPage = query({
       });
     }
 
-    const page = await ctx.db.get(args.pageId);
+    const identity = await ctx.db.get(args.identityId);
 
-    if (!page || page.deletionTime) {
+    if (!identity || identity.deletionTime) {
       return null;
     }
 
     // Verify ownership
-    if (page.userId !== user._id) {
+    if (identity.userId !== user._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You don't have access to this page",
+        message: "You don't have access to this identity",
       });
     }
 
-    return page;
+    return identity;
   },
 });
 
 /**
- * Get all pages for the current user
+ * Get all identities for the current user
  */
-export const getUserPages = query({
+export const getUserIdentities = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       return [];
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
       return [];
     }
 
-    const pages = await ctx.db
-      .query("pages")
+    const identities = await ctx.db
+      .query("identities")
       .withIndex("by_user", (q) =>
         q.eq("userId", user._id).eq("deletionTime", undefined)
       )
       .collect();
 
-    return pages;
+    return identities;
   },
 });
 
@@ -83,25 +83,25 @@ export const getUserPages = query({
 export const isSlugAvailable = query({
   args: {
     slug: v.string(),
-    excludePageId: v.optional(v.id("pages")),
+    excludeIdentityId: v.optional(v.id("identities")),
   },
   handler: async (ctx, args) => {
-    const existingPage = await ctx.db
-      .query("pages")
+    const existingIdentity = await ctx.db
+      .query("identities")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
 
-    if (!existingPage) {
+    if (!existingIdentity) {
       return true;
     }
 
-    // If the existing page is the one we're excluding (for updates), it's available
-    if (args.excludePageId && existingPage._id === args.excludePageId) {
+    // If the existing identity is the one we're excluding (for updates), it's available
+    if (args.excludeIdentityId && existingIdentity._id === args.excludeIdentityId) {
       return true;
     }
 
-    // If the existing page is soft-deleted, the slug is available
-    if (existingPage.deletionTime) {
+    // If the existing identity is soft-deleted, the slug is available
+    if (existingIdentity.deletionTime) {
       return true;
     }
 
@@ -110,41 +110,41 @@ export const isSlugAvailable = query({
 });
 
 /**
- * Get all links across all user pages (for All Links page)
+ * Get all links across all user identities (for All Links page)
  */
 export const getAllUserLinks = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       return { links: [], stats: { total: 0, active: 0, totalClicks: 0 } };
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
       return { links: [], stats: { total: 0, active: 0, totalClicks: 0 } };
     }
 
-    // Get all user pages
-    const pages = await ctx.db
-      .query("pages")
+    // Get all user identities
+    const identities = await ctx.db
+      .query("identities")
       .withIndex("by_user", (q) =>
         q.eq("userId", user._id).eq("deletionTime", undefined)
       )
       .collect();
 
-    const pageMap = new Map(pages.map((p) => [p._id.toString(), p]));
+    const identityMap = new Map(identities.map((p) => [p._id.toString(), p]));
 
-    // Collect all links from all pages
+    // Collect all links from all identities
     const allLinks: Array<{
       _id: string;
-      pageId: string;
-      pageName: string;
-      pageSlug: string;
+      identityId: string;
+      identityName: string;
+      identitySlug: string;
       title: string;
       url: string | undefined;
       type: "link" | "header" | "divider" | undefined;
@@ -159,20 +159,20 @@ export const getAllUserLinks = query({
     let totalClicks = 0;
     let activeCount = 0;
 
-    for (const page of pages) {
+    for (const identity of identities) {
       const links = await ctx.db
         .query("links")
-        .withIndex("by_page", (q) =>
-          q.eq("pageId", page._id).eq("deletionTime", undefined)
+        .withIndex("by_identity", (q) =>
+          q.eq("identityId", identity._id).eq("deletionTime", undefined)
         )
         .collect();
 
       for (const link of links) {
         allLinks.push({
           _id: link._id,
-          pageId: page._id,
-          pageName: page.name,
-          pageSlug: page.slug,
+          identityId: identity._id,
+          identityName: identity.name,
+          identitySlug: identity.slug,
           title: link.title,
           url: link.url,
           type: link.type,
@@ -204,22 +204,22 @@ export const getAllUserLinks = query({
 });
 
 /**
- * Get page with theme information
+ * Get identity with theme information
  */
-export const getPageWithTheme = query({
-  args: { pageId: v.id("pages") },
+export const getIdentityWithTheme = query({
+  args: { identityId: v.id("identities") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       throw new ConvexError({
         code: "UNAUTHORIZED",
-        message: "You must be logged in to view this page",
+        message: "You must be logged in to view this identity",
       });
     }
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
@@ -229,28 +229,28 @@ export const getPageWithTheme = query({
       });
     }
 
-    const page = await ctx.db.get(args.pageId);
+    const identity = await ctx.db.get(args.identityId);
 
-    if (!page || page.deletionTime) {
+    if (!identity || identity.deletionTime) {
       return null;
     }
 
     // Verify ownership
-    if (page.userId !== user._id) {
+    if (identity.userId !== user._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You don't have access to this page",
+        message: "You don't have access to this identity",
       });
     }
 
     // Get theme if it exists
     let theme = null;
-    if (page.themeId) {
-      theme = await ctx.db.get(page.themeId);
+    if (identity.themeId) {
+      theme = await ctx.db.get(identity.themeId);
     }
 
     return {
-      ...page,
+      ...identity,
       theme,
     };
   },

@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery, useMutation } from "convex/react";
+import { useEffect, useCallback, useRef } from "react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { useConvexAvailable } from "@/components/providers/ConvexClientProvider";
 
 // Conditionally import to avoid errors when Convex isn't configured
@@ -21,6 +22,57 @@ export function useCurrentUser() {
       ? api.users.queries.getCurrentUser
       : "skip"
   );
+}
+
+/**
+ * Hook that ensures the current authenticated user exists in Convex.
+ * This should be used on authenticated pages to sync the user from Clerk to Convex.
+ * It will automatically create the user in Convex if they don't exist.
+ * 
+ * Uses useConvexAuth to wait for the auth token to be synchronized with Convex
+ * before attempting to create the user.
+ */
+export function useSyncUser() {
+  const isAvailable = useConvexAvailable();
+  // Use Convex's auth hook to ensure the token is synchronized
+  const { isAuthenticated, isLoading } = useConvexAuth();
+  const hasSyncedRef = useRef(false);
+
+  const getOrCreateCurrentUser = useMutation(
+    isAvailable && api?.users?.mutations?.getOrCreateCurrentUser
+      ? api.users.mutations.getOrCreateCurrentUser
+      : ("skip" as any)
+  );
+
+  const syncUser = useCallback(async () => {
+    // Wait until Convex auth is ready and user is authenticated
+    if (!isAvailable || !isAuthenticated || isLoading || hasSyncedRef.current) {
+      return;
+    }
+
+    try {
+      await getOrCreateCurrentUser({});
+      hasSyncedRef.current = true;
+    } catch (error) {
+      console.error("Failed to sync user to Convex:", error);
+    }
+  }, [isAvailable, isAuthenticated, isLoading, getOrCreateCurrentUser]);
+
+  useEffect(() => {
+    // Only sync when Convex auth is fully loaded and user is authenticated
+    if (!isLoading && isAuthenticated && isAvailable && !hasSyncedRef.current) {
+      syncUser();
+    }
+  }, [isLoading, isAuthenticated, isAvailable, syncUser]);
+
+  // Reset the sync flag when user signs out
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      hasSyncedRef.current = false;
+    }
+  }, [isAuthenticated, isLoading]);
+
+  return { syncUser };
 }
 
 /**

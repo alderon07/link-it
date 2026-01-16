@@ -26,12 +26,12 @@ import { PixelDivider } from "@/components/pixel-art/PixelDivider";
 import { FadeIn, SlideUp } from "@/components/animations/PageTransition";
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer";
 import { CountUp } from "@/components/animations/CountUp";
-import { useUserPages, usePageMutations, useSlugAvailable } from "@/hooks/convex";
+import { useUserIdentities, useIdentityMutations, useSlugAvailable } from "@/hooks/convex";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 
-interface PageData {
-  _id: Id<"pages">;
+interface IdentityData {
+  _id: Id<"identities">;
   name: string;
   slug: string;
   bio?: string;
@@ -40,14 +40,14 @@ interface PageData {
   viewCount: number;
 }
 
-export function PageManager() {
-  const pages = useUserPages();
-  const { createPage, updatePage, deletePage } = usePageMutations();
+export function IdentityManager() {
+  const identities = useUserIdentities();
+  const { createIdentity, updateIdentity, deleteIdentity } = useIdentityMutations();
 
-  const [selectedPageId, setSelectedPageId] = React.useState<Id<"pages"> | null>(null);
+  const [selectedIdentityId, setSelectedIdentityId] = React.useState<Id<"identities"> | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [newPage, setNewPage] = React.useState({
+  const [newIdentity, setNewIdentity] = React.useState({
     name: "",
     slug: "",
     bio: "",
@@ -55,13 +55,13 @@ export function PageManager() {
   });
 
   // Check slug availability
-  const slugAvailable = useSlugAvailable(newPage.slug);
+  const slugAvailable = useSlugAvailable(newIdentity.slug);
 
-  const typedPages = pages as PageData[] | undefined;
-  const currentPage = selectedPageId ? typedPages?.find((p: PageData) => p._id === selectedPageId) : null;
+  const typedIdentities = identities as IdentityData[] | undefined;
+  const currentIdentity = selectedIdentityId ? typedIdentities?.find((p: IdentityData) => p._id === selectedIdentityId) : null;
 
-  const handleCreatePage = async () => {
-    if (!newPage.name || !newPage.slug) {
+  const handleCreateIdentity = async () => {
+    if (!newIdentity.name || !newIdentity.slug) {
       toast.error("Name and slug are required");
       return;
     }
@@ -73,13 +73,13 @@ export function PageManager() {
 
     setIsLoading(true);
     try {
-      await createPage({
-        name: newPage.name,
-        slug: newPage.slug.toLowerCase(),
-        bio: newPage.bio || undefined,
-        isPublic: newPage.isPublic,
+      await createIdentity({
+        name: newIdentity.name,
+        slug: newIdentity.slug.toLowerCase(),
+        bio: newIdentity.bio || undefined,
+        isPublic: newIdentity.isPublic,
       });
-      setNewPage({ name: "", slug: "", bio: "", isPublic: true });
+      setNewIdentity({ name: "", slug: "", bio: "", isPublic: true });
       setIsCreateDialogOpen(false);
       toast.success("Identity created successfully!");
     } catch (error) {
@@ -90,9 +90,9 @@ export function PageManager() {
     }
   };
 
-  const togglePageStatus = async (pageId: Id<"pages">, currentStatus: boolean) => {
+  const toggleIdentityStatus = async (identityId: Id<"identities">, currentStatus: boolean) => {
     try {
-      await updatePage({ pageId, isPublic: !currentStatus });
+      await updateIdentity({ identityId, isPublic: !currentStatus });
       toast.success(currentStatus ? "Identity deactivated" : "Identity activated");
     } catch (error) {
       toast.error("Failed to update identity");
@@ -100,11 +100,11 @@ export function PageManager() {
     }
   };
 
-  const handleDeletePage = async (pageId: Id<"pages">) => {
+  const handleDeleteIdentity = async (identityId: Id<"identities">) => {
     try {
-      await deletePage({ pageId });
-      if (selectedPageId === pageId) {
-        setSelectedPageId(null);
+      await deleteIdentity({ identityId });
+      if (selectedIdentityId === identityId) {
+        setSelectedIdentityId(null);
       }
       toast.success("Identity deleted");
     } catch (error) {
@@ -113,7 +113,7 @@ export function PageManager() {
     }
   };
 
-  if (typedPages === undefined) {
+  if (typedIdentities === undefined) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -122,65 +122,67 @@ export function PageManager() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-full overflow-hidden">
       {/* Identity Selection Header */}
       <FadeIn>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center w-full">
-            <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
-              <PixelBorder variant="solid" shadow="sm" className="px-3 py-1.5 bg-card shrink-0">
-                <div className="flex items-center gap-2 text-sm">
-                  <PixelIcon icon="star" size="xs" color="teal" />
-                  <CountUp value={typedPages.length} duration={0.5} />
-                  <span className="text-muted-foreground">identities</span>
-                </div>
-              </PixelBorder>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto min-w-0">
-                <Label htmlFor="identity-select" className="text-sm font-bold shrink-0">
-                  Select Identity:
-                </Label>
-                <PixelBorder variant="solid" shadow="sm" className="bg-card w-full sm:w-auto min-w-0">
-                  <Select
-                    value={selectedPageId || ""}
-                    onValueChange={(value) => setSelectedPageId(value as Id<"pages">)}
-                  >
-                    <SelectTrigger className="w-full sm:w-[250px] border-0 bg-transparent font-bold">
-                      <SelectValue placeholder="Choose an identity to manage">
-                      {currentPage && (
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-5 w-5 pixel-border">
-                            <AvatarImage src={currentPage.avatarUrl || "/placeholder.svg"} alt={currentPage.name} />
-                            <AvatarFallback className="text-xs">{currentPage.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-bold">{currentPage.name}</span>
-                        </div>
-                      )}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="pixel-border">
-                    {typedPages.map((page: PageData) => (
-                      <SelectItem key={page._id} value={page._id} className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage src={page.avatarUrl || "/placeholder.svg"} alt={page.name} />
-                            <AvatarFallback className="text-xs">{page.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span>{page.name}</span>
-                          <Badge variant={page.isPublic ? "retro" : "secondary"} className="text-xs ml-auto">
-                            {page.isPublic ? "Public" : "Private"}
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </PixelBorder>
-            </div>
+        <div className="flex flex-col gap-3">
+          {/* Stats and Select Row */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
+            <PixelBorder variant="solid" shadow="sm" className="px-3 py-1.5 bg-card shrink-0 w-fit">
+              <div className="flex items-center gap-2 text-sm">
+                <PixelIcon icon="star" size="xs" color="teal" />
+                <CountUp value={typedIdentities.length} duration={0.5} />
+                <span className="text-muted-foreground">identities</span>
+              </div>
+            </PixelBorder>
+            
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
+              <Label htmlFor="identity-select" className="text-sm font-bold shrink-0 whitespace-nowrap">
+                Select Identity:
+              </Label>
+              <PixelBorder variant="solid" shadow="sm" className="bg-card flex-1 min-w-0">
+                <Select
+                  value={selectedIdentityId || ""}
+                  onValueChange={(value) => setSelectedIdentityId(value as Id<"identities">)}
+                >
+                  <SelectTrigger className="w-full border-0 bg-transparent font-bold text-sm min-w-0">
+                    <SelectValue placeholder="Choose identity...">
+                    {currentIdentity && (
+                      <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                        <Avatar className="h-5 w-5 pixel-border shrink-0">
+                          <AvatarImage src={currentIdentity.avatarUrl || "/placeholder.svg"} alt={currentIdentity.name} />
+                          <AvatarFallback className="text-xs">{currentIdentity.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-bold truncate">{currentIdentity.name}</span>
+                      </div>
+                    )}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="pixel-border">
+                  {typedIdentities.map((identity: IdentityData) => (
+                    <SelectItem key={identity._id} value={identity._id} className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-5 w-5 shrink-0">
+                          <AvatarImage src={identity.avatarUrl || "/placeholder.svg"} alt={identity.name} />
+                          <AvatarFallback className="text-xs">{identity.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="truncate">{identity.name}</span>
+                        <Badge variant={identity.isPublic ? "retro" : "secondary"} className="text-xs ml-auto shrink-0">
+                          {identity.isPublic ? "Public" : "Private"}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PixelBorder>
           </div>
           </div>
+          
+          {/* Create Button */}
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="pixel" className="w-full sm:w-auto shrink-0">
+                <Button variant="pixel" className="w-full sm:w-auto">
                   <Plus className="h-4 w-4 mr-2" />
                   Create Identity
                 </Button>
@@ -195,8 +197,8 @@ export function PageManager() {
                   <Label htmlFor="name" className="font-bold">Display Name</Label>
                   <Input
                     id="name"
-                    value={newPage.name}
-                    onChange={(e) => setNewPage({ ...newPage, name: e.target.value })}
+                    value={newIdentity.name}
+                    onChange={(e) => setNewIdentity({ ...newIdentity, name: e.target.value })}
                     placeholder="Alex Johnson"
                     className="pixel-border"
                   />
@@ -205,12 +207,12 @@ export function PageManager() {
                   <Label htmlFor="slug" className="font-bold">URL Slug</Label>
                   <Input
                     id="slug"
-                    value={newPage.slug}
-                    onChange={(e) => setNewPage({ ...newPage, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
+                    value={newIdentity.slug}
+                    onChange={(e) => setNewIdentity({ ...newIdentity, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
                     placeholder="alex-creates"
                     className="pixel-border"
                   />
-                  {newPage.slug && (
+                  {newIdentity.slug && (
                     <p className={`text-xs ${slugAvailable === false ? "text-red-500" : slugAvailable === true ? "text-green-500" : "text-muted-foreground"}`}>
                       {slugAvailable === false ? "This slug is taken" : slugAvailable === true ? "This slug is available" : "Checking..."}
                     </p>
@@ -220,8 +222,8 @@ export function PageManager() {
                   <Label htmlFor="bio" className="font-bold">Bio</Label>
                   <Textarea
                     id="bio"
-                    value={newPage.bio}
-                    onChange={(e) => setNewPage({ ...newPage, bio: e.target.value })}
+                    value={newIdentity.bio}
+                    onChange={(e) => setNewIdentity({ ...newIdentity, bio: e.target.value })}
                     placeholder="Tell people about yourself..."
                     rows={3}
                     className="pixel-border"
@@ -230,13 +232,13 @@ export function PageManager() {
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="isPublic"
-                    checked={newPage.isPublic}
-                    onCheckedChange={(checked) => setNewPage({ ...newPage, isPublic: checked })}
+                    checked={newIdentity.isPublic}
+                    onCheckedChange={(checked) => setNewIdentity({ ...newIdentity, isPublic: checked })}
                   />
-                  <Label htmlFor="isPublic" className="font-bold">Make this page public</Label>
+                  <Label htmlFor="isPublic" className="font-bold">Make this identity public</Label>
                 </div>
                 <div className="flex gap-2 pt-4">
-                  <Button variant="pixel" onClick={handleCreatePage} disabled={isLoading} className="flex-1">
+                  <Button variant="pixel" onClick={handleCreateIdentity} disabled={isLoading} className="flex-1">
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                     Create Identity
                   </Button>
@@ -251,7 +253,7 @@ export function PageManager() {
       </FadeIn>
 
       {/* Selected Identity Management */}
-      {currentPage ? (
+      {currentIdentity ? (
         <SlideUp delay={0.1}>
           <div className="space-y-6">
             {/* Identity Overview Card */}
@@ -261,16 +263,16 @@ export function PageManager() {
                   <div className="flex items-center gap-4 min-w-0 flex-1">
                     <PixelBorder variant="solid" shadow="sm" className="p-0.5 bg-pixel-teal">
                       <Avatar className="h-16 w-16 pixel-border">
-                        <AvatarImage src={currentPage.avatarUrl || "/placeholder.svg"} alt={currentPage.name} />
-                        <AvatarFallback className="text-lg font-bold bg-pixel-teal">{currentPage.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={currentIdentity.avatarUrl || "/placeholder.svg"} alt={currentIdentity.name} />
+                        <AvatarFallback className="text-lg font-bold bg-pixel-teal">{currentIdentity.name.charAt(0)}</AvatarFallback>
                       </Avatar>
                     </PixelBorder>
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="text-xl font-black pixel-text-shadow truncate">{currentPage.name}</CardTitle>
-                      <CardDescription className="font-medium truncate">/{currentPage.slug}</CardDescription>
+                      <CardTitle className="text-xl font-black pixel-text-shadow truncate">{currentIdentity.name}</CardTitle>
+                      <CardDescription className="font-medium truncate">/{currentIdentity.slug}</CardDescription>
                       <div className="flex gap-2 mt-2 flex-wrap">
-                        <Badge variant={currentPage.isPublic ? "retro" : "secondary"}>
-                          {currentPage.isPublic ? "Public" : "Private"}
+                        <Badge variant={currentIdentity.isPublic ? "retro" : "secondary"}>
+                          {currentIdentity.isPublic ? "Public" : "Private"}
                         </Badge>
                       </div>
                     </div>
@@ -283,25 +285,25 @@ export function PageManager() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <a href={`/admin/pages/${currentPage._id}`}>
+                        <a href={`/admin/identities/${currentIdentity._id}`}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Identity
                         </a>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <a href={`/${currentPage.slug}`} target="_blank" rel="noreferrer">
+                        <a href={`/${currentIdentity.slug}`} target="_blank" rel="noreferrer">
                           <Eye className="h-4 w-4 mr-2" />
                           View Identity
                         </a>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => togglePageStatus(currentPage._id, currentPage.isPublic)}
-                        className={currentPage.isPublic ? "text-orange-600" : "text-green-600"}
+                        onClick={() => toggleIdentityStatus(currentIdentity._id, currentIdentity.isPublic)}
+                        className={currentIdentity.isPublic ? "text-orange-600" : "text-green-600"}
                       >
                         <Settings className="h-4 w-4 mr-2" />
-                        {currentPage.isPublic ? "Make Private" : "Make Public"}
+                        {currentIdentity.isPublic ? "Make Private" : "Make Public"}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeletePage(currentPage._id)} className="text-red-600">
+                      <DropdownMenuItem onClick={() => handleDeleteIdentity(currentIdentity._id)} className="text-red-600">
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </DropdownMenuItem>
@@ -311,10 +313,10 @@ export function PageManager() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <PixelDivider variant="dashed" className="my-2" />
-                <p className="text-sm text-muted-foreground">{currentPage.bio || "No bio set"}</p>
+                <p className="text-sm text-muted-foreground">{currentIdentity.bio || "No bio set"}</p>
                 <div className="flex justify-between text-sm">
                   <PixelBorder variant="solid" shadow="sm" className="px-2 py-1 bg-pixel-yellow">
-                    <span className="font-bold">{currentPage.viewCount} views</span>
+                    <span className="font-bold">{currentIdentity.viewCount} views</span>
                   </PixelBorder>
                 </div>
               </CardContent>
@@ -325,7 +327,7 @@ export function PageManager() {
               <StaggerItem>
                 <Card variant="pixel-interactive" className="cursor-pointer group">
                   <CardContent className="p-6">
-                    <a href={`/admin/pages/${currentPage._id}`} className="block">
+                    <a href={`/admin/identities/${currentIdentity._id}`} className="block">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-pixel-teal pixel-border group-hover:pixel-bounce">
                           <PixelIcon icon="star" size="sm" />
@@ -343,7 +345,7 @@ export function PageManager() {
               <StaggerItem>
                 <Card variant="pixel-interactive" className="cursor-pointer group">
                   <CardContent className="p-6">
-                    <a href={`/admin/pages/${currentPage._id}/links`} className="block">
+                    <a href={`/admin/identities/${currentIdentity._id}/links`} className="block">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-pixel-mint pixel-border group-hover:pixel-bounce">
                           <PixelIcon icon="link" size="sm" />
@@ -361,7 +363,7 @@ export function PageManager() {
               <StaggerItem>
                 <Card variant="pixel-interactive" className="cursor-pointer group">
                   <CardContent className="p-6">
-                    <a href={`/admin/pages/${currentPage._id}/themes`} className="block">
+                    <a href={`/admin/identities/${currentIdentity._id}/themes`} className="block">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-pixel-pink pixel-border group-hover:pixel-bounce">
                           <PixelIcon icon="sparkle" size="sm" />
@@ -379,7 +381,7 @@ export function PageManager() {
               <StaggerItem>
                 <Card variant="pixel-interactive" className="cursor-pointer group">
                   <CardContent className="p-6">
-                    <a href={`/${currentPage.slug}`} target="_blank" rel="noreferrer" className="block">
+                    <a href={`/${currentIdentity.slug}`} target="_blank" rel="noreferrer" className="block">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-pixel-yellow pixel-border group-hover:pixel-bounce">
                           <PixelIcon icon="arrow" size="sm" />
@@ -411,7 +413,7 @@ export function PageManager() {
                     Choose an identity from the dropdown above to edit its settings, manage links, and customize its theme.
                   </p>
                 </div>
-                {typedPages.length === 0 && (
+                {typedIdentities.length === 0 && (
                   <Button variant="pixel" onClick={() => setIsCreateDialogOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Your First Identity
@@ -436,40 +438,40 @@ export function PageManager() {
           <CardContent>
             <PixelDivider variant="dashed" className="mb-4" />
             <StaggerContainer className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {typedPages.map((page: PageData, index: number) => {
+              {typedIdentities.map((identity: IdentityData, index: number) => {
                 const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"];
                 const colorClass = colors[index % colors.length];
 
                 return (
-                  <StaggerItem key={page._id}>
+                  <StaggerItem key={identity._id}>
                     <Card variant="pixel-interactive" className="relative group">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-3 mb-3">
                           <PixelBorder variant="solid" shadow="sm" className={`p-0.5 ${colorClass}`}>
                             <Avatar className="h-10 w-10 pixel-border">
-                              <AvatarImage src={page.avatarUrl || "/placeholder.svg"} alt={page.name} />
-                              <AvatarFallback className={`text-sm font-bold ${colorClass}`}>{page.name.charAt(0)}</AvatarFallback>
+                              <AvatarImage src={identity.avatarUrl || "/placeholder.svg"} alt={identity.name} />
+                              <AvatarFallback className={`text-sm font-bold ${colorClass}`}>{identity.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                           </PixelBorder>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-bold truncate group-hover:text-pixel-pink transition-colors">{page.name}</h3>
-                            <p className="text-sm text-muted-foreground truncate">/{page.slug}</p>
+                            <h3 className="font-bold truncate group-hover:text-pixel-pink transition-colors">{identity.name}</h3>
+                            <p className="text-sm text-muted-foreground truncate">/{identity.slug}</p>
                           </div>
                           <Button
-                            variant={selectedPageId === page._id ? "pixel" : "pixel-outline"}
+                            variant={selectedIdentityId === identity._id ? "pixel" : "pixel-outline"}
                             size="sm"
-                            onClick={() => setSelectedPageId(page._id)}
+                            onClick={() => setSelectedIdentityId(identity._id)}
                           >
-                            {selectedPageId === page._id ? "Selected" : "Select"}
+                            {selectedIdentityId === identity._id ? "Selected" : "Select"}
                           </Button>
                         </div>
                         <div className="flex gap-2 mb-2">
-                          <Badge variant={page.isPublic ? "retro" : "secondary"} className="text-xs">
-                            {page.isPublic ? "Public" : "Private"}
+                          <Badge variant={identity.isPublic ? "retro" : "secondary"} className="text-xs">
+                            {identity.isPublic ? "Public" : "Private"}
                           </Badge>
                         </div>
                         <div className="flex justify-between text-xs font-medium">
-                          <span className="text-pixel-pink">{page.viewCount} views</span>
+                          <span className="text-pixel-pink">{identity.viewCount} views</span>
                         </div>
                       </CardContent>
                     </Card>

@@ -83,7 +83,7 @@ export const createFromClerk = internalMutation({
       userId,
       completedIntro: false,
       addedFirstLink: false,
-      publishedPage: false,
+      publishedIdentity: false,
       updatedAt: now(),
     });
 
@@ -166,29 +166,29 @@ export const deleteFromClerk = internalMutation({
       updatedAt: deletionTime,
     });
 
-    // Soft delete all user's pages and their links
-    const userPages = await ctx.db
-      .query("pages")
+    // Soft delete all user's identities and their links
+    const userIdentities = await ctx.db
+      .query("identities")
       .withIndex("by_user", (q) =>
         q.eq("userId", user._id).eq("deletionTime", undefined)
       )
       .collect();
 
-    for (const page of userPages) {
-      await ctx.db.patch(page._id, {
+    for (const identity of userIdentities) {
+      await ctx.db.patch(identity._id, {
         deletionTime,
         updatedAt: deletionTime,
       });
 
-      // Soft delete all links on each page
-      const pageLinks = await ctx.db
+      // Soft delete all links on each identity
+      const identityLinks = await ctx.db
         .query("links")
-        .withIndex("by_page", (q) =>
-          q.eq("pageId", page._id).eq("deletionTime", undefined)
+        .withIndex("by_identity", (q) =>
+          q.eq("identityId", identity._id).eq("deletionTime", undefined)
         )
         .collect();
 
-      for (const link of pageLinks) {
+      for (const link of identityLinks) {
         await ctx.db.patch(link._id, {
           deletionTime,
           updatedAt: deletionTime,
