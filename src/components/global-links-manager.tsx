@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Plus, Search, MoreHorizontal, Edit, Trash2, ExternalLink, Copy, Eye, BarChart3, LinkIcon, Loader2 } from "lucide-react"
-import { useAllUserLinks, useUserPages, useLinkMutations } from "@/hooks/convex"
+import { useAllUserLinks, useUserIdentities, useLinkMutations } from "@/hooks/convex"
 import { PixelBorder } from "@/components/pixel-art/PixelBorder"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 import { PixelDivider } from "@/components/pixel-art/PixelDivider"
@@ -31,9 +31,9 @@ import { Id } from "../../convex/_generated/dataModel"
 
 interface LinkData {
   _id: string;
-  pageId: string;
-  pageName: string;
-  pageSlug: string;
+  identityId: string;
+  identityName: string;
+  identitySlug: string;
   title: string;
   url?: string;
   type?: "link" | "header" | "divider";
@@ -47,7 +47,7 @@ interface LinkData {
 
 export function GlobalLinksManager() {
   const allLinksData = useAllUserLinks();
-  const pages = useUserPages();
+  const identities = useUserIdentities();
   const { createLink, updateLink, deleteLink: deleteLinkMutation } = useLinkMutations();
 
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -56,13 +56,13 @@ export function GlobalLinksManager() {
 
   // Add Link dialog state
   const [isAddDialogOpen, setIsAddDialogOpen] = React.useState(false)
-  const [newLinkPageId, setNewLinkPageId] = React.useState("")
+  const [newLinkIdentityId, setNewLinkIdentityId] = React.useState("")
   const [newLinkTitle, setNewLinkTitle] = React.useState("")
   const [newLinkUrl, setNewLinkUrl] = React.useState("")
   const [newLinkDescription, setNewLinkDescription] = React.useState("")
   const [isCreating, setIsCreating] = React.useState(false)
 
-  const isLoading = allLinksData === undefined || pages === undefined;
+  const isLoading = allLinksData === undefined || identities === undefined;
 
   // Only show actual links, not headers or dividers
   const links = ((allLinksData?.links || []) as LinkData[]).filter(
@@ -70,7 +70,7 @@ export function GlobalLinksManager() {
   );
   const stats = allLinksData?.stats || { total: 0, active: 0, totalClicks: 0 };
 
-  const typedPages = (pages || []) as Array<{
+  const typedIdentities = (identities || []) as Array<{
     _id: string;
     name: string;
     slug: string;
@@ -80,11 +80,11 @@ export function GlobalLinksManager() {
     const matchesSearch =
       link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (link.url?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
-      link.pageName.toLowerCase().includes(searchQuery.toLowerCase())
+      link.identityName.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesProfile = selectedPage === "all" || link.pageId === selectedPage
+    const matchesIdentity = selectedPage === "all" || link.identityId === selectedPage
 
-    return matchesSearch && matchesProfile
+    return matchesSearch && matchesIdentity
   })
 
   const sortedLinks = [...filteredLinks].sort((a, b) => {
@@ -94,7 +94,7 @@ export function GlobalLinksManager() {
       case "title":
         return a.title.localeCompare(b.title)
       case "profile":
-        return a.pageName.localeCompare(b.pageName)
+        return a.identityName.localeCompare(b.identityName)
       default: // recent
         return (b.updatedAt ?? 0) - (a.updatedAt ?? 0)
     }
@@ -124,7 +124,7 @@ export function GlobalLinksManager() {
   }
 
   const handleCreateLink = async () => {
-    if (!newLinkPageId || !newLinkTitle || !newLinkUrl) {
+    if (!newLinkIdentityId || !newLinkTitle || !newLinkUrl) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -132,7 +132,7 @@ export function GlobalLinksManager() {
     setIsCreating(true);
     try {
       await createLink({
-        pageId: newLinkPageId as Id<"pages">,
+        identityId: newLinkIdentityId as Id<"identities">,
         title: newLinkTitle,
         url: newLinkUrl,
         description: newLinkDescription || undefined,
@@ -141,7 +141,7 @@ export function GlobalLinksManager() {
       });
       toast.success("Link created successfully");
       // Reset form and close dialog
-      setNewLinkPageId("");
+      setNewLinkIdentityId("");
       setNewLinkTitle("");
       setNewLinkUrl("");
       setNewLinkDescription("");
@@ -155,7 +155,7 @@ export function GlobalLinksManager() {
   }
 
   const resetAddLinkForm = () => {
-    setNewLinkPageId("");
+    setNewLinkIdentityId("");
     setNewLinkTitle("");
     setNewLinkUrl("");
     setNewLinkDescription("");
@@ -272,9 +272,9 @@ export function GlobalLinksManager() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Identities</SelectItem>
-                  {typedPages.map((page) => (
-                    <SelectItem key={page._id} value={page._id}>
-                      {page.name}
+                  {typedIdentities.map((identity) => (
+                    <SelectItem key={identity._id} value={identity._id}>
+                      {identity.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -308,7 +308,7 @@ export function GlobalLinksManager() {
                 <CardDescription>
                   {selectedPage === "all"
                     ? "Showing all links across identities"
-                    : `Showing links for ${typedPages.find((p) => p._id === selectedPage)?.name}`}
+                    : `Showing links for ${typedIdentities.find((p) => p._id === selectedPage)?.name}`}
                 </CardDescription>
               </div>
               <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
@@ -329,18 +329,18 @@ export function GlobalLinksManager() {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="profile" className="font-bold">Identity</Label>
-                      <Select value={newLinkPageId} onValueChange={setNewLinkPageId}>
+                      <Select value={newLinkIdentityId} onValueChange={setNewLinkIdentityId}>
                         <SelectTrigger className="pixel-border">
                           <SelectValue placeholder="Select an identity" />
                         </SelectTrigger>
                         <SelectContent>
-                          {typedPages.map((page) => (
-                            <SelectItem key={page._id} value={page._id}>
+                          {typedIdentities.map((identity) => (
+                            <SelectItem key={identity._id} value={identity._id}>
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-5 w-5">
-                                  <AvatarFallback className="text-xs">{page.name.charAt(0)}</AvatarFallback>
+                                  <AvatarFallback className="text-xs">{identity.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
-                                {page.name}
+                                {identity.name}
                               </div>
                             </SelectItem>
                           ))}
@@ -382,7 +382,7 @@ export function GlobalLinksManager() {
                         variant="pixel"
                         className="flex-1"
                         onClick={handleCreateLink}
-                        disabled={isCreating || !newLinkPageId || !newLinkTitle || !newLinkUrl}
+                        disabled={isCreating || !newLinkIdentityId || !newLinkTitle || !newLinkUrl}
                       >
                         {isCreating ? (
                           <>
@@ -442,7 +442,7 @@ export function GlobalLinksManager() {
                               </div>
                               <p className="text-sm text-muted-foreground truncate">{link.url}</p>
                               <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs flex-wrap">
-                                <span className="text-pixel-teal font-medium truncate">Identity: {link.pageName}</span>
+                                <span className="text-pixel-teal font-medium truncate">Identity: {link.identityName}</span>
                                 <span className="text-pixel-pink font-medium">{link.clickCount ?? 0} clicks</span>
                               </div>
                             </div>
@@ -463,7 +463,7 @@ export function GlobalLinksManager() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                  <a href={`/admin/pages/${link.pageId}/links`}>
+                                  <a href={`/admin/identities/${link.identityId}/links`}>
                                     <Edit className="h-4 w-4 mr-2" />
                                     Edit Link
                                   </a>

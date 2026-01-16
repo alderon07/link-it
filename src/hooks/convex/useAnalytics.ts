@@ -24,20 +24,20 @@ export function useDashboardStats() {
 }
 
 /**
- * Hook to get analytics for a specific page
+ * Hook to get analytics for a specific identity
  */
-export function usePageAnalytics(pageId: string | undefined, days?: number) {
+export function useIdentityAnalytics(identityId: string | undefined, days?: number) {
   const isAvailable = useConvexAvailable();
   return useQuery(
-    isAvailable && api?.analytics?.queries?.getPageAnalytics && pageId
-      ? api.analytics.queries.getPageAnalytics
+    isAvailable && api?.analytics?.queries?.getIdentityAnalytics && identityId
+      ? api.analytics.queries.getIdentityAnalytics
       : "skip",
-    pageId ? { pageId, days } : "skip"
+    identityId ? { identityId, days } : "skip"
   );
 }
 
 /**
- * Hook to get global analytics across all pages
+ * Hook to get global analytics across all identities
  */
 export function useGlobalAnalytics(days?: number) {
   const isAvailable = useConvexAvailable();

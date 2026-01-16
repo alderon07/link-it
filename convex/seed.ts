@@ -75,7 +75,7 @@ export const seedSystemThemes = internalMutation({
 });
 
 /**
- * Seed test data for a specific user (pages, links, analytics)
+ * Seed test data for a specific user (identities, links, analytics)
  */
 export const seedTestDataForUser = internalMutation({
   args: {
@@ -85,27 +85,27 @@ export const seedTestDataForUser = internalMutation({
   handler: async (ctx, args) => {
     const timestamp = now();
 
-    // Get system themes for page associations
+    // Get system themes for identity associations
     const systemThemes = await ctx.db
       .query("themes")
       .withIndex("by_system", (q) => q.eq("isCustom", false))
       .collect();
 
-    // Check if user already has pages
-    const existingPages = await ctx.db
-      .query("pages")
+    // Check if user already has identities
+    const existingIdentities = await ctx.db
+      .query("identities")
       .withIndex("by_user", (q) =>
         q.eq("userId", args.userId).eq("deletionTime", undefined)
       )
       .collect();
 
-    if (existingPages.length >= 3) {
-      console.log(`User ${args.username} already has ${existingPages.length} pages`);
-      return { pages: existingPages.map((p) => p._id), links: [], pageViews: [], linkClicks: [] };
+    if (existingIdentities.length >= 3) {
+      console.log(`User ${args.username} already has ${existingIdentities.length} identities`);
+      return { identities: existingIdentities.map((p) => p._id), links: [], identityViews: [], linkClicks: [] };
     }
 
-    // Create test pages
-    const pages = [
+    // Create test identities
+    const identities = [
       {
         name: "Personal",
         slug: `${args.username}-personal`,
@@ -132,37 +132,37 @@ export const seedTestDataForUser = internalMutation({
       },
     ];
 
-    const pageIds: Id<"pages">[] = [];
-    for (const page of pages) {
+    const identityIds: Id<"identities">[] = [];
+    for (const identity of identities) {
       // Check if slug exists
       const existing = await ctx.db
-        .query("pages")
-        .withIndex("by_slug", (q) => q.eq("slug", page.slug))
+        .query("identities")
+        .withIndex("by_slug", (q) => q.eq("slug", identity.slug))
         .first();
 
       if (existing && !existing.deletionTime) {
-        console.log(`Page with slug ${page.slug} already exists, skipping`);
-        pageIds.push(existing._id);
+        console.log(`Identity with slug ${identity.slug} already exists, skipping`);
+        identityIds.push(existing._id);
         continue;
       }
 
-      const id = await ctx.db.insert("pages", {
+      const id = await ctx.db.insert("identities", {
         userId: args.userId,
-        name: page.name,
-        slug: page.slug,
-        bio: page.bio,
-        isPublic: page.isPublic,
-        viewCount: page.viewCount,
-        themeId: page.themeId,
+        name: identity.name,
+        slug: identity.slug,
+        bio: identity.bio,
+        isPublic: identity.isPublic,
+        viewCount: identity.viewCount,
+        themeId: identity.themeId,
         updatedAt: timestamp,
       });
-      pageIds.push(id);
-      console.log(`Created page: ${page.name} (${page.slug})`);
+      identityIds.push(id);
+      console.log(`Created identity: ${identity.name} (${identity.slug})`);
     }
 
-    // Create links for each page
+    // Create links for each identity
     const linksData: Array<{
-      pageId: Id<"pages">;
+      identityId: Id<"identities">;
       title: string;
       url: string;
       type: "link" | "header" | "divider";
@@ -173,41 +173,41 @@ export const seedTestDataForUser = internalMutation({
       clickCount: number;
     }> = [];
 
-    // Personal page links
-    if (pageIds[0]) {
+    // Personal identity links
+    if (identityIds[0]) {
       linksData.push(
-        { pageId: pageIds[0], title: "Social Media", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
-        { pageId: pageIds[0], title: "Twitter / X", url: "https://twitter.com/example", type: "link", description: "Follow me for tech updates", icon: "twitter", isActive: true, orderIndex: 1, clickCount: 189 },
-        { pageId: pageIds[0], title: "Instagram", url: "https://instagram.com/example", type: "link", description: "Photos and stories", icon: "instagram", isActive: true, orderIndex: 2, clickCount: 156 },
-        { pageId: pageIds[0], title: "LinkedIn", url: "https://linkedin.com/in/example", type: "link", description: "Professional network", icon: "linkedin", isActive: true, orderIndex: 3, clickCount: 98 },
-        { pageId: pageIds[0], title: "GitHub", url: "https://github.com/example", type: "link", description: "Open source projects", icon: "github", isActive: true, orderIndex: 4, clickCount: 234 },
-        { pageId: pageIds[0], title: "", url: "", type: "divider", isActive: true, orderIndex: 5, clickCount: 0 },
-        { pageId: pageIds[0], title: "Content", url: "", type: "header", isActive: true, orderIndex: 6, clickCount: 0 },
-        { pageId: pageIds[0], title: "YouTube Channel", url: "https://youtube.com/@example", type: "link", description: "Tutorials and vlogs", icon: "youtube", isActive: true, orderIndex: 7, clickCount: 312 },
-        { pageId: pageIds[0], title: "Blog", url: "https://blog.example.com", type: "link", description: "Thoughts and writings", icon: "pen", isActive: true, orderIndex: 8, clickCount: 145 },
-        { pageId: pageIds[0], title: "Portfolio", url: "https://portfolio.example.com", type: "link", description: "My best work", icon: "briefcase", isActive: false, orderIndex: 9, clickCount: 67 }
+        { identityId: identityIds[0], title: "Social Media", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
+        { identityId: identityIds[0], title: "Twitter / X", url: "https://twitter.com/example", type: "link", description: "Follow me for tech updates", icon: "twitter", isActive: true, orderIndex: 1, clickCount: 189 },
+        { identityId: identityIds[0], title: "Instagram", url: "https://instagram.com/example", type: "link", description: "Photos and stories", icon: "instagram", isActive: true, orderIndex: 2, clickCount: 156 },
+        { identityId: identityIds[0], title: "LinkedIn", url: "https://linkedin.com/in/example", type: "link", description: "Professional network", icon: "linkedin", isActive: true, orderIndex: 3, clickCount: 98 },
+        { identityId: identityIds[0], title: "GitHub", url: "https://github.com/example", type: "link", description: "Open source projects", icon: "github", isActive: true, orderIndex: 4, clickCount: 234 },
+        { identityId: identityIds[0], title: "", url: "", type: "divider", isActive: true, orderIndex: 5, clickCount: 0 },
+        { identityId: identityIds[0], title: "Content", url: "", type: "header", isActive: true, orderIndex: 6, clickCount: 0 },
+        { identityId: identityIds[0], title: "YouTube Channel", url: "https://youtube.com/@example", type: "link", description: "Tutorials and vlogs", icon: "youtube", isActive: true, orderIndex: 7, clickCount: 312 },
+        { identityId: identityIds[0], title: "Blog", url: "https://blog.example.com", type: "link", description: "Thoughts and writings", icon: "pen", isActive: true, orderIndex: 8, clickCount: 145 },
+        { identityId: identityIds[0], title: "Portfolio", url: "https://portfolio.example.com", type: "link", description: "My best work", icon: "briefcase", isActive: false, orderIndex: 9, clickCount: 67 }
       );
     }
 
-    // Business page links
-    if (pageIds[1]) {
+    // Business identity links
+    if (identityIds[1]) {
       linksData.push(
-        { pageId: pageIds[1], title: "Services", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
-        { pageId: pageIds[1], title: "Company Website", url: "https://company.example.com", type: "link", description: "Learn about our services", icon: "globe", isActive: true, orderIndex: 1, clickCount: 178 },
-        { pageId: pageIds[1], title: "Book a Consultation", url: "https://calendly.com/example", type: "link", description: "Schedule a free call", icon: "calendar", isActive: true, orderIndex: 2, clickCount: 89 },
-        { pageId: pageIds[1], title: "Contact", url: "", type: "header", isActive: true, orderIndex: 3, clickCount: 0 },
-        { pageId: pageIds[1], title: "Email Us", url: "mailto:hello@example.com", type: "link", description: "Get in touch", icon: "mail", isActive: true, orderIndex: 4, clickCount: 56 },
-        { pageId: pageIds[1], title: "Store", url: "https://store.example.com", type: "link", description: "Shop our products", icon: "shopping-cart", isActive: true, orderIndex: 5, clickCount: 134 }
+        { identityId: identityIds[1], title: "Services", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
+        { identityId: identityIds[1], title: "Company Website", url: "https://company.example.com", type: "link", description: "Learn about our services", icon: "globe", isActive: true, orderIndex: 1, clickCount: 178 },
+        { identityId: identityIds[1], title: "Book a Consultation", url: "https://calendly.com/example", type: "link", description: "Schedule a free call", icon: "calendar", isActive: true, orderIndex: 2, clickCount: 89 },
+        { identityId: identityIds[1], title: "Contact", url: "", type: "header", isActive: true, orderIndex: 3, clickCount: 0 },
+        { identityId: identityIds[1], title: "Email Us", url: "mailto:hello@example.com", type: "link", description: "Get in touch", icon: "mail", isActive: true, orderIndex: 4, clickCount: 56 },
+        { identityId: identityIds[1], title: "Store", url: "https://store.example.com", type: "link", description: "Shop our products", icon: "shopping-cart", isActive: true, orderIndex: 5, clickCount: 134 }
       );
     }
 
-    // Private page links
-    if (pageIds[2]) {
+    // Private identity links
+    if (identityIds[2]) {
       linksData.push(
-        { pageId: pageIds[2], title: "Resources", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
-        { pageId: pageIds[2], title: "Private Dashboard", url: "https://dashboard.example.com", type: "link", description: "Admin access", icon: "lock", isActive: true, orderIndex: 1, clickCount: 23 },
-        { pageId: pageIds[2], title: "Notes", url: "https://notes.example.com", type: "link", description: "Personal notes", icon: "file-text", isActive: true, orderIndex: 2, clickCount: 45 },
-        { pageId: pageIds[2], title: "Bookmarks", url: "https://bookmarks.example.com", type: "link", description: "Saved links", icon: "bookmark", isActive: true, orderIndex: 3, clickCount: 12 }
+        { identityId: identityIds[2], title: "Resources", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
+        { identityId: identityIds[2], title: "Private Dashboard", url: "https://dashboard.example.com", type: "link", description: "Admin access", icon: "lock", isActive: true, orderIndex: 1, clickCount: 23 },
+        { identityId: identityIds[2], title: "Notes", url: "https://notes.example.com", type: "link", description: "Personal notes", icon: "file-text", isActive: true, orderIndex: 2, clickCount: 45 },
+        { identityId: identityIds[2], title: "Bookmarks", url: "https://bookmarks.example.com", type: "link", description: "Saved links", icon: "bookmark", isActive: true, orderIndex: 3, clickCount: 12 }
       );
     }
 
@@ -223,11 +223,11 @@ export const seedTestDataForUser = internalMutation({
     console.log(`Created ${linkIds.length} links`);
 
     // Generate analytics data (last 30 days)
-    const pageViewIds: Id<"pageViews">[] = [];
+    const identityViewIds: Id<"identityViews">[] = [];
     const linkClickIds: Id<"linkClicks">[] = [];
     const thirtyDaysAgo = timestamp - 30 * 24 * 60 * 60 * 1000;
 
-    // Generate page views for public pages
+    // Generate identity views for public identities
     const referrers = ["https://google.com", "https://twitter.com", "https://linkedin.com", "direct", "https://facebook.com"];
     const userAgents = [
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0",
@@ -238,25 +238,25 @@ export const seedTestDataForUser = internalMutation({
     const countries = ["US", "UK", "CA", "DE", "FR", "AU", "JP", "BR"];
 
     for (let i = 0; i < 2; i++) {
-      const pageId = pageIds[i];
-      if (!pageId) continue;
+      const identityId = identityIds[i];
+      if (!identityId) continue;
 
-      // Generate 50-150 page views
+      // Generate 50-150 identity views
       const viewCount = 50 + Math.floor(Math.random() * 100);
       for (let j = 0; j < viewCount; j++) {
         const viewedAt = thirtyDaysAgo + Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000);
-        const id = await ctx.db.insert("pageViews", {
-          pageId,
+        const id = await ctx.db.insert("identityViews", {
+          identityId,
           viewedAt,
           visitorId: `visitor-${Math.random().toString(36).substring(2, 10)}`,
           userAgent: userAgents[Math.floor(Math.random() * userAgents.length)],
           referrer: referrers[Math.floor(Math.random() * referrers.length)],
           country: countries[Math.floor(Math.random() * countries.length)],
         });
-        pageViewIds.push(id);
+        identityViewIds.push(id);
       }
     }
-    console.log(`Created ${pageViewIds.length} page views`);
+    console.log(`Created ${identityViewIds.length} identity views`);
 
     // Generate link clicks for links with clickCount > 0
     const linksWithClicks = linksData.filter((l) => l.clickCount > 0 && l.type === "link");
@@ -271,7 +271,7 @@ export const seedTestDataForUser = internalMutation({
         const clickedAt = thirtyDaysAgo + Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000);
         const id = await ctx.db.insert("linkClicks", {
           linkId,
-          pageId: linkData.pageId,
+          identityId: linkData.identityId,
           clickedAt,
           visitorId: `visitor-${Math.random().toString(36).substring(2, 10)}`,
           userAgent: userAgents[Math.floor(Math.random() * userAgents.length)],
@@ -295,7 +295,7 @@ export const seedTestDataForUser = internalMutation({
         userId: args.userId,
         darkMode: false,
         emailNotifications: true,
-        defaultPageId: pageIds[0],
+        defaultIdentityId: identityIds[0],
         updatedAt: timestamp,
       });
       console.log("Created user settings");
@@ -312,16 +312,16 @@ export const seedTestDataForUser = internalMutation({
         userId: args.userId,
         completedIntro: true,
         addedFirstLink: true,
-        publishedPage: true,
+        publishedIdentity: true,
         updatedAt: timestamp,
       });
       console.log("Created user progress");
     }
 
     return {
-      pages: pageIds,
+      identities: identityIds,
       links: linkIds,
-      pageViews: pageViewIds,
+      identityViews: identityViewIds,
       linkClicks: linkClickIds,
     };
   },
@@ -370,30 +370,30 @@ export const seedMyData = mutation({
     // Now seed user data
     const timestamp = now();
 
-    // Get system themes for page associations
+    // Get system themes for identity associations
     const systemThemes = await ctx.db
       .query("themes")
       .withIndex("by_system", (q) => q.eq("isCustom", false))
       .collect();
 
-    // Check if user already has pages
-    const existingPages = await ctx.db
-      .query("pages")
+    // Check if user already has identities
+    const existingIdentities = await ctx.db
+      .query("identities")
       .withIndex("by_user", (q) =>
         q.eq("userId", user._id).eq("deletionTime", undefined)
       )
       .collect();
 
-    if (existingPages.length >= 3) {
+    if (existingIdentities.length >= 3) {
       return {
-        message: `User already has ${existingPages.length} pages. Seed skipped.`,
-        pagesCreated: 0,
+        message: `User already has ${existingIdentities.length} identities. Seed skipped.`,
+        identitiesCreated: 0,
         linksCreated: 0,
       };
     }
 
-    // Create test pages
-    const pages = [
+    // Create test identities
+    const identities = [
       {
         name: "Personal",
         slug: `${user.username}-personal`,
@@ -420,35 +420,35 @@ export const seedMyData = mutation({
       },
     ];
 
-    const pageIds: Id<"pages">[] = [];
-    for (const page of pages) {
+    const identityIds: Id<"identities">[] = [];
+    for (const identity of identities) {
       // Check if slug exists
       const existing = await ctx.db
-        .query("pages")
-        .withIndex("by_slug", (q) => q.eq("slug", page.slug))
+        .query("identities")
+        .withIndex("by_slug", (q) => q.eq("slug", identity.slug))
         .first();
 
       if (existing && !existing.deletionTime) {
-        pageIds.push(existing._id);
+        identityIds.push(existing._id);
         continue;
       }
 
-      const id = await ctx.db.insert("pages", {
+      const id = await ctx.db.insert("identities", {
         userId: user._id,
-        name: page.name,
-        slug: page.slug,
-        bio: page.bio,
-        isPublic: page.isPublic,
-        viewCount: page.viewCount,
-        themeId: page.themeId,
+        name: identity.name,
+        slug: identity.slug,
+        bio: identity.bio,
+        isPublic: identity.isPublic,
+        viewCount: identity.viewCount,
+        themeId: identity.themeId,
         updatedAt: timestamp,
       });
-      pageIds.push(id);
+      identityIds.push(id);
     }
 
-    // Create links for each page (same structure as internal mutation)
+    // Create links for each identity (same structure as internal mutation)
     const linksData: Array<{
-      pageId: Id<"pages">;
+      identityId: Id<"identities">;
       title: string;
       url: string;
       type: "link" | "header" | "divider";
@@ -459,41 +459,41 @@ export const seedMyData = mutation({
       clickCount: number;
     }> = [];
 
-    // Personal page links
-    if (pageIds[0]) {
+    // Personal identity links
+    if (identityIds[0]) {
       linksData.push(
-        { pageId: pageIds[0], title: "Social Media", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
-        { pageId: pageIds[0], title: "Twitter / X", url: "https://twitter.com/example", type: "link", description: "Follow me for tech updates", icon: "twitter", isActive: true, orderIndex: 1, clickCount: 189 },
-        { pageId: pageIds[0], title: "Instagram", url: "https://instagram.com/example", type: "link", description: "Photos and stories", icon: "instagram", isActive: true, orderIndex: 2, clickCount: 156 },
-        { pageId: pageIds[0], title: "LinkedIn", url: "https://linkedin.com/in/example", type: "link", description: "Professional network", icon: "linkedin", isActive: true, orderIndex: 3, clickCount: 98 },
-        { pageId: pageIds[0], title: "GitHub", url: "https://github.com/example", type: "link", description: "Open source projects", icon: "github", isActive: true, orderIndex: 4, clickCount: 234 },
-        { pageId: pageIds[0], title: "", url: "", type: "divider", isActive: true, orderIndex: 5, clickCount: 0 },
-        { pageId: pageIds[0], title: "Content", url: "", type: "header", isActive: true, orderIndex: 6, clickCount: 0 },
-        { pageId: pageIds[0], title: "YouTube Channel", url: "https://youtube.com/@example", type: "link", description: "Tutorials and vlogs", icon: "youtube", isActive: true, orderIndex: 7, clickCount: 312 },
-        { pageId: pageIds[0], title: "Blog", url: "https://blog.example.com", type: "link", description: "Thoughts and writings", icon: "pen", isActive: true, orderIndex: 8, clickCount: 145 },
-        { pageId: pageIds[0], title: "Portfolio", url: "https://portfolio.example.com", type: "link", description: "My best work", icon: "briefcase", isActive: false, orderIndex: 9, clickCount: 67 }
+        { identityId: identityIds[0], title: "Social Media", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
+        { identityId: identityIds[0], title: "Twitter / X", url: "https://twitter.com/example", type: "link", description: "Follow me for tech updates", icon: "twitter", isActive: true, orderIndex: 1, clickCount: 189 },
+        { identityId: identityIds[0], title: "Instagram", url: "https://instagram.com/example", type: "link", description: "Photos and stories", icon: "instagram", isActive: true, orderIndex: 2, clickCount: 156 },
+        { identityId: identityIds[0], title: "LinkedIn", url: "https://linkedin.com/in/example", type: "link", description: "Professional network", icon: "linkedin", isActive: true, orderIndex: 3, clickCount: 98 },
+        { identityId: identityIds[0], title: "GitHub", url: "https://github.com/example", type: "link", description: "Open source projects", icon: "github", isActive: true, orderIndex: 4, clickCount: 234 },
+        { identityId: identityIds[0], title: "", url: "", type: "divider", isActive: true, orderIndex: 5, clickCount: 0 },
+        { identityId: identityIds[0], title: "Content", url: "", type: "header", isActive: true, orderIndex: 6, clickCount: 0 },
+        { identityId: identityIds[0], title: "YouTube Channel", url: "https://youtube.com/@example", type: "link", description: "Tutorials and vlogs", icon: "youtube", isActive: true, orderIndex: 7, clickCount: 312 },
+        { identityId: identityIds[0], title: "Blog", url: "https://blog.example.com", type: "link", description: "Thoughts and writings", icon: "pen", isActive: true, orderIndex: 8, clickCount: 145 },
+        { identityId: identityIds[0], title: "Portfolio", url: "https://portfolio.example.com", type: "link", description: "My best work", icon: "briefcase", isActive: false, orderIndex: 9, clickCount: 67 }
       );
     }
 
-    // Business page links
-    if (pageIds[1]) {
+    // Business identity links
+    if (identityIds[1]) {
       linksData.push(
-        { pageId: pageIds[1], title: "Services", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
-        { pageId: pageIds[1], title: "Company Website", url: "https://company.example.com", type: "link", description: "Learn about our services", icon: "globe", isActive: true, orderIndex: 1, clickCount: 178 },
-        { pageId: pageIds[1], title: "Book a Consultation", url: "https://calendly.com/example", type: "link", description: "Schedule a free call", icon: "calendar", isActive: true, orderIndex: 2, clickCount: 89 },
-        { pageId: pageIds[1], title: "Contact", url: "", type: "header", isActive: true, orderIndex: 3, clickCount: 0 },
-        { pageId: pageIds[1], title: "Email Us", url: "mailto:hello@example.com", type: "link", description: "Get in touch", icon: "mail", isActive: true, orderIndex: 4, clickCount: 56 },
-        { pageId: pageIds[1], title: "Store", url: "https://store.example.com", type: "link", description: "Shop our products", icon: "shopping-cart", isActive: true, orderIndex: 5, clickCount: 134 }
+        { identityId: identityIds[1], title: "Services", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
+        { identityId: identityIds[1], title: "Company Website", url: "https://company.example.com", type: "link", description: "Learn about our services", icon: "globe", isActive: true, orderIndex: 1, clickCount: 178 },
+        { identityId: identityIds[1], title: "Book a Consultation", url: "https://calendly.com/example", type: "link", description: "Schedule a free call", icon: "calendar", isActive: true, orderIndex: 2, clickCount: 89 },
+        { identityId: identityIds[1], title: "Contact", url: "", type: "header", isActive: true, orderIndex: 3, clickCount: 0 },
+        { identityId: identityIds[1], title: "Email Us", url: "mailto:hello@example.com", type: "link", description: "Get in touch", icon: "mail", isActive: true, orderIndex: 4, clickCount: 56 },
+        { identityId: identityIds[1], title: "Store", url: "https://store.example.com", type: "link", description: "Shop our products", icon: "shopping-cart", isActive: true, orderIndex: 5, clickCount: 134 }
       );
     }
 
-    // Private page links
-    if (pageIds[2]) {
+    // Private identity links
+    if (identityIds[2]) {
       linksData.push(
-        { pageId: pageIds[2], title: "Resources", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
-        { pageId: pageIds[2], title: "Private Dashboard", url: "https://dashboard.example.com", type: "link", description: "Admin access", icon: "lock", isActive: true, orderIndex: 1, clickCount: 23 },
-        { pageId: pageIds[2], title: "Notes", url: "https://notes.example.com", type: "link", description: "Personal notes", icon: "file-text", isActive: true, orderIndex: 2, clickCount: 45 },
-        { pageId: pageIds[2], title: "Bookmarks", url: "https://bookmarks.example.com", type: "link", description: "Saved links", icon: "bookmark", isActive: true, orderIndex: 3, clickCount: 12 }
+        { identityId: identityIds[2], title: "Resources", url: "", type: "header", isActive: true, orderIndex: 0, clickCount: 0 },
+        { identityId: identityIds[2], title: "Private Dashboard", url: "https://dashboard.example.com", type: "link", description: "Admin access", icon: "lock", isActive: true, orderIndex: 1, clickCount: 23 },
+        { identityId: identityIds[2], title: "Notes", url: "https://notes.example.com", type: "link", description: "Personal notes", icon: "file-text", isActive: true, orderIndex: 2, clickCount: 45 },
+        { identityId: identityIds[2], title: "Bookmarks", url: "https://bookmarks.example.com", type: "link", description: "Saved links", icon: "bookmark", isActive: true, orderIndex: 3, clickCount: 12 }
       );
     }
 
@@ -518,16 +518,16 @@ export const seedMyData = mutation({
     ];
     const countries = ["US", "UK", "CA", "DE", "FR", "AU", "JP", "BR"];
 
-    // Generate page views for public pages
+    // Generate identity views for public identities
     for (let i = 0; i < 2; i++) {
-      const pageId = pageIds[i];
-      if (!pageId) continue;
+      const identityId = identityIds[i];
+      if (!identityId) continue;
 
       const viewCount = 50 + Math.floor(Math.random() * 100);
       for (let j = 0; j < viewCount; j++) {
         const viewedAt = thirtyDaysAgo + Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000);
-        await ctx.db.insert("pageViews", {
-          pageId,
+        await ctx.db.insert("identityViews", {
+          identityId,
           viewedAt,
           visitorId: `visitor-${Math.random().toString(36).substring(2, 10)}`,
           userAgent: userAgents[Math.floor(Math.random() * userAgents.length)],
@@ -548,7 +548,7 @@ export const seedMyData = mutation({
         const clickedAt = thirtyDaysAgo + Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000);
         await ctx.db.insert("linkClicks", {
           linkId,
-          pageId: linkData.pageId,
+          identityId: linkData.identityId,
           clickedAt,
           visitorId: `visitor-${Math.random().toString(36).substring(2, 10)}`,
           userAgent: userAgents[Math.floor(Math.random() * userAgents.length)],
@@ -569,7 +569,7 @@ export const seedMyData = mutation({
         userId: user._id,
         darkMode: false,
         emailNotifications: true,
-        defaultPageId: pageIds[0],
+        defaultIdentityId: identityIds[0],
         updatedAt: timestamp,
       });
     }
@@ -585,7 +585,7 @@ export const seedMyData = mutation({
         userId: user._id,
         completedIntro: true,
         addedFirstLink: true,
-        publishedPage: true,
+        publishedIdentity: true,
         updatedAt: timestamp,
       });
     }
@@ -679,15 +679,15 @@ export const seedMyData = mutation({
     // PAGE_COLLABORATORS - Self as owner (for demo purposes)
     // ═══════════════════════════════════════════════════════════════
     let collaboratorsCreated = 0;
-    for (const pageId of pageIds) {
+    for (const identityId of identityIds) {
       const existingCollaborator = await ctx.db
-        .query("pageCollaborators")
-        .withIndex("by_page", (q) => q.eq("pageId", pageId))
+        .query("identityCollaborators")
+        .withIndex("by_identity", (q) => q.eq("identityId", identityId))
         .first();
 
       if (!existingCollaborator) {
-        await ctx.db.insert("pageCollaborators", {
-          pageId,
+        await ctx.db.insert("identityCollaborators", {
+          identityId,
           userId: user._id,
           role: "owner",
           invitedAt: timestamp,
@@ -697,7 +697,7 @@ export const seedMyData = mutation({
       }
     }
     if (collaboratorsCreated > 0) {
-      console.log(`Created ${collaboratorsCreated} page collaborators`);
+      console.log(`Created ${collaboratorsCreated} identity collaborators`);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -712,15 +712,15 @@ export const seedMyData = mutation({
     if (!existingLogs) {
       const auditActions = [
         { action: "user.login", entityType: "user", entityId: user._id, daysAgo: 0 },
-        { action: "page.create", entityType: "page", entityId: pageIds[0] || user._id, daysAgo: 7 },
-        { action: "page.create", entityType: "page", entityId: pageIds[1] || user._id, daysAgo: 6 },
-        { action: "page.create", entityType: "page", entityId: pageIds[2] || user._id, daysAgo: 5 },
+        { action: "identity.create", entityType: "identity", entityId: identityIds[0] || user._id, daysAgo: 7 },
+        { action: "identity.create", entityType: "identity", entityId: identityIds[1] || user._id, daysAgo: 6 },
+        { action: "identity.create", entityType: "identity", entityId: identityIds[2] || user._id, daysAgo: 5 },
         { action: "link.create", entityType: "link", entityId: linkIds[0] || user._id, daysAgo: 5 },
         { action: "link.create", entityType: "link", entityId: linkIds[1] || user._id, daysAgo: 5 },
-        { action: "page.update", entityType: "page", entityId: pageIds[0] || user._id, daysAgo: 4 },
-        { action: "theme.apply", entityType: "page", entityId: pageIds[0] || user._id, daysAgo: 3 },
+        { action: "identity.update", entityType: "identity", entityId: identityIds[0] || user._id, daysAgo: 4 },
+        { action: "theme.apply", entityType: "identity", entityId: identityIds[0] || user._id, daysAgo: 3 },
         { action: "link.update", entityType: "link", entityId: linkIds[2] || user._id, daysAgo: 2 },
-        { action: "page.publish", entityType: "page", entityId: pageIds[0] || user._id, daysAgo: 1 },
+        { action: "identity.publish", entityType: "identity", entityId: identityIds[0] || user._id, daysAgo: 1 },
         { action: "settings.update", entityType: "settings", entityId: user._id, daysAgo: 1 },
         { action: "user.login", entityType: "user", entityId: user._id, daysAgo: 0 },
       ];
@@ -791,7 +791,7 @@ export const seedMyData = mutation({
 
     return {
       message: "Seed completed successfully!",
-      pagesCreated: pageIds.length,
+      identitiesCreated: identityIds.length,
       linksCreated: linkIds.length,
       tagsCreated: tagIds.length,
       linkTagsCreated,
@@ -822,15 +822,15 @@ export const clearMyData = mutation({
       throw new Error("User not found");
     }
 
-    // Get all user pages
-    const pages = await ctx.db
-      .query("pages")
+    // Get all user identities
+    const userIdentities = await ctx.db
+      .query("identities")
       .withIndex("by_user", (q) => q.eq("userId", user._id).eq("deletionTime", undefined))
       .collect();
 
-    let deletedPages = 0;
+    let deletedIdentities = 0;
     let deletedLinks = 0;
-    let deletedPageViews = 0;
+    let deletedIdentityViews = 0;
     let deletedLinkClicks = 0;
     let deletedTags = 0;
     let deletedLinkTags = 0;
@@ -838,21 +838,21 @@ export const clearMyData = mutation({
     let deletedAuditLogs = 0;
     let deletedCustomThemes = 0;
 
-    for (const page of pages) {
-      // Delete page views
-      const pageViews = await ctx.db
-        .query("pageViews")
-        .withIndex("by_page", (q) => q.eq("pageId", page._id))
+    for (const identity of userIdentities) {
+      // Delete identity views
+      const identityViews = await ctx.db
+        .query("identityViews")
+        .withIndex("by_identity", (q) => q.eq("identityId", identity._id))
         .collect();
-      for (const view of pageViews) {
+      for (const view of identityViews) {
         await ctx.db.delete(view._id);
-        deletedPageViews++;
+        deletedIdentityViews++;
       }
 
-      // Delete link clicks for this page
+      // Delete link clicks for this identity
       const linkClicks = await ctx.db
         .query("linkClicks")
-        .withIndex("by_page", (q) => q.eq("pageId", page._id))
+        .withIndex("by_identity", (q) => q.eq("identityId", identity._id))
         .collect();
       for (const click of linkClicks) {
         await ctx.db.delete(click._id);
@@ -862,7 +862,7 @@ export const clearMyData = mutation({
       // Delete links and their tags
       const links = await ctx.db
         .query("links")
-        .withIndex("by_page", (q) => q.eq("pageId", page._id).eq("deletionTime", undefined))
+        .withIndex("by_identity", (q) => q.eq("identityId", identity._id).eq("deletionTime", undefined))
         .collect();
       for (const link of links) {
         // Delete link tags
@@ -878,19 +878,19 @@ export const clearMyData = mutation({
         deletedLinks++;
       }
 
-      // Delete page collaborators
+      // Delete identity collaborators
       const collaborators = await ctx.db
-        .query("pageCollaborators")
-        .withIndex("by_page", (q) => q.eq("pageId", page._id))
+        .query("identityCollaborators")
+        .withIndex("by_identity", (q) => q.eq("identityId", identity._id))
         .collect();
       for (const collab of collaborators) {
         await ctx.db.delete(collab._id);
         deletedCollaborators++;
       }
 
-      // Delete page
-      await ctx.db.delete(page._id);
-      deletedPages++;
+      // Delete identity
+      await ctx.db.delete(identity._id);
+      deletedIdentities++;
     }
 
     // Delete user tags
@@ -952,9 +952,9 @@ export const clearMyData = mutation({
 
     return {
       message: "Data cleared successfully!",
-      deletedPages,
+      deletedIdentities,
       deletedLinks,
-      deletedPageViews,
+      deletedIdentityViews,
       deletedLinkClicks,
       deletedTags,
       deletedLinkTags,

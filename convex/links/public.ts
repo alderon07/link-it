@@ -3,22 +3,22 @@ import { v } from "convex/values";
 import { now } from "../lib/utils";
 
 /**
- * Get public links for a page (no authentication required)
+ * Get public links for an identity (no authentication required)
  * Only returns active links within their visibility window
  */
-export const getPublicPageLinks = query({
-  args: { pageId: v.id("pages") },
+export const getPublicIdentityLinks = query({
+  args: { identityId: v.id("identities") },
   handler: async (ctx, args) => {
-    const page = await ctx.db.get(args.pageId);
+    const identity = await ctx.db.get(args.identityId);
 
-    if (!page || page.deletionTime || !page.isPublic) {
+    if (!identity || identity.deletionTime || !identity.isPublic) {
       return [];
     }
 
     const links = await ctx.db
       .query("links")
-      .withIndex("by_page_active", (q) =>
-        q.eq("pageId", args.pageId).eq("isActive", true).eq("deletionTime", undefined)
+      .withIndex("by_identity_active", (q) =>
+        q.eq("identityId", args.identityId).eq("isActive", true).eq("deletionTime", undefined)
       )
       .collect();
 
@@ -40,24 +40,24 @@ export const getPublicPageLinks = query({
 });
 
 /**
- * Get public links by page slug (no authentication required)
+ * Get public links by identity slug (no authentication required)
  */
 export const getPublicLinksBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
-    const page = await ctx.db
-      .query("pages")
+    const identity = await ctx.db
+      .query("identities")
       .withIndex("by_slug", (q) => q.eq("slug", args.slug))
       .first();
 
-    if (!page || page.deletionTime || !page.isPublic) {
+    if (!identity || identity.deletionTime || !identity.isPublic) {
       return [];
     }
 
     const links = await ctx.db
       .query("links")
-      .withIndex("by_page_active", (q) =>
-        q.eq("pageId", page._id).eq("isActive", true).eq("deletionTime", undefined)
+      .withIndex("by_identity_active", (q) =>
+        q.eq("identityId", identity._id).eq("isActive", true).eq("deletionTime", undefined)
       )
       .collect();
 
@@ -92,13 +92,13 @@ export const trackClick = mutation({
   handler: async (ctx, args) => {
     const link = await ctx.db.get(args.linkId);
 
-    if (!link || link.deletionTime || !link.pageId) {
+    if (!link || link.deletionTime || !link.identityId) {
       return { success: false };
     }
 
-    // Get the page to verify it's public
-    const page = await ctx.db.get(link.pageId);
-    if (!page || ("deletionTime" in page && page.deletionTime) || !("isPublic" in page && page.isPublic)) {
+    // Get the identity to verify it's public
+    const identity = await ctx.db.get(link.identityId);
+    if (!identity || ("deletionTime" in identity && identity.deletionTime) || !("isPublic" in identity && identity.isPublic)) {
       return { success: false };
     }
 
@@ -111,7 +111,7 @@ export const trackClick = mutation({
     // Record detailed analytics
     await ctx.db.insert("linkClicks", {
       linkId: args.linkId,
-      pageId: link.pageId,
+      identityId: link.identityId,
       clickedAt: now(),
       visitorId: args.visitorId,
       userAgent: args.userAgent,
@@ -131,13 +131,13 @@ export const incrementClickCount = mutation({
   handler: async (ctx, args) => {
     const link = await ctx.db.get(args.linkId);
 
-    if (!link || link.deletionTime || !link.pageId) {
+    if (!link || link.deletionTime || !link.identityId) {
       return { success: false };
     }
 
-    // Get the page to verify it's public
-    const page = await ctx.db.get(link.pageId);
-    if (!page || ("deletionTime" in page && page.deletionTime) || !("isPublic" in page && page.isPublic)) {
+    // Get the identity to verify it's public
+    const identity = await ctx.db.get(link.identityId);
+    if (!identity || ("deletionTime" in identity && identity.deletionTime) || !("isPublic" in identity && identity.isPublic)) {
       return { success: false };
     }
 

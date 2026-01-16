@@ -3,13 +3,13 @@ import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 
 /**
- * Get a link by ID (authenticated, requires page ownership)
+ * Get a link by ID (authenticated, requires identity ownership)
  */
 export const getLink = query({
   args: { linkId: v.id("links") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       throw new ConvexError({
         code: "UNAUTHORIZED",
         message: "You must be logged in to view this link",
@@ -18,7 +18,7 @@ export const getLink = query({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
@@ -34,15 +34,15 @@ export const getLink = query({
       return null;
     }
 
-    // Get the page to verify ownership
-    if (!link.pageId) {
+    // Get the identity to verify ownership
+    if (!link.identityId) {
       throw new ConvexError({
         code: "NOT_FOUND",
-        message: "Link has no associated page",
+        message: "Link has no associated identity",
       });
     }
-    const page = await ctx.db.get(link.pageId);
-    if (!page || ("deletionTime" in page && page.deletionTime) || ("userId" in page && page.userId !== user._id)) {
+    const identity = await ctx.db.get(link.identityId);
+    if (!identity || ("deletionTime" in identity && identity.deletionTime) || ("userId" in identity && identity.userId !== user._id)) {
       throw new ConvexError({
         code: "FORBIDDEN",
         message: "You don't have access to this link",
@@ -54,13 +54,13 @@ export const getLink = query({
 });
 
 /**
- * Get all links for a page (authenticated, requires page ownership)
+ * Get all links for an identity (authenticated, requires identity ownership)
  */
-export const getPageLinks = query({
-  args: { pageId: v.id("pages") },
+export const getIdentityLinks = query({
+  args: { identityId: v.id("identities") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       throw new ConvexError({
         code: "UNAUTHORIZED",
         message: "You must be logged in to view these links",
@@ -69,7 +69,7 @@ export const getPageLinks = query({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
@@ -79,19 +79,19 @@ export const getPageLinks = query({
       });
     }
 
-    // Verify page ownership
-    const page = await ctx.db.get(args.pageId);
-    if (!page || page.deletionTime || page.userId !== user._id) {
+    // Verify identity ownership
+    const identity = await ctx.db.get(args.identityId);
+    if (!identity || identity.deletionTime || identity.userId !== user._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You don't have access to this page",
+        message: "You don't have access to this identity",
       });
     }
 
     const links = await ctx.db
       .query("links")
-      .withIndex("by_page", (q) =>
-        q.eq("pageId", args.pageId).eq("deletionTime", undefined)
+      .withIndex("by_identity", (q) =>
+        q.eq("identityId", args.identityId).eq("deletionTime", undefined)
       )
       .collect();
 
@@ -101,13 +101,13 @@ export const getPageLinks = query({
 });
 
 /**
- * Get link stats for a page (authenticated, requires page ownership)
+ * Get link stats for an identity (authenticated, requires identity ownership)
  */
-export const getPageLinkStats = query({
-  args: { pageId: v.id("pages") },
+export const getIdentityLinkStats = query({
+  args: { identityId: v.id("identities") },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
       throw new ConvexError({
         code: "UNAUTHORIZED",
         message: "You must be logged in to view link stats",
@@ -116,7 +116,7 @@ export const getPageLinkStats = query({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", authIdentity.subject))
       .first();
 
     if (!user || user.deletionTime) {
@@ -126,19 +126,19 @@ export const getPageLinkStats = query({
       });
     }
 
-    // Verify page ownership
-    const page = await ctx.db.get(args.pageId);
-    if (!page || page.deletionTime || page.userId !== user._id) {
+    // Verify identity ownership
+    const identity = await ctx.db.get(args.identityId);
+    if (!identity || identity.deletionTime || identity.userId !== user._id) {
       throw new ConvexError({
         code: "FORBIDDEN",
-        message: "You don't have access to this page",
+        message: "You don't have access to this identity",
       });
     }
 
     const links = await ctx.db
       .query("links")
-      .withIndex("by_page", (q) =>
-        q.eq("pageId", args.pageId).eq("deletionTime", undefined)
+      .withIndex("by_identity", (q) =>
+        q.eq("identityId", args.identityId).eq("deletionTime", undefined)
       )
       .collect();
 

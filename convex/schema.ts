@@ -19,9 +19,9 @@ export default defineSchema({
     .index("by_username", ["username"]),
 
   // ═══════════════════════════════════════════════════════════════
-  // PAGES - User's "link in bio" pages (Identities)
+  // IDENTITIES - User's "link in bio"
   // ═══════════════════════════════════════════════════════════════
-  pages: defineTable({
+  identities: defineTable({
     userId: v.id("users"),
     name: v.string(),
     slug: v.string(),
@@ -52,7 +52,7 @@ export default defineSchema({
   // LINKS - Individual links on a page
   // ═══════════════════════════════════════════════════════════════
   links: defineTable({
-    pageId: v.optional(v.id("pages")),
+    identityId: v.optional(v.id("identities")),
     title: v.string(),
     url: v.optional(v.string()),
     type: v.optional(v.union(
@@ -77,8 +77,8 @@ export default defineSchema({
     deletionTime: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
   })
-    .index("by_page", ["pageId", "deletionTime", "orderIndex"])
-    .index("by_page_active", ["pageId", "isActive", "deletionTime"]),
+    .index("by_identity", ["identityId", "deletionTime", "orderIndex"])
+    .index("by_identity_active", ["identityId", "isActive", "deletionTime"]),
 
   // ═══════════════════════════════════════════════════════════════
   // THEMES - Color themes (system + custom)
@@ -118,10 +118,10 @@ export default defineSchema({
     .index("by_tag", ["tagId"]),
 
   // ═══════════════════════════════════════════════════════════════
-  // PAGE_COLLABORATORS - Shared page access (Future)
+  // IDENTITY_COLLABORATORS - Shared identity access (Future)
   // ═══════════════════════════════════════════════════════════════
-  pageCollaborators: defineTable({
-    pageId: v.id("pages"),
+  identityCollaborators: defineTable({
+    identityId: v.id("identities"),
     userId: v.id("users"),
     role: v.union(
       v.literal("owner"),
@@ -131,28 +131,28 @@ export default defineSchema({
     invitedAt: v.number(),
     acceptedAt: v.optional(v.number()),
   })
-    .index("by_page", ["pageId"])
+    .index("by_identity", ["identityId"])
     .index("by_user", ["userId"]),
 
   // ═══════════════════════════════════════════════════════════════
-  // PAGE_VIEWS - Analytics (Future - supplement PostHog)
+  // IDENTITY_VIEWS - Analytics (Future - supplement PostHog)
   // ═══════════════════════════════════════════════════════════════
-  pageViews: defineTable({
-    pageId: v.id("pages"),
+  identityViews: defineTable({
+    identityId: v.id("identities"),
     viewedAt: v.number(),
     visitorId: v.optional(v.string()),
     userAgent: v.optional(v.string()),
     referrer: v.optional(v.string()),
     country: v.optional(v.string()),
     city: v.optional(v.string()),
-  }).index("by_page", ["pageId", "viewedAt"]),
+  }).index("by_identity", ["identityId", "viewedAt"]),
 
   // ═══════════════════════════════════════════════════════════════
   // LINK_CLICKS - Analytics (Future - supplement PostHog)
   // ═══════════════════════════════════════════════════════════════
   linkClicks: defineTable({
     linkId: v.id("links"),
-    pageId: v.id("pages"),
+    identityId: v.id("identities"),
     clickedAt: v.number(),
     visitorId: v.optional(v.string()),
     userAgent: v.optional(v.string()),
@@ -160,7 +160,7 @@ export default defineSchema({
     country: v.optional(v.string()),
   })
     .index("by_link", ["linkId", "clickedAt"])
-    .index("by_page", ["pageId", "clickedAt"]),
+    .index("by_identity", ["identityId", "clickedAt"]),
 
   // ═══════════════════════════════════════════════════════════════
   // USER_SETTINGS - Preferences
@@ -169,7 +169,7 @@ export default defineSchema({
     userId: v.id("users"),
     darkMode: v.boolean(),
     emailNotifications: v.boolean(),
-    defaultPageId: v.optional(v.id("pages")),
+    defaultIdentityId: v.optional(v.id("identities")),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
 
@@ -180,7 +180,7 @@ export default defineSchema({
     userId: v.id("users"),
     completedIntro: v.boolean(),
     addedFirstLink: v.boolean(),
-    publishedPage: v.boolean(),
+    publishedIdentity: v.boolean(),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
 

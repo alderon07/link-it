@@ -9,15 +9,16 @@
  */
 
 import type * as analytics_queries from "../analytics/queries.js";
+import type * as clearAll from "../clearAll.js";
 import type * as http from "../http.js";
+import type * as identities_mutations from "../identities/mutations.js";
+import type * as identities_public from "../identities/public.js";
+import type * as identities_queries from "../identities/queries.js";
 import type * as lib_utils from "../lib/utils.js";
 import type * as lib_validators from "../lib/validators.js";
 import type * as links_mutations from "../links/mutations.js";
 import type * as links_public from "../links/public.js";
 import type * as links_queries from "../links/queries.js";
-import type * as pages_mutations from "../pages/mutations.js";
-import type * as pages_public from "../pages/public.js";
-import type * as pages_queries from "../pages/queries.js";
 import type * as seed from "../seed.js";
 import type * as seedAll from "../seedAll.js";
 import type * as settings_mutations from "../settings/mutations.js";
@@ -36,15 +37,16 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "analytics/queries": typeof analytics_queries;
+  clearAll: typeof clearAll;
   http: typeof http;
+  "identities/mutations": typeof identities_mutations;
+  "identities/public": typeof identities_public;
+  "identities/queries": typeof identities_queries;
   "lib/utils": typeof lib_utils;
   "lib/validators": typeof lib_validators;
   "links/mutations": typeof links_mutations;
   "links/public": typeof links_public;
   "links/queries": typeof links_queries;
-  "pages/mutations": typeof pages_mutations;
-  "pages/public": typeof pages_public;
-  "pages/queries": typeof pages_queries;
   seed: typeof seed;
   seedAll: typeof seedAll;
   "settings/mutations": typeof settings_mutations;

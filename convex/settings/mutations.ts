@@ -1,7 +1,7 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
-import { now } from "../lib/utils";
+import { now, getOrCreateUser } from "../lib/utils";
 
 /**
  * Update user settings
@@ -10,36 +10,19 @@ export const updateSettings = mutation({
   args: {
     darkMode: v.optional(v.boolean()),
     emailNotifications: v.optional(v.boolean()),
-    defaultPageId: v.optional(v.id("pages")),
+    defaultIdentityId: v.optional(v.id("identities")),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to update settings",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
-
-    // If setting a default page, verify ownership
-    if (args.defaultPageId) {
-      const page = await ctx.db.get(args.defaultPageId);
-      if (!page || page.deletionTime || page.userId !== user._id) {
+    // If setting a default identity, verify ownership
+    if (args.defaultIdentityId) {
+      const identity = await ctx.db.get(args.defaultIdentityId);
+      if (!identity || identity.deletionTime || identity.userId !== user._id) {
         throw new ConvexError({
           code: "FORBIDDEN",
-          message: "You can only set your own pages as default",
+          message: "You can only set your own identities as default",
         });
       }
     }
@@ -55,7 +38,7 @@ export const updateSettings = mutation({
         userId: user._id,
         darkMode: args.darkMode ?? false,
         emailNotifications: args.emailNotifications ?? true,
-        defaultPageId: args.defaultPageId,
+        defaultIdentityId: args.defaultIdentityId,
         updatedAt: now(),
       });
     }
@@ -67,7 +50,7 @@ export const updateSettings = mutation({
 
     if (args.darkMode !== undefined) updates.darkMode = args.darkMode;
     if (args.emailNotifications !== undefined) updates.emailNotifications = args.emailNotifications;
-    if (args.defaultPageId !== undefined) updates.defaultPageId = args.defaultPageId;
+    if (args.defaultIdentityId !== undefined) updates.defaultIdentityId = args.defaultIdentityId;
 
     await ctx.db.patch(settings._id, updates);
 
@@ -82,28 +65,11 @@ export const updateProgress = mutation({
   args: {
     completedIntro: v.optional(v.boolean()),
     addedFirstLink: v.optional(v.boolean()),
-    publishedPage: v.optional(v.boolean()),
+    publishedIdentity: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in to update progress",
-      });
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
     const progress = await ctx.db
       .query("userProgress")
@@ -116,7 +82,7 @@ export const updateProgress = mutation({
         userId: user._id,
         completedIntro: args.completedIntro ?? false,
         addedFirstLink: args.addedFirstLink ?? false,
-        publishedPage: args.publishedPage ?? false,
+        publishedIdentity: args.publishedIdentity ?? false,
         updatedAt: now(),
       });
     }
@@ -128,7 +94,7 @@ export const updateProgress = mutation({
 
     if (args.completedIntro !== undefined) updates.completedIntro = args.completedIntro;
     if (args.addedFirstLink !== undefined) updates.addedFirstLink = args.addedFirstLink;
-    if (args.publishedPage !== undefined) updates.publishedPage = args.publishedPage;
+    if (args.publishedIdentity !== undefined) updates.publishedIdentity = args.publishedIdentity;
 
     await ctx.db.patch(progress._id, updates);
 
@@ -142,25 +108,8 @@ export const updateProgress = mutation({
 export const completeIntro = mutation({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new ConvexError({
-        code: "UNAUTHORIZED",
-        message: "You must be logged in",
-      });
-    }
-
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
-      .first();
-
-    if (!user || user.deletionTime) {
-      throw new ConvexError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+    // Get or create the user - this ensures the user exists even if webhook was missed
+    const user = await getOrCreateUser(ctx);
 
     const progress = await ctx.db
       .query("userProgress")
@@ -172,7 +121,7 @@ export const completeIntro = mutation({
         userId: user._id,
         completedIntro: true,
         addedFirstLink: false,
-        publishedPage: false,
+        publishedIdentity: false,
         updatedAt: now(),
       });
     }

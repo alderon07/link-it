@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart3, TrendingUp, Users, Eye, MousePointer, Download, Filter, Loader2 } from "lucide-react"
-import { useDashboardStats, useGlobalAnalytics, usePageAnalytics, useUserPages } from "@/hooks/convex"
+import { useDashboardStats, useGlobalAnalytics, useIdentityAnalytics, useUserIdentities } from "@/hooks/convex"
 import { PixelBorder } from "@/components/pixel-art/PixelBorder"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 import { PixelDivider } from "@/components/pixel-art/PixelDivider"
@@ -35,7 +35,7 @@ interface GlobalAnalyticsData {
 }
 
 interface DashboardStats {
-  totalPages: number;
+  totalIdentities: number;
   totalLinks: number;
   totalActiveLinks: number;
   totalViews: number;
@@ -45,7 +45,7 @@ interface DashboardStats {
   engagementRate: number;
 }
 
-interface PageAnalyticsData {
+interface IdentityAnalyticsData {
   totalViews: number;
   totalClicks: number;
   viewsOverTime: Array<{ date: string; count: number }>;
@@ -57,20 +57,20 @@ interface PageAnalyticsData {
 
 export function AnalyticsDashboard() {
   const [days, setDays] = React.useState(30);
-  const [selectedPage, setSelectedPage] = React.useState("all");
+  const [selectedIdentity, setSelectedIdentity] = React.useState("all");
 
   const stats = useDashboardStats() as DashboardStats | null | undefined;
   const globalAnalytics = useGlobalAnalytics(days) as GlobalAnalyticsData | null | undefined;
-  const pageAnalytics = usePageAnalytics(
-    selectedPage !== "all" ? selectedPage : undefined,
+  const identityAnalytics = useIdentityAnalytics(
+    selectedIdentity !== "all" ? selectedIdentity : undefined,
     days
-  ) as PageAnalyticsData | null | undefined;
-  const pages = useUserPages();
+  ) as IdentityAnalyticsData | null | undefined;
+  const identities = useUserIdentities();
 
-  const isShowingPageAnalytics = selectedPage !== "all";
-  const isLoading = stats === undefined || globalAnalytics === undefined || pages === undefined || (isShowingPageAnalytics && pageAnalytics === undefined);
+  const isShowingIdentityAnalytics = selectedIdentity !== "all";
+  const isLoading = stats === undefined || globalAnalytics === undefined || identities === undefined || (isShowingIdentityAnalytics && identityAnalytics === undefined);
 
-  const typedPages = (pages || []) as Array<{
+  const typedIdentities = (identities || []) as Array<{
     _id: string;
     name: string;
     slug: string;
@@ -79,19 +79,19 @@ export function AnalyticsDashboard() {
     isPublic: boolean;
   }>;
 
-  // Use page-specific data when a page is selected, otherwise use global stats
-  const totalViews = isShowingPageAnalytics
-    ? (pageAnalytics?.totalViews ?? 0)
+  // Use identity-specific data when an identity is selected, otherwise use global stats
+  const totalViews = isShowingIdentityAnalytics
+    ? (identityAnalytics?.totalViews ?? 0)
     : (stats?.totalViews ?? 0);
-  const totalClicks = isShowingPageAnalytics
-    ? (pageAnalytics?.totalClicks ?? 0)
+  const totalClicks = isShowingIdentityAnalytics
+    ? (identityAnalytics?.totalClicks ?? 0)
     : (stats?.totalClicks ?? 0);
-  const avgEngagement = isShowingPageAnalytics
+  const avgEngagement = isShowingIdentityAnalytics
     ? (totalViews > 0 ? Math.round((totalClicks / totalViews) * 1000) / 10 : 0)
     : (stats?.engagementRate ?? 0);
 
-  // Get the selected page name for display
-  const selectedPageData = typedPages.find((p) => p._id === selectedPage);
+  // Get the selected identity name for display
+  const selectedIdentityData = typedIdentities.find((p) => p._id === selectedIdentity);
 
   if (isLoading) {
     return (
@@ -133,15 +133,15 @@ export function AnalyticsDashboard() {
               </Select>
             </PixelBorder>
             <PixelBorder variant="solid" shadow="sm" className="bg-card w-full sm:w-auto">
-              <Select value={selectedPage} onValueChange={setSelectedPage}>
+              <Select value={selectedIdentity} onValueChange={setSelectedIdentity}>
                 <SelectTrigger className="w-full sm:w-[200px] border-0 bg-transparent font-bold">
                   <SelectValue placeholder="Filter by identity" />
                 </SelectTrigger>
                 <SelectContent className="pixel-border">
                   <SelectItem value="all" className="font-medium">All Identities</SelectItem>
-                  {typedPages.map((page) => (
-                    <SelectItem key={page._id} value={page._id} className="font-medium">
-                      {page.name}
+                  {typedIdentities.map((identity) => (
+                    <SelectItem key={identity._id} value={identity._id} className="font-medium">
+                      {identity.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -213,16 +213,16 @@ export function AnalyticsDashboard() {
           <Card variant="pixel">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-bold">
-                {isShowingPageAnalytics ? selectedPageData?.name : "This Month"}
+                {isShowingIdentityAnalytics ? selectedIdentityData?.name : "This Month"}
               </CardTitle>
               <PixelIcon icon="star" size="xs" color="coral" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-black pixel-text-shadow">
-                <CountUp value={isShowingPageAnalytics ? totalViews : (stats?.viewsThisMonth ?? 0)} duration={0.8} />
+                <CountUp value={isShowingIdentityAnalytics ? totalViews : (stats?.viewsThisMonth ?? 0)} duration={0.8} />
               </div>
               <p className="text-xs text-muted-foreground">
-                {isShowingPageAnalytics ? `Views for ${selectedPageData?.name}` : "Views in last 30 days"}
+                {isShowingIdentityAnalytics ? `Views for ${selectedIdentityData?.name}` : "Views in last 30 days"}
               </p>
             </CardContent>
           </Card>
@@ -324,35 +324,35 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <PixelDivider variant="dashed" className="mb-4" />
-                {typedPages.length === 0 ? (
+                {typedIdentities.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">No identities yet</p>
                 ) : (
                   <StaggerContainer className="space-y-4">
-                    {typedPages.map((page, index) => {
+                    {typedIdentities.map((identity, index) => {
                       const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
                       const colorClass = colors[index % colors.length]
 
                       return (
-                        <StaggerItem key={page._id}>
+                        <StaggerItem key={identity._id}>
                           <PixelBorder variant="solid" shadow="sm" className="p-4 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                               <div className="flex items-center gap-3 min-w-0">
                                 <PixelBorder variant="solid" shadow="sm" className={`p-0.5 ${colorClass} shrink-0`}>
                                   <Avatar className="h-12 w-12 pixel-border">
-                                    <AvatarImage src={page.avatarUrl || "/placeholder.svg"} alt={page.name} />
-                                    <AvatarFallback className={`font-bold ${colorClass}`}>{page.name.charAt(0)}</AvatarFallback>
+                                    <AvatarImage src={identity.avatarUrl || "/placeholder.svg"} alt={identity.name} />
+                                    <AvatarFallback className={`font-bold ${colorClass}`}>{identity.name.charAt(0)}</AvatarFallback>
                                   </Avatar>
                                 </PixelBorder>
                                 <div className="min-w-0 flex-1">
-                                  <h3 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{page.name}</h3>
-                                  <p className="text-sm text-muted-foreground truncate">/{page.slug}</p>
+                                  <h3 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{identity.name}</h3>
+                                  <p className="text-sm text-muted-foreground truncate">/{identity.slug}</p>
                                 </div>
-                                <Badge variant={page.isPublic ? "retro" : "secondary"} className="capitalize shrink-0 hidden sm:inline-flex">
-                                  {page.isPublic ? "Public" : "Private"}
+                                <Badge variant={identity.isPublic ? "retro" : "secondary"} className="capitalize shrink-0 hidden sm:inline-flex">
+                                  {identity.isPublic ? "Public" : "Private"}
                                 </Badge>
                               </div>
                               <div className="text-right shrink-0">
-                                <div className="font-black text-pixel-pink">{page.viewCount.toLocaleString()} views</div>
+                                <div className="font-black text-pixel-pink">{identity.viewCount.toLocaleString()} views</div>
                               </div>
                             </div>
                           </PixelBorder>
@@ -373,20 +373,20 @@ export function AnalyticsDashboard() {
                   <CardTitle className="font-black">Top Performing Links</CardTitle>
                 </div>
                 <CardDescription>
-                  {isShowingPageAnalytics
-                    ? `Most clicked links for ${selectedPageData?.name}`
+                  {isShowingIdentityAnalytics
+                    ? `Most clicked links for ${selectedIdentityData?.name}`
                     : "Your most clicked links across all identities"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <PixelDivider variant="dashed" className="mb-4" />
-                {isShowingPageAnalytics ? (
-                  // Page-specific top links
-                  !pageAnalytics?.clicksByLink || pageAnalytics.clicksByLink.length === 0 ? (
+                {isShowingIdentityAnalytics ? (
+                  // Identity-specific top links
+                  !identityAnalytics?.clicksByLink || identityAnalytics.clicksByLink.length === 0 ? (
                     <p className="text-center text-muted-foreground py-8">No link data yet</p>
                   ) : (
                     <StaggerContainer className="space-y-4">
-                      {pageAnalytics.clicksByLink.slice(0, 5).map((item, index) => {
+                      {identityAnalytics.clicksByLink.slice(0, 5).map((item, index) => {
                         const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"]
                         const colorClass = colors[index % colors.length]
 
@@ -400,7 +400,7 @@ export function AnalyticsDashboard() {
                                   </div>
                                   <div className="min-w-0">
                                     <h4 className="font-bold group-hover:text-pixel-pink transition-colors truncate">{item.title}</h4>
-                                    <p className="text-sm text-muted-foreground truncate">{selectedPageData?.name}</p>
+                                    <p className="text-sm text-muted-foreground truncate">{selectedIdentityData?.name}</p>
                                   </div>
                                 </div>
                                 <div className="text-right shrink-0">

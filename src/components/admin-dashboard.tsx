@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { useUserPages, useDashboardStats, useRecentActivity } from "@/hooks/convex"
+import { useUserIdentities, useDashboardStats, useRecentActivity } from "@/hooks/convex"
 import { PixelBorder } from "@/components/pixel-art/PixelBorder"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 import { PixelDivider } from "@/components/pixel-art/PixelDivider"
@@ -30,7 +30,7 @@ import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerCo
 import { CountUp } from "@/components/animations/CountUp"
 
 interface DashboardStats {
-  totalPages: number;
+  totalIdentities: number;
   totalLinks: number;
   totalActiveLinks: number;
   totalViews: number;
@@ -38,7 +38,7 @@ interface DashboardStats {
   viewsThisMonth: number;
   clicksThisMonth: number;
   engagementRate: number;
-  topPages: Array<{
+  topIdentities: Array<{
     _id: string;
     name: string;
     slug: string;
@@ -50,11 +50,11 @@ interface DashboardStats {
 
 const getStatsConfig = (stats: DashboardStats | null | undefined) => [
   {
-    title: "Total Pages",
+    title: "Total Identities",
     icon: Users,
     color: "pink",
-    value: stats?.totalPages ?? 0,
-    subtext: `${stats?.totalPages ?? 0} identities`,
+    value: stats?.totalIdentities ?? 0,
+    subtext: `${stats?.totalIdentities ?? 0} identities`,
   },
   {
     title: "Total Links",
@@ -82,10 +82,10 @@ const getStatsConfig = (stats: DashboardStats | null | undefined) => [
 
 const quickActions = [
   {
-    title: "Create New Page",
-    description: "Set up a new link-it page",
+    title: "Create New Identity",
+    description: "Set up a new link-it identity",
     icon: Plus,
-    href: "/admin/pages",
+    href: "/admin/identities",
     color: "pink",
   },
   {
@@ -116,11 +116,11 @@ function formatTimeAgo(timestamp: number): string {
 }
 
 export function AdminDashboard() {
-  const pages = useUserPages();
+  const identities = useUserIdentities();
   const stats = useDashboardStats() as DashboardStats | null | undefined;
   const recentActivity = useRecentActivity(10);
 
-  const isLoading = pages === undefined || stats === undefined;
+  const isLoading = identities === undefined || stats === undefined;
   const statsConfig = getStatsConfig(stats);
 
   if (isLoading) {
@@ -141,7 +141,7 @@ export function AdminDashboard() {
     );
   }
 
-  const typedPages = (pages || []) as Array<{
+  const typedIdentities = (identities || []) as Array<{
     _id: string;
     name: string;
     slug: string;
@@ -227,35 +227,35 @@ export function AdminDashboard() {
           </Card>
         </FadeIn>
 
-        {/* Your Pages */}
+        {/* Your Identities */}
         <FadeIn delay={0.2}>
           <Card variant="pixel">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-2">
                 <PixelIcon icon="star" color="pink" />
-                <CardTitle className="font-black">Your Pages</CardTitle>
+                <CardTitle className="font-black">Your Identities</CardTitle>
               </div>
-              <CardDescription>Overview of your link-it pages</CardDescription>
+              <CardDescription>Overview of your link-it identities</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {typedPages.length === 0 ? (
+              {typedIdentities.length === 0 ? (
                 <div className="text-center py-6">
                   <p className="text-muted-foreground mb-4">No identities yet</p>
                   <Button variant="pixel" size="sm" asChild>
-                    <Link href="/admin/pages">
+                    <Link href="/admin/identities">
                       <Plus className="h-4 w-4 mr-2" />
                       Create First Identity
                     </Link>
                   </Button>
                 </div>
               ) : (
-                typedPages.slice(0, 3).map((page, index) => {
+                typedIdentities.slice(0, 3).map((identity, index) => {
                   const colors = ["pink", "teal", "yellow"]
                   const color = colors[index % colors.length]
 
                   return (
                     <motion.div
-                      key={page._id}
+                      key={identity._id}
                       whileHover={{ scale: 1.01 }}
                       className="group"
                     >
@@ -263,27 +263,27 @@ export function AdminDashboard() {
                         <div className="flex items-center gap-2 sm:gap-3">
                           <PixelBorder variant="solid" className={`p-0.5 bg-pixel-${color} shrink-0`}>
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={page.avatarUrl || "/placeholder.svg"} alt={page.name} />
+                              <AvatarImage src={identity.avatarUrl || "/placeholder.svg"} alt={identity.name} />
                               <AvatarFallback className={`font-bold bg-pixel-${color}`}>
-                                {page.name.charAt(0)}
+                                {identity.name.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
                           </PixelBorder>
                           <div className="flex-1 min-w-0">
-                            <div className="font-bold truncate">{page.name}</div>
-                            <div className="text-xs text-muted-foreground truncate">/{page.slug}</div>
+                            <div className="font-bold truncate">{identity.name}</div>
+                            <div className="text-xs text-muted-foreground truncate">/{identity.slug}</div>
                           </div>
-                          <Badge variant={page.isPublic ? "retro" : "secondary"} className="text-xs shrink-0 hidden sm:inline-flex">
-                            {page.isPublic ? "Public" : "Private"}
+                          <Badge variant={identity.isPublic ? "retro" : "secondary"} className="text-xs shrink-0 hidden sm:inline-flex">
+                            {identity.isPublic ? "Public" : "Private"}
                           </Badge>
                           <div className="flex items-center gap-1 shrink-0">
                             <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
-                              <Link href={`/admin/pages/${page._id}`}>
+                              <Link href={`/admin/identities/${identity._id}`}>
                                 <Settings className="h-3 w-3" />
                               </Link>
                             </Button>
                             <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
-                              <Link href={`/${page.slug}`} target="_blank" rel="noreferrer">
+                              <Link href={`/${identity.slug}`} target="_blank" rel="noreferrer">
                                 <ExternalLink className="h-3 w-3" />
                               </Link>
                             </Button>
@@ -296,8 +296,8 @@ export function AdminDashboard() {
               )}
               <div className="pt-2">
                 <Button variant="pixel-secondary" className="w-full" asChild>
-                  <Link href="/admin/pages">
-                    View All Pages
+                  <Link href="/admin/identities">
+                    View All Identities
                     <PixelIcon icon="arrow" className="ml-2 w-4 h-4" />
                   </Link>
                 </Button>
@@ -318,7 +318,7 @@ export function AdminDashboard() {
                 <PixelIcon icon="sparkle" color="teal" />
                 <CardTitle className="font-black">Recent Activity</CardTitle>
               </div>
-              <CardDescription>Latest actions across your pages</CardDescription>
+                <CardDescription>Latest actions across your identities</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -328,11 +328,11 @@ export function AdminDashboard() {
                   (recentActivity as Array<{
                     type: "view" | "click";
                     timestamp: number;
-                    pageName: string;
+                    identityName: string;
                     linkTitle?: string;
                   }>).slice(0, 5).map((activity, index) => {
                     const colors = activity.type === "view" ? "teal" : "pink";
-                    const action = activity.type === "view" ? "Page viewed" : `Link clicked${activity.linkTitle ? `: ${activity.linkTitle}` : ""}`;
+                    const action = activity.type === "view" ? "Identity viewed" : `Link clicked${activity.linkTitle ? `: ${activity.linkTitle}` : ""}`;
 
                     return (
                       <motion.div
@@ -345,7 +345,7 @@ export function AdminDashboard() {
                         <div className={`w-2 h-2 bg-pixel-${colors} pixel-border`} />
                         <div className="flex-1 text-sm min-w-0">
                           <span className="font-bold truncate">{action}</span>
-                          <span className="text-muted-foreground"> on {activity.pageName}</span>
+                          <span className="text-muted-foreground"> on {activity.identityName}</span>
                         </div>
                         <span className="text-xs text-muted-foreground shrink-0">{formatTimeAgo(activity.timestamp)}</span>
                       </motion.div>
@@ -435,9 +435,9 @@ export function AdminDashboard() {
               </div>
             </div>
             <Button variant="pixel" size="lg" asChild>
-              <Link href="/admin/pages">
+              <Link href="/admin/identities">
                 <Plus className="h-5 w-5 mr-2" />
-                Create New Page
+                Create New Identity
               </Link>
             </Button>
           </div>

@@ -2,26 +2,26 @@
 export { useConvexAvailable } from "@/components/providers/ConvexClientProvider";
 
 // User hooks
-export { useCurrentUser, useUserByUsername, useUserByClerkId, useUsernameAvailable, useUserMutations } from "./useUser";
+export { useCurrentUser, useUserByUsername, useUserByClerkId, useUsernameAvailable, useUserMutations, useSyncUser } from "./useUser";
 
-// Page hooks
+// Identity hooks
 export {
-  useUserPages,
-  usePage,
-  usePageWithTheme,
+  useUserIdentities,
+  useIdentity,
+  useIdentityWithTheme,
   useSlugAvailable,
-  usePublicPage,
-  usePublicPageByUsername,
-  usePageMutations,
+  usePublicIdentity,
+  usePublicIdentityByUsername,
+  useIdentityMutations,
   useAllUserLinks,
-} from "./usePages";
+} from "./useIdentities";
 
 // Link hooks
 export {
-  usePageLinks,
+  useIdentityLinks,
   useLink,
-  usePageLinkStats,
-  usePublicPageLinks,
+  useIdentityLinkStats,
+  usePublicIdentityLinks,
   usePublicLinksBySlug,
   useLinkMutations,
 } from "./useLinks";
@@ -39,7 +39,7 @@ export {
 // Analytics hooks
 export {
   useDashboardStats,
-  usePageAnalytics,
+  useIdentityAnalytics,
   useGlobalAnalytics,
   useRecentActivity,
   useSeedMutations,

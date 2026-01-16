@@ -35,7 +35,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePage, usePageLinks, usePageLinkStats, useLinkMutations } from "@/hooks/convex";
+import { useIdentity, useIdentityLinks, useIdentityLinkStats, useLinkMutations } from "@/hooks/convex";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 
@@ -50,14 +50,14 @@ interface LinkData {
   orderIndex: number;
 }
 
-interface PageLinksManagerProps {
-  pageId: Id<"pages">;
+interface IdentityLinksManagerProps {
+  identityId: Id<"identities">;
 }
 
-export function PageLinksManager({ pageId }: PageLinksManagerProps) {
-  const page = usePage(pageId);
-  const links = usePageLinks(pageId);
-  const stats = usePageLinkStats(pageId);
+export function IdentityLinksManager({ identityId }: IdentityLinksManagerProps) {
+  const identity = useIdentity(identityId);
+  const links = useIdentityLinks(identityId);
+  const stats = useIdentityLinkStats(identityId);
   const { createLink, updateLink, deleteLink, reorderLinks } = useLinkMutations();
 
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -94,7 +94,7 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
     setIsLoading(true);
     try {
       await createLink({
-        pageId,
+        identityId,
         title: newLink.title,
         url: newLink.url,
         description: newLink.description || undefined,
@@ -169,14 +169,14 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
     [newLinkIds[linkIndex], newLinkIds[targetIndex]] = [newLinkIds[targetIndex], newLinkIds[linkIndex]];
 
     try {
-      await reorderLinks({ pageId, linkIds: newLinkIds });
+      await reorderLinks({ identityId, linkIds: newLinkIds });
     } catch (error) {
       toast.error("Failed to reorder links");
       console.error(error);
     }
   };
 
-  if (page === undefined || links === undefined) {
+  if (identity === undefined || links === undefined) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -184,13 +184,13 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
     );
   }
 
-  if (page === null) {
+  if (identity === null) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
           <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">Page not found</h3>
-            <p className="text-muted-foreground">The page you&apos;re looking for doesn&apos;t exist.</p>
+            <h3 className="text-lg font-semibold mb-2">Identity not found</h3>
+            <p className="text-muted-foreground">The identity you&apos;re looking for doesn&apos;t exist.</p>
           </div>
         </CardContent>
       </Card>
@@ -203,19 +203,19 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           <Avatar className="h-12 w-12 shrink-0">
-            <AvatarImage src={page.avatarUrl || "/placeholder.svg"} alt={page.name} />
-            <AvatarFallback>{page.name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={identity.avatarUrl || "/placeholder.svg"} alt={identity.name} />
+            <AvatarFallback>{identity.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-bold truncate">{page.name}</h2>
-            <p className="text-muted-foreground truncate">/{page.slug}</p>
+            <h2 className="text-xl font-bold truncate">{identity.name}</h2>
+            <p className="text-muted-foreground truncate">/{identity.slug}</p>
           </div>
-          <Badge variant={page.isPublic ? "default" : "secondary"} className="shrink-0">
-            {page.isPublic ? "Public" : "Private"}
+          <Badge variant={identity.isPublic ? "default" : "secondary"} className="shrink-0">
+            {identity.isPublic ? "Public" : "Private"}
           </Badge>
         </div>
         <Button asChild variant="outline" className="w-full sm:w-auto shrink-0">
-          <a href={`/${page.slug}`} target="_blank" rel="noreferrer">
+          <a href={`/${identity.slug}`} target="_blank" rel="noreferrer">
             <ExternalLink className="h-4 w-4 mr-2" />
             View Live Page
           </a>
@@ -241,7 +241,7 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.totalClicks?.toLocaleString() || 0}</div>
-            <p className="text-xs text-muted-foreground">This page only</p>
+            <p className="text-xs text-muted-foreground">This identity only</p>
           </CardContent>
         </Card>
         <Card>
@@ -275,8 +275,8 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="min-w-0">
-              <CardTitle className="truncate">Links for {page.name}</CardTitle>
-              <CardDescription>Manage links for this page</CardDescription>
+              <CardTitle className="truncate">Links for {identity.name}</CardTitle>
+              <CardDescription>Manage links for this identity</CardDescription>
             </div>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
@@ -288,7 +288,7 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add New Link</DialogTitle>
-                  <DialogDescription>Create a new link for {page.name}&apos;s page</DialogDescription>
+                  <DialogDescription>Create a new link for {identity.name}&apos;s page</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -370,7 +370,7 @@ export function PageLinksManager({ pageId }: PageLinksManagerProps) {
               <p className="text-muted-foreground">
                 {searchQuery
                   ? "Try adjusting your search criteria"
-                  : `Create the first link for ${page.name}'s page`}
+                  : `Create the first link for ${identity.name}'s page`}
               </p>
             </div>
           ) : (
