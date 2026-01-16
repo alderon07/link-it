@@ -110,6 +110,100 @@ export const isSlugAvailable = query({
 });
 
 /**
+ * Get all links across all user pages (for All Links page)
+ */
+export const getAllUserLinks = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return { links: [], stats: { total: 0, active: 0, totalClicks: 0 } };
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .first();
+
+    if (!user || user.deletionTime) {
+      return { links: [], stats: { total: 0, active: 0, totalClicks: 0 } };
+    }
+
+    // Get all user pages
+    const pages = await ctx.db
+      .query("pages")
+      .withIndex("by_user", (q) =>
+        q.eq("userId", user._id).eq("deletionTime", undefined)
+      )
+      .collect();
+
+    const pageMap = new Map(pages.map((p) => [p._id.toString(), p]));
+
+    // Collect all links from all pages
+    const allLinks: Array<{
+      _id: string;
+      pageId: string;
+      pageName: string;
+      pageSlug: string;
+      title: string;
+      url: string | undefined;
+      type: "link" | "header" | "divider" | undefined;
+      description: string | undefined;
+      icon: string | undefined;
+      isActive: boolean | undefined;
+      orderIndex: number | undefined;
+      clickCount: number | undefined;
+      updatedAt: number | undefined;
+    }> = [];
+
+    let totalClicks = 0;
+    let activeCount = 0;
+
+    for (const page of pages) {
+      const links = await ctx.db
+        .query("links")
+        .withIndex("by_page", (q) =>
+          q.eq("pageId", page._id).eq("deletionTime", undefined)
+        )
+        .collect();
+
+      for (const link of links) {
+        allLinks.push({
+          _id: link._id,
+          pageId: page._id,
+          pageName: page.name,
+          pageSlug: page.slug,
+          title: link.title,
+          url: link.url,
+          type: link.type,
+          description: link.description,
+          icon: link.icon,
+          isActive: link.isActive,
+          orderIndex: link.orderIndex,
+          clickCount: link.clickCount,
+          updatedAt: link.updatedAt,
+        });
+
+        if (link.isActive) activeCount++;
+        totalClicks += link.clickCount ?? 0;
+      }
+    }
+
+    // Sort by most recently updated
+    allLinks.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+
+    return {
+      links: allLinks,
+      stats: {
+        total: allLinks.length,
+        active: activeCount,
+        totalClicks,
+      },
+    };
+  },
+});
+
+/**
  * Get page with theme information
  */
 export const getPageWithTheme = query({

@@ -13,6 +13,7 @@ export {
   usePublicPage,
   usePublicPageByUsername,
   usePageMutations,
+  useAllUserLinks,
 } from "./usePages";
 
 // Link hooks
@@ -33,3 +34,12 @@ export {
   useAllThemes,
   useThemeMutations,
 } from "./useThemes";
+
+// Analytics hooks
+export {
+  useDashboardStats,
+  usePageAnalytics,
+  useGlobalAnalytics,
+  useRecentActivity,
+  useSeedMutations,
+} from "./useAnalytics";

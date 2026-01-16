@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Dialog,
@@ -17,92 +18,63 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Plus, Search, MoreHorizontal, Edit, Trash2, ExternalLink, Copy, Eye, BarChart3, LinkIcon } from "lucide-react"
-import { mockPages } from "@/lib/mock-pages"
+import { Plus, Search, MoreHorizontal, Edit, Trash2, ExternalLink, Copy, Eye, BarChart3, LinkIcon, Loader2 } from "lucide-react"
+import { useAllUserLinks, useUserPages, useLinkMutations } from "@/hooks/convex"
 import { PixelBorder } from "@/components/pixel-art/PixelBorder"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 import { PixelDivider } from "@/components/pixel-art/PixelDivider"
 import { FadeIn, SlideUp } from "@/components/animations/PageTransition"
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer"
 import { CountUp } from "@/components/animations/CountUp"
+import { toast } from "sonner"
+import { Id } from "../../convex/_generated/dataModel"
 
-// Mock links data
-const mockLinks = [
-  {
-    id: "1",
-    title: "My Portfolio",
-    url: "https://alexjohnson.dev",
-    description: "Check out my latest work",
-    profileId: "profile-1",
-    profileName: "Alex Johnson",
-    clicks: 245,
-    isActive: true,
-    createdAt: "2024-01-15",
-    icon: "🎨",
-  },
-  {
-    id: "2",
-    title: "YouTube Channel",
-    url: "https://youtube.com/@alexcreates",
-    description: "Creative tutorials and tips",
-    profileId: "profile-1",
-    profileName: "Alex Johnson",
-    clicks: 189,
-    isActive: true,
-    createdAt: "2024-01-10",
-    icon: "📹",
-  },
-  {
-    id: "3",
-    title: "GitHub",
-    url: "https://github.com/sarahchen",
-    description: "Open source projects",
-    profileId: "profile-2",
-    profileName: "Sarah Chen",
-    clicks: 156,
-    isActive: true,
-    createdAt: "2024-01-12",
-    icon: "💻",
-  },
-  {
-    id: "4",
-    title: "Tech Blog",
-    url: "https://sarahtech.blog",
-    description: "Latest tech insights",
-    profileId: "profile-2",
-    profileName: "Sarah Chen",
-    clicks: 203,
-    isActive: true,
-    createdAt: "2024-01-08",
-    icon: "📝",
-  },
-  {
-    id: "5",
-    title: "Spotify",
-    url: "https://spotify.com/artist/mikemusic",
-    description: "Latest tracks and albums",
-    profileId: "profile-3",
-    profileName: "Mike Rodriguez",
-    clicks: 312,
-    isActive: true,
-    createdAt: "2024-01-05",
-    icon: "🎵",
-  },
-]
+interface LinkData {
+  _id: string;
+  pageId: string;
+  pageName: string;
+  pageSlug: string;
+  title: string;
+  url?: string;
+  type?: "link" | "header" | "divider";
+  description?: string;
+  icon?: string;
+  isActive?: boolean;
+  orderIndex?: number;
+  clickCount?: number;
+  updatedAt?: number;
+}
 
 export function GlobalLinksManager() {
-  const [links, setLinks] = React.useState(mockLinks)
+  const allLinksData = useAllUserLinks();
+  const pages = useUserPages();
+  const { updateLink, deleteLink: deleteLinkMutation } = useLinkMutations();
+
   const [searchQuery, setSearchQuery] = React.useState("")
   const [selectedPage, setSelectedPage] = React.useState("all")
   const [sortBy, setSortBy] = React.useState("recent")
 
+  const isLoading = allLinksData === undefined || pages === undefined;
+
+  // Only show actual links, not headers or dividers
+  const links = ((allLinksData?.links || []) as LinkData[]).filter(
+    (link) => link.type === "link" || !link.type
+  );
+  const stats = allLinksData?.stats || { total: 0, active: 0, totalClicks: 0 };
+
+  const typedPages = (pages || []) as Array<{
+    _id: string;
+    name: string;
+    slug: string;
+  }>;
+
   const filteredLinks = links.filter((link) => {
     const matchesSearch =
       link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      link.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      link.profileName.toLowerCase().includes(searchQuery.toLowerCase())
+      (link.url?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+      link.pageName.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesProfile = selectedPage === "all" || link.profileId === selectedPage
+    const matchesProfile = selectedPage === "all" || link.pageId === selectedPage
 
     return matchesSearch && matchesProfile
   })
@@ -110,25 +82,54 @@ export function GlobalLinksManager() {
   const sortedLinks = [...filteredLinks].sort((a, b) => {
     switch (sortBy) {
       case "clicks":
-        return b.clicks - a.clicks
+        return (b.clickCount ?? 0) - (a.clickCount ?? 0)
       case "title":
         return a.title.localeCompare(b.title)
       case "profile":
-        return a.profileName.localeCompare(b.profileName)
+        return a.pageName.localeCompare(b.pageName)
       default: // recent
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        return (b.updatedAt ?? 0) - (a.updatedAt ?? 0)
     }
   })
 
-  const totalClicks = links.reduce((sum, link) => sum + link.clicks, 0)
-  const activeLinks = links.filter((link) => link.isActive).length
+  // Find top performer
+  const topLink = [...links].sort((a, b) => (b.clickCount ?? 0) - (a.clickCount ?? 0))[0];
 
-  const deleteLink = (linkId: string) => {
-    setLinks(links.filter((link) => link.id !== linkId))
+  const handleDeleteLink = async (linkId: string) => {
+    try {
+      await deleteLinkMutation({ linkId: linkId as Id<"links"> });
+      toast.success("Link deleted");
+    } catch (error) {
+      toast.error("Failed to delete link");
+      console.error(error);
+    }
   }
 
-  const toggleLinkStatus = (linkId: string) => {
-    setLinks(links.map((link) => (link.id === linkId ? { ...link, isActive: !link.isActive } : link)))
+  const toggleLinkStatus = async (linkId: string, currentStatus: boolean) => {
+    try {
+      await updateLink({ linkId: linkId as Id<"links">, isActive: !currentStatus });
+      toast.success(currentStatus ? "Link deactivated" : "Link activated");
+    } catch (error) {
+      toast.error("Failed to update link");
+      console.error(error);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} variant="pixel">
+              <CardContent className="p-4">
+                <Skeleton className="h-6 w-24 mb-2" />
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -146,7 +147,7 @@ export function GlobalLinksManager() {
                 <div className="text-2xl font-black pixel-text-shadow">
                   <CountUp value={links.length} duration={0.5} />
                 </div>
-                <p className="text-xs text-muted-foreground">{activeLinks} active</p>
+                <p className="text-xs text-muted-foreground">{stats.active} active</p>
               </CardContent>
             </Card>
           </StaggerItem>
@@ -158,7 +159,7 @@ export function GlobalLinksManager() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-black pixel-text-shadow">
-                  <CountUp value={totalClicks} duration={0.8} />
+                  <CountUp value={stats.totalClicks} duration={0.8} />
                 </div>
                 <p className="text-xs text-muted-foreground">Across all identities</p>
               </CardContent>
@@ -167,12 +168,14 @@ export function GlobalLinksManager() {
           <StaggerItem>
             <Card variant="pixel">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-bold">Avg. CTR</CardTitle>
+                <CardTitle className="text-sm font-bold">Avg. Clicks</CardTitle>
                 <PixelIcon icon="arrow" size="xs" color="yellow" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-black pixel-text-shadow text-pixel-teal">6.8%</div>
-                <p className="text-xs text-muted-foreground">+1.2% from last month</p>
+                <div className="text-2xl font-black pixel-text-shadow text-pixel-teal">
+                  {links.length > 0 ? Math.round(stats.totalClicks / links.length) : 0}
+                </div>
+                <p className="text-xs text-muted-foreground">Per link</p>
               </CardContent>
             </Card>
           </StaggerItem>
@@ -183,8 +186,12 @@ export function GlobalLinksManager() {
                 <PixelIcon icon="star" size="xs" color="coral" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-black pixel-text-shadow">Spotify</div>
-                <p className="text-xs text-muted-foreground">312 clicks</p>
+                <div className="text-2xl font-black pixel-text-shadow truncate">
+                  {topLink?.title || "N/A"}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {topLink?.clickCount ?? 0} clicks
+                </p>
               </CardContent>
             </Card>
           </StaggerItem>
@@ -219,8 +226,8 @@ export function GlobalLinksManager() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Identities</SelectItem>
-                  {mockPages.map((page) => (
-                    <SelectItem key={page.id} value={page.id}>
+                  {typedPages.map((page) => (
+                    <SelectItem key={page._id} value={page._id}>
                       {page.name}
                     </SelectItem>
                   ))}
@@ -255,7 +262,7 @@ export function GlobalLinksManager() {
                 <CardDescription>
                   {selectedPage === "all"
                     ? "Showing all links across identities"
-                    : `Showing links for ${mockPages.find((p) => p.id === selectedPage)?.name}`}
+                    : `Showing links for ${typedPages.find((p) => p._id === selectedPage)?.name}`}
                 </CardDescription>
               </div>
               <Dialog>
@@ -278,11 +285,10 @@ export function GlobalLinksManager() {
                           <SelectValue placeholder="Select an identity" />
                         </SelectTrigger>
                         <SelectContent>
-                          {mockPages.map((page) => (
-                            <SelectItem key={page.id} value={page.id}>
+                          {typedPages.map((page) => (
+                            <SelectItem key={page._id} value={page._id}>
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-5 w-5">
-                                  <AvatarImage src={page.avatar || "/placeholder.svg"} alt={page.name} />
                                   <AvatarFallback className="text-xs">{page.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 {page.name}
@@ -334,12 +340,12 @@ export function GlobalLinksManager() {
                   const colorClass = colors[index % colors.length]
 
                   return (
-                    <StaggerItem key={link.id}>
+                    <StaggerItem key={link._id}>
                       <PixelBorder variant="solid" shadow="sm" className="p-4 bg-card hover:-translate-x-0.5 hover:-translate-y-0.5 transition-transform group w-full max-w-full">
                         <div className="flex items-center justify-between gap-2 w-full max-w-full">
                           <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                             <div className={`w-10 h-10 ${colorClass} pixel-border flex items-center justify-center text-lg group-hover:pixel-bounce`}>
-                              {link.icon}
+                              {link.icon || "🔗"}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
@@ -350,18 +356,19 @@ export function GlobalLinksManager() {
                               </div>
                               <p className="text-sm text-muted-foreground truncate">{link.url}</p>
                               <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs flex-wrap">
-                                <span className="text-pixel-teal font-medium truncate">Identity: {link.profileName}</span>
-                                <span className="text-pixel-pink font-medium">{link.clicks} clicks</span>
-                                <span className="text-muted-foreground truncate">Created {new Date(link.createdAt).toLocaleDateString()}</span>
+                                <span className="text-pixel-teal font-medium truncate">Identity: {link.pageName}</span>
+                                <span className="text-pixel-pink font-medium">{link.clickCount ?? 0} clicks</span>
                               </div>
                             </div>
                           </div>
                           <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-                            <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
-                              <a href={link.url} target="_blank" rel="noreferrer">
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            </Button>
+                            {link.url && (
+                              <Button size="sm" variant="pixel-outline" className="h-8 w-8 p-0" asChild>
+                                <a href={link.url} target="_blank" rel="noreferrer">
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </Button>
+                            )}
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="pixel-outline" size="sm" className="h-8 w-8 p-0">
@@ -369,26 +376,31 @@ export function GlobalLinksManager() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit Link
+                                <DropdownMenuItem asChild>
+                                  <a href={`/admin/pages/${link.pageId}/links`}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit Link
+                                  </a>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Copy className="h-4 w-4 mr-2" />
-                                  Copy URL
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <BarChart3 className="h-4 w-4 mr-2" />
-                                  View Analytics
-                                </DropdownMenuItem>
+                                {link.url && (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(link.url!);
+                                      toast.success("URL copied to clipboard");
+                                    }}
+                                  >
+                                    <Copy className="h-4 w-4 mr-2" />
+                                    Copy URL
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
-                                  onClick={() => toggleLinkStatus(link.id)}
+                                  onClick={() => toggleLinkStatus(link._id, link.isActive ?? false)}
                                   className={link.isActive ? "text-orange-600" : "text-green-600"}
                                 >
                                   <Eye className="h-4 w-4 mr-2" />
                                   {link.isActive ? "Deactivate" : "Activate"}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => deleteLink(link.id)} className="text-red-600">
+                                <DropdownMenuItem onClick={() => handleDeleteLink(link._id)} className="text-red-600">
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Delete
                                 </DropdownMenuItem>

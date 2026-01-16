@@ -1,0 +1,37 @@
+{"title":"Social Media","url":"","type":"header","isActive":true,"orderIndex":0,"clickCount":0,"updatedAt":1768581511487}
+{"title":"Twitter / X","url":"https://twitter.com/alexj","type":"link","description":"Follow me for tech updates","icon":"twitter","isActive":true,"orderIndex":1,"clickCount":534,"updatedAt":1768581511487}
+{"title":"Instagram","url":"https://instagram.com/alexj","type":"link","description":"Photos and stories","icon":"instagram","isActive":true,"orderIndex":2,"clickCount":423,"updatedAt":1768581511487}
+{"title":"LinkedIn","url":"https://linkedin.com/in/alexj","type":"link","description":"Professional network","icon":"linkedin","isActive":true,"orderIndex":3,"clickCount":312,"updatedAt":1768581511487}
+{"title":"","url":"","type":"divider","isActive":true,"orderIndex":4,"clickCount":0,"updatedAt":1768581511487}
+{"title":"Content","url":"","type":"header","isActive":true,"orderIndex":5,"clickCount":0,"updatedAt":1768581511487}
+{"title":"YouTube Channel","url":"https://youtube.com/@alexj","type":"link","description":"Tutorials and vlogs","icon":"youtube","isActive":true,"orderIndex":6,"clickCount":867,"updatedAt":1768581511487}
+{"title":"Blog","url":"https://alexj.dev/blog","type":"link","description":"Thoughts on tech","icon":"pen","isActive":true,"orderIndex":7,"clickCount":234,"updatedAt":1768581511487}
+{"title":"GitHub","url":"https://github.com/alexj","type":"link","description":"Open source projects","icon":"github","isActive":true,"orderIndex":8,"clickCount":456,"updatedAt":1768581511487}
+{"title":"Services","url":"","type":"header","isActive":true,"orderIndex":0,"clickCount":0,"updatedAt":1768581511487}
+{"title":"Portfolio","url":"https://alexj.dev","type":"link","description":"View my work","icon":"briefcase","isActive":true,"orderIndex":1,"clickCount":567,"updatedAt":1768581511487}
+{"title":"Book a Call","url":"https://calendly.com/alexj","type":"link","description":"Schedule a consultation","icon":"calendar","isActive":true,"orderIndex":2,"clickCount":234,"updatedAt":1768581511487}
+{"title":"Email Me","url":"mailto:alex@alexj.dev","type":"link","description":"Get in touch","icon":"mail","isActive":true,"orderIndex":3,"clickCount":189,"updatedAt":1768581511487}
+{"title":"Twitch","url":"https://twitch.tv/alexj","type":"link","description":"Watch me stream","icon":"twitch","isActive":true,"orderIndex":0,"clickCount":345,"updatedAt":1768581511487}
+{"title":"Discord Server","url":"https://discord.gg/alexj","type":"link","description":"Join the community","icon":"message-circle","isActive":true,"orderIndex":1,"clickCount":234,"updatedAt":1768581511487}
+{"title":"Steam","url":"https://steamcommunity.com/id/alexj","type":"link","description":"Add me on Steam","icon":"gamepad-2","isActive":true,"orderIndex":2,"clickCount":123,"updatedAt":1768581511487}
+{"title":"Latest Articles","url":"","type":"header","isActive":true,"orderIndex":0,"clickCount":0,"updatedAt":1768581511487}
+{"title":"Tech Blog","url":"https://sarahchen.tech","type":"link","description":"Read my latest posts","icon":"file-text","isActive":true,"orderIndex":1,"clickCount":1234,"updatedAt":1768581511487}
+{"title":"Newsletter","url":"https://sarahchen.tech/newsletter","type":"link","description":"Weekly tech insights","icon":"mail","isActive":true,"orderIndex":2,"clickCount":567,"updatedAt":1768581511487}
+{"title":"Code","url":"","type":"header","isActive":true,"orderIndex":3,"clickCount":0,"updatedAt":1768581511487}
+{"title":"GitHub","url":"https://github.com/sarahchen","type":"link","description":"Open source projects","icon":"github","isActive":true,"orderIndex":4,"clickCount":890,"updatedAt":1768581511487}
+{"title":"CodePen","url":"https://codepen.io/sarahchen","type":"link","description":"CSS experiments","icon":"code","isActive":true,"orderIndex":5,"clickCount":345,"updatedAt":1768581511487}
+{"title":"Twitter / X","url":"https://twitter.com/sarahchen","type":"link","description":"Tech thoughts","icon":"twitter","isActive":true,"orderIndex":0,"clickCount":678,"updatedAt":1768581511487}
+{"title":"Instagram","url":"https://instagram.com/sarahchen","type":"link","description":"Life moments","icon":"instagram","isActive":true,"orderIndex":1,"clickCount":456,"updatedAt":1768581511487}
+{"title":"LinkedIn","url":"https://linkedin.com/in/sarahchen","type":"link","description":"Professional profile","icon":"linkedin","isActive":true,"orderIndex":2,"clickCount":345,"updatedAt":1768581511487}
+{"title":"Listen","url":"","type":"header","isActive":true,"orderIndex":0,"clickCount":0,"updatedAt":1768581511487}
+{"title":"Spotify","url":"https://open.spotify.com/artist/mike","type":"link","description":"Stream my music","icon":"music","isActive":true,"orderIndex":1,"clickCount":2345,"updatedAt":1768581511487}
+{"title":"Apple Music","url":"https://music.apple.com/artist/mike","type":"link","description":"Listen on Apple Music","icon":"music-2","isActive":true,"orderIndex":2,"clickCount":1234,"updatedAt":1768581511487}
+{"title":"SoundCloud","url":"https://soundcloud.com/mike","type":"link","description":"Exclusive tracks","icon":"cloud","isActive":true,"orderIndex":3,"clickCount":876,"updatedAt":1768581511487}
+{"title":"Watch","url":"","type":"header","isActive":true,"orderIndex":4,"clickCount":0,"updatedAt":1768581511487}
+{"title":"YouTube","url":"https://youtube.com/@mikemusic","type":"link","description":"Music videos","icon":"youtube","isActive":true,"orderIndex":5,"clickCount":1567,"updatedAt":1768581511487}
+{"title":"TikTok","url":"https://tiktok.com/@mikemusic","type":"link","description":"Short clips","icon":"video","isActive":true,"orderIndex":6,"clickCount":2134,"updatedAt":1768581511487}
+{"title":"Merch Store","url":"https://mikemusic.store","type":"link","description":"Official merchandise","icon":"shopping-bag","isActive":true,"orderIndex":0,"clickCount":456,"updatedAt":1768581511487}
+{"title":"Patreon","url":"https://patreon.com/mikemusic","type":"link","description":"Exclusive content","icon":"heart","isActive":true,"orderIndex":1,"clickCount":234,"updatedAt":1768581511487}
+{"title":"Concert Tickets","url":"https://tickets.mikemusic.com","type":"link","description":"Upcoming shows","icon":"ticket","isActive":true,"orderIndex":2,"clickCount":567,"updatedAt":1768581511487}
+{"title":"Admin Dashboard","url":"https://admin.mikemusic.com","type":"link","description":"Management portal","icon":"lock","isActive":true,"orderIndex":0,"clickCount":45,"updatedAt":1768581511487}
+{"title":"Analytics","url":"https://analytics.mikemusic.com","type":"link","description":"Performance metrics","icon":"bar-chart","isActive":true,"orderIndex":1,"clickCount":34,"updatedAt":1768581511487}
