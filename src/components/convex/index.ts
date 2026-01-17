@@ -1,4 +1,5 @@
 export { IdentityManager } from "./IdentityManager";
+export { IdentityEditor } from "./IdentityEditor";
 export { PublicIdentityComponent } from "./PublicIdentityComponent";
 export { IdentityLinksManager } from "./IdentityLinksManager";
 export { IdentityThemeManager } from "./IdentityThemeManager";

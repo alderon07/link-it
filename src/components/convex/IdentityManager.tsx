@@ -437,14 +437,16 @@ export function IdentityManager() {
           </CardHeader>
           <CardContent>
             <PixelDivider variant="dashed" className="mb-4" />
-            <StaggerContainer className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {typedIdentities.map((identity: IdentityData, index: number) => {
-                const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"];
-                const colorClass = colors[index % colors.length];
+            {typedIdentities.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No identities yet. Create your first one above!</p>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {typedIdentities.map((identity: IdentityData, index: number) => {
+                  const colors = ["bg-pixel-pink", "bg-pixel-teal", "bg-pixel-yellow", "bg-pixel-mint", "bg-pixel-coral"];
+                  const colorClass = colors[index % colors.length];
 
-                return (
-                  <StaggerItem key={identity._id}>
-                    <Card variant="pixel-interactive" className="relative group">
+                  return (
+                    <Card key={identity._id} variant="pixel-interactive" className="relative group">
                       <CardContent className="p-4">
                         <div className="flex items-center gap-3 mb-3">
                           <PixelBorder variant="solid" shadow="sm" className={`p-0.5 ${colorClass}`}>
@@ -475,10 +477,10 @@ export function IdentityManager() {
                         </div>
                       </CardContent>
                     </Card>
-                  </StaggerItem>
-                );
-              })}
-            </StaggerContainer>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
       </SlideUp>

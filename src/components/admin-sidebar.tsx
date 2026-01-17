@@ -45,7 +45,7 @@ const data = {
       items: [
         {
           title: "Identities",
-          url: "/admin/pages",
+          url: "/admin/identities",
           icon: Users,
           pixelIcon: "star" as const,
           color: "bg-pixel-yellow",

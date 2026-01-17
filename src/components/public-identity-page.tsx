@@ -231,17 +231,15 @@ export function PublicIdentityPage({ identity, links }: PublicIdentityPageProps)
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
             >
-              <PixelBorder variant="solid" shadow="default" className={`p-1 bg-pixel-${pageColor}`}>
-                <Avatar className="w-24 h-24 pixel-border">
-                  <AvatarImage 
-                    src={identity.avatarUrl || identity.user.avatarUrl || "/placeholder.svg?height=200&width=200"} 
-                    alt={identity.name} 
-                  />
-                  <AvatarFallback className={`text-2xl font-bold bg-pixel-${pageColor}`}>
-                    {identity.name.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-              </PixelBorder>
+              <Avatar className="w-24 h-24 ring-4 ring-foreground/20">
+                <AvatarImage 
+                  src={identity.avatarUrl || identity.user.avatarUrl || "/placeholder.svg?height=200&width=200"} 
+                  alt={identity.name} 
+                />
+                <AvatarFallback className={`text-2xl font-bold bg-pixel-${pageColor}`}>
+                  {identity.name.charAt(0)}
+                </AvatarFallback>
+              </Avatar>
             </motion.div>
 
             {/* Name & Slug */}
