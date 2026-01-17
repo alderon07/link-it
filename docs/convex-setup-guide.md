@@ -1,6 +1,6 @@
 # Convex Setup Guide
 
-This guide covers the remaining steps to complete the Convex database integration.
+This guide covers the Convex database setup and configuration. The Convex integration is complete and all data operations use Convex for real-time reactivity.
 
 ## Prerequisites
 
@@ -88,18 +88,16 @@ const systemThemes = [
 ];
 ```
 
-## Step 6: Switch to Convex Components
+## Step 6: Using Convex Components
 
-Replace the old mock-data components with the new Convex-powered ones:
+All components now use Convex for data operations:
 
 ```tsx
-// Old import (uses mock data)
-import { PageManager } from "@/components/page-manager";
-import { PublicPageComponent } from "@/components/public-page-component";
-import { PageLinksManager } from "@/components/page-links-manager";
+// Import Convex-powered components
+import { IdentityManager, PublicIdentityComponent, IdentityLinksManager } from "@/components/convex";
 
-// New import (uses Convex)
-import { PageManager, PublicPageComponent, PageLinksManager } from "@/components/convex";
+// Or use custom hooks
+import { useUserIdentities, useIdentityMutations } from "@/hooks/convex";
 ```
 
 ## Step 7: Run the Development Server
@@ -129,7 +127,7 @@ pnpm dev:next
 - [ ] Clerk webhook points to Convex HTTP endpoint
 - [ ] App loads without errors
 - [ ] User can sign in and data syncs to Convex
-- [ ] Pages/links can be created and update in real-time
+- [ ] Identities/links can be created and update in real-time
 
 ## Troubleshooting
 
@@ -156,14 +154,46 @@ convex/
 ├── auth.config.ts        # Clerk auth config
 ├── http.ts               # Webhook handler
 ├── lib/                  # Utilities
+│   ├── utils.ts          # Helpers
+│   └── validators.ts     # Validation logic
 ├── users/                # User queries/mutations
-├── pages/                # Page queries/mutations
+│   ├── queries.ts
+│   ├── mutations.ts
+│   └── internal.ts       # Webhook-only functions
+├── identities/           # Identity (page) queries/mutations
+│   ├── queries.ts
+│   ├── mutations.ts
+│   └── public.ts         # Public queries
 ├── links/                # Link queries/mutations
+│   ├── queries.ts
+│   ├── mutations.ts
+│   └── public.ts         # Public queries
 ├── themes/               # Theme queries/mutations
-└── settings/             # Settings queries/mutations
+│   ├── queries.ts
+│   └── mutations.ts
+├── analytics/            # Analytics queries
+│   └── queries.ts
+├── settings/             # Settings queries/mutations
+│   ├── queries.ts
+│   └── mutations.ts
+├── seed.ts               # Database seeding
+└── seedAll.ts            # Full database seeding
 
 src/
 ├── hooks/convex/         # React hooks for Convex
+│   ├── useUser.ts
+│   ├── useIdentities.ts
+│   ├── useLinks.ts
+│   ├── useThemes.ts
+│   ├── useAnalytics.ts
+│   ├── useSettings.ts
+│   └── index.ts
 ├── components/convex/    # Convex-powered components
-└── components/providers/ConvexClientProvider.tsx
+│   ├── IdentityManager.tsx
+│   ├── IdentityLinksManager.tsx
+│   ├── IdentityThemeManager.tsx
+│   ├── PublicIdentityComponent.tsx
+│   └── index.ts
+└── components/providers/
+    └── ConvexClientProvider.tsx
 ```

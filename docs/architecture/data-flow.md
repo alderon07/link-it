@@ -4,126 +4,327 @@ This document provides a detailed overview of how data flows through the Link-It
 
 ## Data Flow Overview
 
-The application uses a three-tier architecture with multiple data access patterns:
+The application uses Convex for all data operations with real-time reactivity:
 
 ```
-┌─────────────┐      ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
-│  Client UI  │ ◄──► │ Server      │ ◄──► │  Service    │ ◄──► │  Database   │
-│             │      │ Actions/API │      │  Layer      │      │  Client     │
-└─────────────┘      └─────────────┘      └─────────────┘      └─────────────┘
+┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+│  Client UI  │ ◄──► │   Convex    │ ◄──► │   Convex    │
+│  (React)    │      │   Hooks     │      │  Backend    │
+│             │      │             │      │             │
+└─────────────┘      └─────────────┘      └─────────────┘
+      │                    │                    │
+      │                    │                    │
+      │  useQuery()        │  WebSocket         │  Queries
+      │  useMutation()     │  (Real-time)       │  Mutations
+      │                    │                    │
+      └────────────────────┴────────────────────┘
+                    │
+                    ▼
+            ┌───────────────┐
+            │ Convex Cloud  │
+            │   Database    │
+            └───────────────┘
 ```
 
-## Three-Tier Data Architecture
+## Convex Architecture
 
-### 1. Database Client Layer (`src/data/db/client.ts`)
+### 1. Schema (`convex/schema.ts`)
 
-The `DatabaseClient` interface provides database abstraction:
-- Currently implemented as `DummyDatabaseClient` using mock data
-- Designed to swap to Neon PostgreSQL via interface
-- Provides CRUD operations for Users, Pages, Links, and Themes
+Defines all database tables with type-safe schemas:
+- `users`: User accounts (synced from Clerk)
+- `identities`: User's "link in bio" pages
+- `links`: Individual links on identities
+- `themes`: Color themes (system + custom)
+- `tags`, `linkTags`: Link categorization (future)
+- `identityCollaborators`: Shared access (future)
+- `identityViews`, `linkClicks`: Analytics data
+- `userSettings`, `userProgress`: User preferences
+- `auditLogs`: Change tracking (future)
 
-### 2. Data Access Layer (DAL) (`src/data/*/*DAL.ts`)
+### 2. Queries (`convex/*/queries.ts`)
 
-Direct database operations through `getDb()`:
-- No business logic, just data operations
-- Examples: `pageDAL.ts`, `linkDAL.ts`, `userDAL.ts`
-- Functions like `getPageById()`, `createPage()`, `updatePage()`, `deletePage()`
+Read-only functions that return data:
+- Automatically reactive - components re-render when data changes
+- Can be authenticated or public
+- Use indexes for efficient queries
 
-### 3. Service Layer (`src/data/*/*Service.ts`)
+### 3. Mutations (`convex/*/mutations.ts`)
 
-Business logic with ownership verification:
-- Ownership checks
-- Slug uniqueness validation
-- Link reordering logic
-- Examples: `pageService.ts`, `linkService.ts`, `userService.ts`
-- Functions like `createPage()`, `updatePage()`, `getPage()` with ownership checks
+Write operations that modify data:
+- Always authenticated (except internal webhook functions)
+- Validate inputs with Zod schemas
+- Return updated data or success indicators
+
+### 4. Public Functions (`convex/*/public.ts`)
+
+Public queries that don't require authentication:
+- Used for public-facing pages
+- Still validate inputs and handle errors
 
 ## Data Access Patterns
 
-The application supports two main data access patterns:
-
-### Pattern 1: Server Actions (Form Submissions)
+### Pattern 1: Reading Data (Queries)
 
 ```
 Client Component
   │
-  ├── Calls Server Action (src/actions/*.ts)
+  ├── Calls useQuery(api.identities.queries.getUserIdentities)
   │   │
-  │   ├── Validates authentication (Clerk)
-  │   ├── Validates input with Zod schema
+  │   ├── Convex hook establishes WebSocket connection
+  │   ├── Sends query request to Convex backend
   │   │
-  │   └── Calls Service Layer
+  │   └── Convex Backend
   │       │
-  │       ├── Verifies ownership
-  │       ├── Validates business rules
+  │       ├── Verifies authentication (if required)
+  │       ├── Executes query function
+  │       ├── Queries database using indexes
   │       │
-  │       └── Calls DAL
+  │       └── Returns data via WebSocket
   │           │
-  │           └── Database Client
+  │           └── Component automatically re-renders with new data
   │
-  └── Revalidates path and returns result
+  └── Real-time updates: Component re-renders when data changes
 ```
 
-**Example: Creating a Page**
+**Example: Fetching User Identities**
 
 ```typescript
 // Client Component
-const result = await createPageAction(formData)
+"use client"
 
-// Server Action (src/actions/pages.ts)
-export async function createPageAction(formData: FormData) {
-  const { userId } = await auth() // Clerk authentication
-  const validated = CreatePageSchema.safeParse(rawData) // Zod validation
-  const page = await createPage(userId, validated.data) // Service layer
-  revalidatePath("/admin/pages")
-  return { success: true, data: { id: page.id, slug: page.slug } }
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
+
+export function IdentityList() {
+  const identities = useQuery(api.identities.queries.getUserIdentities)
+  
+  // identities is undefined while loading
+  if (identities === undefined) {
+    return <LoadingSkeleton />
+  }
+  
+  // identities is the data array
+  return (
+    <div>
+      {identities.map(identity => (
+        <IdentityCard key={identity._id} identity={identity} />
+      ))}
+    </div>
+  )
 }
 
-// Service Layer (src/data/pages/pageService.ts)
-export async function createPage(userId: string, input: CreatePageInput) {
-  await checkSlugAvailability(input.slug) // Business logic
-  return await pageDAL.createPage({ ...input, user_id: userId }) // DAL
-}
+// Convex Query (convex/identities/queries.ts)
+export const getUserIdentities = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new ConvexError("Not authenticated")
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .first()
+
+    if (!user) {
+      return []
+    }
+
+    return await ctx.db
+      .query("identities")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("deletionTime"), undefined))
+      .collect()
+  },
+})
 ```
 
-### Pattern 2: API Routes (REST Endpoints)
+### Pattern 2: Writing Data (Mutations)
 
 ```
-Client Component / External Client
+Client Component
   │
-  ├── Calls API Route (src/app/api/v1/*/route.ts)
+  ├── Calls useMutation(api.identities.mutations.createIdentity)
   │   │
-  │   ├── requireAuth() - Clerk authentication
-  │   ├── rateLimit() - Rate limiting
-  │   ├── validateBody() - Zod validation + XSS prevention
+  │   ├── User submits form/triggers action
   │   │
-  │   └── Calls Service Layer
+  │   └── Convex Backend
   │       │
-  │       ├── Verifies ownership
-  │       ├── Validates business rules
+  │       ├── Verifies authentication
+  │       ├── Validates input with Zod schema
+  │       ├── Executes business logic
+  │       ├── Modifies database
   │       │
-  │       └── Calls DAL
+  │       └── Returns result
   │           │
-  │           └── Database Client
-  │
-  └── Returns successResponse() or errorResponse()
+  │           └── All active queries automatically re-run
+  │               │
+  │               └── Components re-render with updated data
 ```
 
-**Example: Getting Pages via API**
+**Example: Creating an Identity**
 
 ```typescript
-// API Route (src/app/api/v1/pages/route.ts)
-export async function GET(request: NextRequest) {
-  const userId = await requireAuth() // Authentication
-  await rateLimit(userId, "default") // Rate limiting
-  const pages = await getUserPages(userId) // Service layer
-  return successResponse(pages)
+// Client Component
+"use client"
+
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { toast } from "sonner"
+
+export function CreateIdentityForm() {
+  const createIdentity = useMutation(api.identities.mutations.createIdentity)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    
+    try {
+      await createIdentity({
+        name: formData.get("name") as string,
+        slug: formData.get("slug") as string,
+      })
+      toast.success("Identity created!")
+      e.currentTarget.reset()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create")
+    }
+  }
+
+  return <form onSubmit={handleSubmit}>{/* form fields */}</form>
 }
 
-// Service Layer (src/data/pages/pageService.ts)
-export async function getUserPages(userId: string) {
-  return await pageDAL.getPagesByUserId(userId) // DAL
+// Convex Mutation (convex/identities/mutations.ts)
+export const createIdentity = mutation({
+  args: {
+    name: v.string(),
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new ConvexError("Not authenticated")
+    }
+
+    // Validate
+    const validated = CreateIdentitySchema.safeParse(args)
+    if (!validated.success) {
+      throw new ConvexError("Validation failed")
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .first()
+
+    if (!user) {
+      throw new ConvexError("User not found")
+    }
+
+    // Check slug availability
+    const existing = await ctx.db
+      .query("identities")
+      .withIndex("by_slug", (q) => q.eq("slug", validated.data.slug))
+      .first()
+
+    if (existing) {
+      throw new ConvexError("Slug already taken")
+    }
+
+    // Create identity
+    const identityId = await ctx.db.insert("identities", {
+      userId: user._id,
+      name: validated.data.name,
+      slug: validated.data.slug,
+      isPublic: false,
+      viewCount: 0,
+      updatedAt: Date.now(),
+    })
+
+    return identityId
+  },
+})
+```
+
+### Pattern 3: Public Queries (No Authentication)
+
+```
+Public Page Component
+  │
+  ├── Calls useQuery(api.identities.public.getPublicIdentityByUsername)
+  │   │
+  │   └── Convex Backend
+  │       │
+  │       ├── No authentication required
+  │       ├── Executes query function
+  │       ├── Queries database
+  │       │
+  │       └── Returns public data
+  │           │
+  │           └── Component renders public identity page
+```
+
+**Example: Public Identity Page**
+
+```typescript
+// Client Component (src/app/[username]/page.tsx)
+"use client"
+
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+
+export default function PublicPage({ username }: { username: string }) {
+  const identity = useQuery(api.identities.public.getPublicIdentityByUsername, { username })
+  const links = useQuery(
+    api.links.public.getPublicIdentityLinks,
+    identity?._id ? { identityId: identity._id } : "skip"
+  )
+  const recordView = useMutation(api.identities.public.recordIdentityView)
+
+  if (identity === undefined) {
+    return <LoadingSkeleton />
+  }
+
+  if (identity === null) {
+    return <NotFound />
+  }
+
+  // Record view on mount
+  useEffect(() => {
+    recordView({ identityId: identity._id })
+  }, [identity._id, recordView])
+
+  return <PublicIdentityPage identity={identity} links={links ?? []} />
 }
+
+// Convex Public Query (convex/identities/public.ts)
+export const getPublicIdentityByUsername = query({
+  args: { username: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", args.username))
+      .first()
+
+    if (!user || user.deletionTime) {
+      return null
+    }
+
+    const identity = await ctx.db
+      .query("identities")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("isPublic"), true),
+          q.eq(q.field("deletionTime"), undefined)
+        )
+      )
+      .first()
+
+    return identity
+  },
+})
 ```
 
 ## Component Hierarchy
@@ -131,50 +332,78 @@ export async function getUserPages(userId: string) {
 ```
 RootLayout (src/app/layout.tsx)
 ├── ClerkProvider
+├── ConvexClientProvider (passes Clerk JWT to Convex)
 ├── PostHogProvider
 ├── SidebarProvider
 └── Page Components
     ├── Landing Page (src/app/page.tsx)
     │   └── Home Component
     ├── Public Profile (src/app/[username]/page.tsx)
-    │   └── PublicPageComponent
-    │       └── LinksList
-    │           └── LinkButton
+    │   └── PublicIdentityPage
+    │       ├── useQuery(api.identities.public.getPublicIdentityByUsername)
+    │       ├── useQuery(api.links.public.getPublicIdentityLinks)
+    │       └── useMutation(api.identities.public.recordIdentityView)
     └── Admin Routes (src/app/(routes)/admin/*)
         ├── AdminLayout (with Sidebar)
         ├── Admin Dashboard
-        ├── Page Manager
+        │   ├── useQuery(api.identities.queries.getUserIdentities)
+        │   └── useQuery(api.analytics.queries.getDashboardStats)
+        ├── Identity Manager
+        │   ├── useQuery(api.identities.queries.getUserIdentities)
+        │   ├── useMutation(api.identities.mutations.createIdentity)
+        │   ├── useMutation(api.identities.mutations.updateIdentity)
+        │   └── useMutation(api.identities.mutations.deleteIdentity)
         ├── Links Manager
+        │   ├── useQuery(api.links.queries.getIdentityLinks)
+        │   ├── useMutation(api.links.mutations.createLink)
+        │   ├── useMutation(api.links.mutations.updateLink)
+        │   ├── useMutation(api.links.mutations.deleteLink)
+        │   └── useMutation(api.links.mutations.reorderLinks)
         ├── Theme Manager
+        │   ├── useQuery(api.themes.queries.getAllThemes)
+        │   └── useMutation(api.identities.mutations.updateIdentity)
         └── Analytics Dashboard
+            ├── useQuery(api.analytics.queries.getGlobalAnalytics)
+            └── useQuery(api.analytics.queries.getIdentityAnalytics)
 ```
 
 ## Data Flow Patterns
 
-### 1. Public Profile Page Flow
+### 1. Public Identity Page Flow
 
 ```
 User visits /[username]
   │
-  ├── Server Component fetches page by slug
+  ├── Component calls useQuery(api.identities.public.getPublicIdentityByUsername)
   │   │
-  │   └── Calls Service Layer
+  │   └── Convex Query
   │       │
-  │       ├── getPublicPageBySlug(slug)
-  │       │   │
-  │       │   └── DAL: findBySlug()
+  │       ├── Finds user by username
+  │       ├── Finds first public identity
   │       │
-  │       └── incrementViewCount(pageId)
+  │       └── Returns identity data
   │           │
-  │           └── DAL: incrementViewCount()
-  │
-  └── Renders PublicPageComponent with links
-      │
-      └── Fetches links via Service Layer
-          │
-          └── getPublicPageLinks(pageId)
-              │
-              └── DAL: findActiveByPageId()
+  │           └── Component renders identity
+  │               │
+  │               ├── Component calls useQuery(api.links.public.getPublicIdentityLinks)
+  │               │   │
+  │               │   └── Convex Query
+  │               │       │
+  │               │       ├── Finds active links for identity
+  │               │       │
+  │               │       └── Returns links array
+  │               │           │
+  │               │           └── Component renders links
+  │               │
+  │               └── Component calls useMutation(api.identities.public.recordIdentityView)
+  │                   │
+  │                   └── Convex Mutation
+  │                       │
+  │                       ├── Increments viewCount
+  │                       │
+  │                       └── All queries re-run automatically
+  │                           │
+  │                           └── View count updates in real-time
 ```
 
 ### 2. Admin Dashboard Flow
@@ -184,55 +413,58 @@ Authenticated user visits /admin
   │
   ├── Middleware verifies authentication
   │
-  ├── Server Component fetches user pages
+  ├── Component calls useQuery(api.identities.queries.getUserIdentities)
   │   │
-  │   └── Calls Service Layer
+  │   └── Convex Query
   │       │
-  │       └── getUserPages(userId)
+  │       ├── Verifies authentication
+  │       ├── Finds user by Clerk ID
+  │       ├── Queries identities for user
+  │       │
+  │       └── Returns identities array
   │           │
-  │           └── DAL: findByUserId()
+  │           └── Component renders identity list
   │
-  └── Renders AdminDashboard
-      │
-      ├── Page Manager Component
-      │   ├── createPageAction() - Server Action
-      │   ├── updatePageAction() - Server Action
-      │   └── deletePageAction() - Server Action
-      │
-      ├── Links Manager Component
-      │   ├── createLinkAction() - Server Action
-      │   ├── updateLinkAction() - Server Action
-      │   ├── deleteLinkAction() - Server Action
-      │   └── reorderLinksAction() - Server Action
-      │
-      └── Analytics Dashboard
-          └── Fetches analytics via PostHog
+  ├── Component calls useQuery(api.analytics.queries.getDashboardStats)
+  │   │
+  │   └── Convex Query
+  │       │
+  │       ├── Aggregates stats from identities and links
+  │       │
+  │       └── Returns dashboard stats
+  │           │
+  │           └── Component renders stats cards
+  │
+  └── Real-time updates: When identities/links change, components automatically re-render
 ```
 
-### 3. API Route Flow (External Access)
+### 3. Creating an Identity Flow
 
 ```
-External client calls /api/v1/pages
+User clicks "Create Identity" button
   │
-  ├── requireAuth() - Verifies Clerk JWT
-  ├── rateLimit() - Checks rate limits
+  ├── Form submission triggers handleSubmit
   │
-  └── Handler function
-      │
-      ├── validateBody() - Validates and sanitizes input
-      │
-      └── Calls Service Layer
-          │
-          ├── Verifies ownership
-          ├── Validates business rules
-          │
-          └── Calls DAL
-              │
-              └── Database Client
-                  │
-                  └── Returns data
-                      │
-                      └── successResponse() or errorResponse()
+  ├── Component calls useMutation(api.identities.mutations.createIdentity)
+  │   │
+  │   └── Convex Mutation
+  │       │
+  │       ├── Verifies authentication
+  │       ├── Validates input (name, slug)
+  │       ├── Checks slug availability
+  │       ├── Creates identity in database
+  │       │
+  │       └── Returns new identity ID
+  │           │
+  │           └── All active queries automatically re-run
+  │               │
+  │               ├── getUserIdentities query re-runs
+  │               │   │
+  │               │   └── Component re-renders with new identity
+  │               │
+  │               └── getDashboardStats query re-runs
+  │                   │
+  │                   └── Stats update automatically
 ```
 
 ## Authentication Flow
@@ -250,17 +482,17 @@ User Request
   │       │
   │       └── Clerk verifies JWT
   │
-  ├── API Routes
+  ├── ConvexClientProvider (src/app/layout.tsx)
   │   │
-  │   └── requireAuth() from @/lib/api/auth
+  │   └── Passes Clerk JWT to Convex
   │       │
-  │       └── Returns Clerk user ID
+  │       └── Convex verifies JWT automatically
   │
-  └── Server Actions
+  └── Convex Functions
       │
-      └── auth() from @clerk/nextjs/server
+      └── ctx.auth.getUserIdentity()
           │
-          └── Returns { userId } or null
+          └── Returns authenticated user or null
 ```
 
 ### Webhook Flow (User Sync)
@@ -268,17 +500,19 @@ User Request
 ```
 Clerk User Event (user.created, user.updated, user.deleted)
   │
-  ├── Webhook: /api/webhooks/clerk
+  ├── Webhook: convex/http.ts → /clerk-webhook
   │   │
   │   ├── Verifies Svix signature
   │   │
   │   └── Handles event
   │       │
-  │       ├── user.created → createUser()
-  │       ├── user.updated → updateUser()
-  │       └── user.deleted → deleteUser()
+  │       ├── user.created → calls users.internal.createUserFromClerk
+  │       ├── user.updated → calls users.mutations.updateUser
+  │       └── user.deleted → calls users.mutations.deleteUser
   │           │
-  │           └── Service Layer → DAL → Database
+  │           └── Updates Convex database
+  │               │
+  │               └── All queries automatically update
 ```
 
 ## Validation Flow
@@ -288,266 +522,161 @@ Clerk User Event (user.created, user.updated, user.deleted)
 ```
 User Input
   │
-  ├── Client-side validation (optional, for UX)
-  │
-  └── Server-side validation
+  └── Convex Mutation
       │
-      ├── Server Actions
+      ├── Zod schema validation
       │   │
-      │   └── Zod schema validation
-      │       │
-      │       ├── safeParse() - Returns success/error
-      │       │
-      │       └── If invalid: Return error to client
+      │   ├── safeParse() - Returns success/error
+      │   │
+      │   └── If invalid: Throw ConvexError
       │
-      └── API Routes
-          │
-          └── validateBody() from @/lib/api/validation
-              │
-              ├── Zod schema validation
-              ├── sanitizeText() - XSS prevention
-              │
-              └── If invalid: Return errorResponse()
-```
-
-### Business Logic Validation
-
-```
-Service Layer Function
-  │
-  ├── Ownership Verification
-  │   │
-  │   └── Checks if userId matches resource owner
-  │       │
-  │       └── Throws NotAuthorizedError if not
-  │
-  ├── Business Rules
-  │   │
-  │   ├── Slug uniqueness (for pages)
-  │   ├── Link ordering (for links)
-  │   └── Theme validation
-  │
-  └── Calls DAL if all validations pass
+      ├── Business logic validation
+      │   │
+      │   ├── Check slug availability
+      │   ├── Verify ownership
+      │   │
+      │   └── If invalid: Throw ConvexError
+      │
+      └── If valid: Proceed with mutation
 ```
 
 ## Error Handling
 
-### Server Actions
+### Convex Errors
 
 ```typescript
-// Action returns ActionResult<T>
-type ActionResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string }
-
-// Example usage
-const result = await createPageAction(formData)
-if (!result.success) {
-  // Display error: result.error
+// In Convex function
+if (!user) {
+  throw new ConvexError({
+    code: "NOT_FOUND",
+    message: "User not found",
+  })
 }
-```
 
-### API Routes
-
-```typescript
-// Standardized error responses
+// In component
 try {
-  const data = await serviceFunction()
-  return successResponse(data)
+  const data = useQuery(api.identities.queries.getIdentity, { identityId })
 } catch (error) {
-  if (error instanceof AuthError) {
-    return error.response // Already a NextResponse
+  // Handle error (use error boundary or try-catch)
+  if (error instanceof ConvexError) {
+    console.error(error.message)
   }
-  if (error instanceof NotAuthorizedError) {
-    return ApiErrors.forbidden(error.message)
-  }
-  return ApiErrors.internalError()
 }
 ```
 
-### Service Layer Errors
+### Component Error Handling
 
 ```typescript
-// Custom error classes
-export class PageNotFoundError extends Error { }
-export class SlugTakenError extends Error { }
-export class NotAuthorizedError extends Error { }
+"use client"
 
-// Thrown by service layer, caught by actions/API routes
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { toast } from "sonner"
+
+export function CreateIdentityForm() {
+  const createIdentity = useMutation(api.identities.mutations.createIdentity)
+
+  const handleSubmit = async (data: FormData) => {
+    try {
+      await createIdentity({
+        name: data.get("name") as string,
+        slug: data.get("slug") as string,
+      })
+      toast.success("Identity created!")
+    } catch (error) {
+      if (error instanceof ConvexError) {
+        toast.error(error.message)
+      } else {
+        toast.error("Failed to create identity")
+      }
+    }
+  }
+
+  return <form onSubmit={handleSubmit}>{/* form fields */}</form>
+}
 ```
 
-## State Management
+## Real-Time Updates
 
-### Server Components
+### Automatic Reactivity
 
-- Data fetched directly in server components
-- No client-side state needed for initial render
-- Revalidation via `revalidatePath()` after mutations
-
-### Client Components
-
-- `useState` for form inputs and UI state
-- `useEffect` for data fetching (when needed)
-- Optimistic updates for better UX
-
-### Analytics State
-
-- PostHog tracks events automatically via `PostHogProvider`
-- Custom events via `trackEvent()` from `@/lib/analytics`
-- User identification via `identifyUser()` on login
-
-## Data Entities
-
-### User
-- `id`: number
-- `clerk_user_id`: string (Clerk user ID)
-- `email`: string
-- `username`: string
-- `display_name`: string | null
-- `avatar_url`: string | null
-- `created_at`: string (ISO datetime)
-- `updated_at`: string (ISO datetime)
-- `deleted_at`: string | null
-
-### Page
-- `id`: number
-- `user_id`: string (Clerk user ID)
-- `name`: string
-- `slug`: string (unique)
-- `description`: string | null
-- `bio`: string | null
-- `avatar_url`: string | null
-- `theme_id`: number | null
-- `is_public`: boolean
-- `view_count`: number
-- `created_at`: string
-- `updated_at`: string
-- `deleted_at`: string | null
-
-### Link
-- `id`: number
-- `page_id`: number
-- `title`: string
-- `url`: string
-- `description`: string | null
-- `is_active`: boolean
-- `order_index`: number
-- `click_count`: number
-- `visible_from`: string | null
-- `visible_until`: string | null
-- `created_at`: string
-- `updated_at`: string
-- `deleted_at`: string | null
-
-### Theme
-- `id`: number
-- `user_id`: string | null (null for system themes)
-- `name`: string
-- `colors`: object (theme configuration)
-- `is_system`: boolean
-- `created_at`: string
-- `updated_at`: string
-
-## Key Data Interactions
-
-### 1. Creating a Page
-
-```typescript
-// Client → Server Action → Service → DAL → Database
-const result = await createPageAction(formData)
-// Validates: authentication, input schema, slug availability
-// Creates: page record
-// Returns: { success: true, data: { id, slug } }
+```
+User A creates an identity
+  │
+  ├── Mutation executes in Convex
+  │
+  ├── Database is updated
+  │
+  └── All active queries automatically re-run
+      │
+      ├── User A's browser: Components re-render with new identity
+      │
+      └── User B's browser (if viewing same data): Components re-render
+          │
+          └── Real-time sync across all clients
 ```
 
-### 2. Updating a Page
+### Query Dependencies
 
-```typescript
-// Client → Server Action → Service → DAL → Database
-const result = await updatePageAction(formData)
-// Validates: authentication, ownership, input schema, slug availability
-// Updates: page record
-// Revalidates: /admin/pages
 ```
-
-### 3. Creating a Link
-
-```typescript
-// Client → Server Action → Service → DAL → Database
-const result = await createLinkAction(formData)
-// Validates: authentication, page ownership, input schema
-// Creates: link record
-// Revalidates: page path
-```
-
-### 4. Reordering Links
-
-```typescript
-// Client → Server Action → Service → DAL → Database
-const result = await reorderLinksAction(formData)
-// Validates: authentication, page ownership, all links belong to page
-// Updates: order_index for multiple links (transaction)
-```
-
-### 5. Viewing Public Page
-
-```typescript
-// Server Component → Service → DAL → Database
-const page = await getPublicPageBySlug(slug)
-await incrementViewCount(page.id)
-// Fetches: page and active links
-// Increments: view_count atomically
+Component uses multiple queries
+  │
+  ├── useQuery(api.identities.queries.getIdentity, { identityId })
+  │
+  └── useQuery(api.links.queries.getIdentityLinks, { identityId })
+      │
+      └── Both queries automatically update when identity or links change
 ```
 
 ## Performance Considerations
 
-1. **Server Components**: Data fetched on server, no client-side loading
-2. **Revalidation**: `revalidatePath()` after mutations for fresh data
-3. **Optimistic Updates**: Client-side state updates before server confirmation
-4. **Rate Limiting**: Prevents abuse of API endpoints
-5. **Caching**: Next.js automatic caching for static routes
+1. **Automatic Caching**: Convex queries are cached and only re-run when dependencies change
+2. **Efficient Updates**: Only changed data is sent over WebSocket
+3. **Index Usage**: Queries use indexes for fast database lookups
+4. **Real-Time Efficiency**: WebSocket connections are efficient and persistent
+5. **Loading States**: Queries return `undefined` while loading (no separate loading state needed)
 
 ## Development and Debugging Guidelines
 
 1. **Tracing Data Flow**:
-   - Start from component → action/API → service → DAL → database
-   - Check authentication at each layer
-   - Verify validation at input boundaries
+   - Start from component → Convex hook → Convex function → Database
+   - Check authentication at Convex function level
+   - Verify validation in mutation handlers
 
 2. **Error Debugging**:
-   - Check service layer errors (ownership, business rules)
-   - Check validation errors (Zod schemas)
-   - Check authentication errors (Clerk)
+   - Check Convex function errors (ownership, validation)
+   - Check authentication errors (Clerk JWT)
+   - Use Convex dashboard to view function logs
 
 3. **Testing Data Operations**:
-   - Test with mock data (DummyDatabaseClient)
-   - Verify ownership checks
-   - Test edge cases (duplicate slugs, invalid IDs)
+   - Use Convex dashboard to test queries/mutations
+   - Check real-time updates in multiple browser tabs
+   - Verify indexes are being used efficiently
 
 ## Expansion Guidelines
 
 When adding new features:
 
 1. **New Data Entities**:
-   - Add Zod schema in `src/data/db/schema.ts`
-   - Create DAL functions in `src/data/[entity]/[entity]DAL.ts`
-   - Create service functions in `src/data/[entity]/[entity]Service.ts`
-   - Add to DatabaseClient interface
+   - Add table to `convex/schema.ts`
+   - Add indexes for efficient queries
+   - Create queries in `convex/[resource]/queries.ts`
+   - Create mutations in `convex/[resource]/mutations.ts`
+   - Create custom hooks in `src/hooks/convex/use[Resource].ts`
 
-2. **New API Endpoints**:
-   - Create route in `src/app/api/v1/[resource]/route.ts`
-   - Use `requireAuth()`, `rateLimit()`, `validateBody()`
-   - Call service layer functions
-   - Return `successResponse()` or `errorResponse()`
+2. **New UI Components**:
+   - Use client components with Convex hooks
+   - Use `useQuery` for reading data
+   - Use `useMutation` for writing data
+   - Handle loading states (query returns `undefined`)
+   - Handle error states (queries throw errors)
 
-3. **New Server Actions**:
-   - Create action in `src/actions/[resource].ts`
-   - Validate authentication and input
-   - Call service layer functions
-   - Use `revalidatePath()` after mutations
+3. **New Public Pages**:
+   - Create public queries in `convex/[resource]/public.ts`
+   - Use `useQuery` with public functions
+   - No authentication required
 
-4. **New UI Components**:
-   - Use server components when possible
-   - Call server actions for mutations
-   - Use client components for interactivity
-   - Handle loading and error states
+4. **New Analytics**:
+   - Add analytics tables to schema
+   - Create analytics queries in `convex/analytics/queries.ts`
+   - Use indexes for efficient aggregations

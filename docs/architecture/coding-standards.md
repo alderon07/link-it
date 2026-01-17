@@ -6,45 +6,40 @@ This document outlines the coding standards, conventions, and best practices use
 
 ### Type Definitions
 
-- Place shared types in the `src/types/` directory
-- Use interfaces for object shapes and types for unions or primitives
+- Types are automatically generated from Convex schema (`convex/schema.ts`)
+- Use `Id<"tableName">` for Convex document IDs
+- Import types from `convex/_generated/api` for function types
 - Prefer explicit typing over implicit (`any` is discouraged)
-- Derive types from Zod schemas using `z.infer<typeof Schema>`
 
 ```typescript
-// Good: Derive types from Zod schemas
-export const UserSchema = z.object({
-  id: z.number(),
-  email: z.string().email(),
-})
+// Good: Use Convex-generated types
+import { api } from "@/convex/_generated/api"
+import { Id } from "@/convex/_generated/dataModel"
 
-export type User = z.infer<typeof UserSchema>
+type IdentityId = Id<"identities">
+const identityId: IdentityId = args.identityId
 
-// Better: With readonly for immutable properties
-interface User {
-  readonly id: number
-  email: string
-}
+// Good: Type inference from queries
+const identity = useQuery(api.identities.queries.getIdentity, { identityId })
+// identity is automatically typed based on the query return type
 ```
 
 ### Type Safety
 
 - Leverage TypeScript's type system to prevent runtime errors
 - Use discriminated unions for state management
-- Implement proper error handling with typed errors
+- Convex automatically provides type safety for queries and mutations
 
 ```typescript
-// Example of a discriminated union for API states
-type ApiState<T> = 
-  | { status: 'idle' }
+// Example of a discriminated union for component states
+type ComponentState<T> = 
   | { status: 'loading' }
   | { status: 'success'; data: T }
-  | { status: 'error'; error: Error }
+  | { status: 'error'; error: string }
 
-// Server action result type
-type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string }
+// Convex mutation result (automatic)
+const result = await createIdentity({ name: "My Identity", slug: "my-identity" })
+// result is automatically typed based on mutation return type
 ```
 
 ## React Component Guidelines
@@ -52,23 +47,30 @@ type ActionResult<T = void> =
 ### Component Structure
 
 - Use functional components with hooks
-- Prefer server components when possible (Next.js 16)
+- Use client components (`"use client"`) for Convex-powered components
 - Split large components into smaller, focused ones
 - Co-locate related components in the same directory
 
 ```typescript
-// Example server component
-export default async function Page() {
-  const pages = await getUserPages(userId)
-  return <PageList pages={pages} />
-}
-
-// Example client component
+// Example client component with Convex
 "use client"
-export function PageList({ pages }: { pages: Page[] }) {
+
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+
+export function IdentityList() {
+  const identities = useQuery(api.identities.queries.getUserIdentities)
+  const createIdentity = useMutation(api.identities.mutations.createIdentity)
+
+  if (identities === undefined) {
+    return <div>Loading...</div>
+  }
+
   return (
     <div>
-      {pages.map(page => <PageCard key={page.id} page={page} />)}
+      {identities.map(identity => (
+        <IdentityCard key={identity._id} identity={identity} />
+      ))}
     </div>
   )
 }
@@ -82,19 +84,17 @@ export function PageList({ pages }: { pages: Page[] }) {
 - Use TypeScript for type safety
 
 ```typescript
-interface ButtonProps {
-  /** The variant style of the button */
-  variant?: 'default' | 'pixel' | 'pixel-secondary' | 'pixel-outline'
+interface IdentityCardProps {
+  /** The identity to display */
+  identity: Doc<"identities">
   /** Handler for click events */
   onClick?: () => void
-  children: React.ReactNode
 }
 
-export function Button({ 
-  variant = 'default',
-  onClick,
-  children 
-}: ButtonProps) {
+export function IdentityCard({ 
+  identity,
+  onClick 
+}: IdentityCardProps) {
   // Component implementation
 }
 ```
@@ -102,12 +102,13 @@ export function Button({
 ### State Management
 
 - Use appropriate hooks for state management:
-  - `useState` for simple component state
-  - `useReducer` for complex state logic
-  - Server components for data fetching (no client state needed)
+  - `useState` for simple component state (form inputs, UI toggles)
+  - `useQuery` for reactive data from Convex (automatic updates)
+  - `useMutation` for data modifications
+  - Custom hooks in `src/hooks/convex/` for complex data operations
 - Keep state as local as possible
 - Lift state up when needed by multiple components
-- Use server actions for mutations
+- Convex queries automatically handle loading and error states
 
 ## Next.js Patterns
 
@@ -118,44 +119,226 @@ export function Button({
 - Keep route-specific components in the same directory as the page
 - Implement error boundaries using `error.tsx` files
 - Use `not-found.tsx` for 404 pages
+- Use `loading.tsx` for loading states
 
 ### Data Fetching
 
-- Use server components when possible for data fetching
-- Use server actions for form submissions and mutations
-- Implement proper loading states with `loading.tsx`
-- Use `revalidatePath()` after mutations to refresh data
-- Consider using React Suspense for loading states
-
-### Server Actions
-
-- Mark with `"use server"` directive
-- Validate authentication using `auth()` from Clerk
-- Validate inputs with Zod schemas
-- Call service layer functions (not DAL directly)
-- Use `revalidatePath()` to refresh cached data
-- Return `ActionResult<T>` type for consistent error handling
+- Use client components with Convex hooks for data fetching
+- `useQuery` automatically handles loading states (returns `undefined` while loading)
+- `useQuery` automatically handles error states (throws errors that can be caught)
+- Use Suspense boundaries for better loading UX
+- No need for `revalidatePath()` - Convex queries are automatically reactive
 
 ```typescript
-"use server"
+"use client"
 
-export async function createPageAction(
-  formData: FormData
-): Promise<ActionResult<{ id: number; slug: string }>> {
-  const { userId } = await auth()
-  if (!userId) {
-    return { success: false, error: "Authentication required" }
+import { useQuery } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { Suspense } from "react"
+
+export function IdentitiesPage() {
+  return (
+    <Suspense fallback={<LoadingSkeleton />}>
+      <IdentityList />
+    </Suspense>
+  )
+}
+
+function IdentityList() {
+  const identities = useQuery(api.identities.queries.getUserIdentities)
+  // identities is undefined while loading, then the data, or throws on error
+  return <div>{/* render identities */}</div>
+}
+```
+
+## Convex Patterns
+
+### Queries
+
+- Queries are read-only functions that return data
+- Automatically reactive - components re-render when data changes
+- Can be public (no auth) or authenticated
+- Use `ctx.auth.getUserIdentity()` for authentication
+
+```typescript
+// convex/identities/queries.ts
+import { query } from "../_generated/server"
+import { v } from "convex/values"
+
+export const getUserIdentities = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new ConvexError("Not authenticated")
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .first()
+
+    if (!user) {
+      return []
+    }
+
+    return await ctx.db
+      .query("identities")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => q.eq(q.field("deletionTime"), undefined))
+      .collect()
+  },
+})
+```
+
+### Mutations
+
+- Mutations modify data
+- Always authenticated (except internal webhook functions)
+- Use `ctx.auth.getUserIdentity()` for authentication
+- Validate inputs with Zod schemas
+- Return updated data or success indicators
+
+```typescript
+// convex/identities/mutations.ts
+import { mutation } from "../_generated/server"
+import { v } from "convex/values"
+import { z } from "zod"
+
+const CreateIdentitySchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
+})
+
+export const createIdentity = mutation({
+  args: {
+    name: v.string(),
+    slug: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new ConvexError("Not authenticated")
+    }
+
+    // Validate with Zod
+    const validated = CreateIdentitySchema.safeParse(args)
+    if (!validated.success) {
+      throw new ConvexError("Validation failed")
+    }
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+      .first()
+
+    if (!user) {
+      throw new ConvexError("User not found")
+    }
+
+    // Check slug availability
+    const existing = await ctx.db
+      .query("identities")
+      .withIndex("by_slug", (q) => q.eq("slug", validated.data.slug))
+      .first()
+
+    if (existing) {
+      throw new ConvexError("Slug already taken")
+    }
+
+    const identityId = await ctx.db.insert("identities", {
+      userId: user._id,
+      name: validated.data.name,
+      slug: validated.data.slug,
+      isPublic: false,
+      viewCount: 0,
+      updatedAt: Date.now(),
+    })
+
+    return identityId
+  },
+})
+```
+
+### Public Functions
+
+- Public functions don't require authentication
+- Used for public-facing pages
+- Still validate inputs and handle errors
+
+```typescript
+// convex/identities/public.ts
+import { query } from "../_generated/server"
+import { v } from "convex/values"
+
+export const getPublicIdentityByUsername = query({
+  args: { username: v.string() },
+  handler: async (ctx, args) => {
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", args.username))
+      .first()
+
+    if (!user || user.deletionTime) {
+      return null
+    }
+
+    // Return first public identity (or implement logic to select specific one)
+    const identity = await ctx.db
+      .query("identities")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("isPublic"), true),
+          q.eq(q.field("deletionTime"), undefined)
+        )
+      )
+      .first()
+
+    return identity
+  },
+})
+```
+
+### Using Convex in Components
+
+- Import `useQuery` and `useMutation` from `convex/react`
+- Import `api` from `@/convex/_generated/api`
+- Handle loading states (query returns `undefined` while loading)
+- Handle error states (queries throw errors)
+- Use custom hooks from `src/hooks/convex/` for complex operations
+
+```typescript
+"use client"
+
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { useUserIdentities, useIdentityMutations } from "@/hooks/convex"
+
+export function IdentityManager() {
+  // Using custom hook (recommended)
+  const identities = useUserIdentities()
+  const { createIdentity, updateIdentity, deleteIdentity } = useIdentityMutations()
+
+  // Or using Convex hooks directly
+  const identities2 = useQuery(api.identities.queries.getUserIdentities)
+  const createIdentity2 = useMutation(api.identities.mutations.createIdentity)
+
+  // Loading state
+  if (identities === undefined) {
+    return <LoadingSkeleton />
   }
 
-  const validated = CreatePageSchema.safeParse(rawData)
-  if (!validated.success) {
-    return { success: false, error: "Validation failed" }
-  }
+  // Error handling (if query throws)
+  // Use error boundaries or try-catch
 
-  const page = await createPage(userId, validated.data)
-  revalidatePath("/admin/pages")
-  
-  return { success: true, data: { id: page.id, slug: page.slug } }
+  return (
+    <div>
+      {identities.map(identity => (
+        <IdentityCard key={identity._id} identity={identity} />
+      ))}
+    </div>
+  )
 }
 ```
 
@@ -227,95 +410,105 @@ export default clerkMiddleware(async (auth, req) => {
 })
 ```
 
-### API Routes
+### Convex Authentication
 
-- Use `requireAuth()` from `@/lib/api/auth` for authentication
-- Returns Clerk user ID or throws `AuthError`
-- Use `requireOwnership()` to verify resource ownership
+- Convex automatically receives Clerk JWT via `ConvexClientProvider`
+- Use `ctx.auth.getUserIdentity()` in Convex functions
+- Returns `null` if not authenticated
+- JWT is verified automatically by Convex
 
 ```typescript
-export async function GET() {
-  const userId = await requireAuth() // Throws if not authenticated
-  // userId is guaranteed to be a string here
+// In Convex query/mutation
+const identity = await ctx.auth.getUserIdentity()
+if (!identity) {
+  throw new ConvexError("Not authenticated")
 }
+
+// identity.subject is the Clerk user ID
+const user = await ctx.db
+  .query("users")
+  .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", identity.subject))
+  .first()
 ```
 
-### Server Components and Actions
+### Webhook Integration
 
-- Use `auth()` from `@clerk/nextjs/server` for server components
-- Returns `{ userId }` or `null`
-- Check authentication before data operations
+- Clerk webhook handler in `convex/http.ts`
+- Syncs user data when users are created/updated/deleted
+- Uses internal mutations (only callable from HTTP routes)
 
 ```typescript
-const { userId } = await auth()
-if (!userId) {
-  redirect('/login')
-}
+// convex/http.ts
+import { httpRouter } from "convex/server"
+import { httpAction } from "../_generated/server"
+import { Webhook } from "svix"
+
+const http = httpRouter()
+
+http.route({
+  path: "/clerk-webhook",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    // Verify webhook signature
+    // Handle user.created, user.updated, user.deleted events
+    // Call internal mutations to sync user data
+  }),
+})
 ```
 
-## API and Data Handling
+## Data Validation
 
-### API Routes
+### Convex Validators
 
-- Create routes in `src/app/api/v1/[resource]/route.ts`
-- Use `requireAuth()` for authentication
-- Apply rate limiting with `rateLimit()` from `@/lib/api/rate-limit`
-- Validate inputs with `validateBody()` from `@/lib/api/validation`
-- Return `successResponse()` or `errorResponse()` from `@/lib/api/response`
-- Use `withErrorHandling()` wrapper for automatic error handling
+- Validate all inputs in Convex functions
+- Use Zod schemas for validation
+- Validate at function boundaries (queries and mutations)
+- Use `sanitizeText()` for XSS prevention in text fields
 
 ```typescript
-export async function POST(request: NextRequest) {
-  const userId = await requireAuth()
-  await rateLimit(userId, "default")
-  
-  const body = await validateBody(CreatePageSchema, request)
-  const page = await createPage(userId, body)
-  
-  return successResponse(page)
-}
-```
+// convex/lib/validators.ts
+import { z } from "zod"
 
-### Data Validation
+export const CreateIdentitySchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
+  bio: z.string().max(500).optional(),
+})
 
-- Validate all user inputs with Zod schemas
-- Use `sanitizeText()` from `@/lib/api/validation` for XSS prevention
-- Validate at API boundaries (routes and actions)
-- Use service layer for business rule validation
-
-```typescript
-// In API route or server action
-const validated = CreatePageSchema.safeParse(rawData)
+// In mutation
+const validated = CreateIdentitySchema.safeParse(args)
 if (!validated.success) {
-  return { success: false, error: "Validation failed" }
+  throw new ConvexError("Validation failed")
 }
-
-// Or use validateBody helper
-const body = await validateBody(CreatePageSchema, request)
 ```
 
-### Three-Tier Data Architecture
+### Custom Hooks
 
-1. **Database Client** (`src/data/db/client.ts`):
-   - Interface for database abstraction
-   - Currently `DummyDatabaseClient`, designed to swap to real DB
-
-2. **Data Access Layer (DAL)** (`src/data/*/*DAL.ts`):
-   - Direct CRUD operations
-   - No business logic
-   - Call via `getDb()` helper
-
-3. **Service Layer** (`src/data/*/*Service.ts`):
-   - Business logic (ownership, validation)
-   - Call from API routes and server actions
-   - Never call DAL directly from components
+- Create custom hooks in `src/hooks/convex/` for complex operations
+- Wrap Convex queries/mutations with additional logic
+- Provide loading and error states
+- Export from `src/hooks/convex/index.ts`
 
 ```typescript
-// ✅ Good: Component → Action → Service → DAL
-const result = await createPageAction(formData)
+// src/hooks/convex/useIdentities.ts
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 
-// ❌ Bad: Component → DAL (bypasses service layer)
-const page = await pageDAL.createPage(data)
+export function useUserIdentities() {
+  return useQuery(api.identities.queries.getUserIdentities)
+}
+
+export function useIdentityMutations() {
+  const createIdentity = useMutation(api.identities.mutations.createIdentity)
+  const updateIdentity = useMutation(api.identities.mutations.updateIdentity)
+  const deleteIdentity = useMutation(api.identities.mutations.deleteIdentity)
+
+  return {
+    createIdentity,
+    updateIdentity,
+    deleteIdentity,
+  }
+}
 ```
 
 ## Analytics with PostHog
@@ -330,17 +523,17 @@ const page = await pageDAL.createPage(data)
 ```typescript
 import { trackEvent } from "@/lib/analytics"
 
-trackEvent("page_created", {
-  page_id: page.id,
-  page_slug: page.slug,
+trackEvent("identity_created", {
+  identity_id: identity._id,
+  identity_slug: identity.slug,
 })
 ```
 
 ### Server-Side Tracking
 
-- Use `posthog-server.ts` for API route tracking
-- Track server-side events for API operations
-- Use for analytics that shouldn't be client-side
+- Use `posthog-server.ts` for server-side tracking
+- Track server-side events for operations that shouldn't be client-side
+- Use for analytics that need server context
 
 ## Animations with Framer Motion
 
@@ -370,42 +563,84 @@ import { FadeIn, SlideUp, StaggerContainer } from "@/components/animations"
 - Use consistent animation timings and easings
 - Keep animations subtle and performant
 
-## Testing Guidelines
+## Error Handling
 
-### Component Testing
+### Convex Errors
 
-- Test components in isolation
-- Test different states: initial, loading, success, error
-- Test user interactions and state changes
-- Test pixel art variants render correctly
+- Use `ConvexError` for user-facing errors
+- Errors in queries automatically propagate to components
+- Use error boundaries to catch and display errors
 
-### Integration Testing
+```typescript
+// In Convex function
+if (!user) {
+  throw new ConvexError({
+    code: "NOT_FOUND",
+    message: "User not found",
+  })
+}
 
-- Test key user flows end-to-end
-- Ensure components work together correctly
-- Test edge cases and error scenarios
-- Test authentication and authorization flows
+// In component
+try {
+  const data = useQuery(api.identities.queries.getIdentity, { identityId })
+} catch (error) {
+  // Handle error
+}
+```
+
+### Component Error Handling
+
+- Use error boundaries for query errors
+- Handle mutation errors with try-catch
+- Display user-friendly error messages
+
+```typescript
+"use client"
+
+import { useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
+import { toast } from "sonner"
+
+export function CreateIdentityForm() {
+  const createIdentity = useMutation(api.identities.mutations.createIdentity)
+
+  const handleSubmit = async (data: FormData) => {
+    try {
+      await createIdentity({
+        name: data.get("name") as string,
+        slug: data.get("slug") as string,
+      })
+      toast.success("Identity created!")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create identity")
+    }
+  }
+
+  return <form onSubmit={handleSubmit}>{/* form fields */}</form>
+}
+```
 
 ## Performance Optimization
 
-### Code Splitting
+### Convex Queries
 
-- Use dynamic imports for large components
-- Lazy load routes and components when appropriate
-- Optimize bundle size by monitoring imports
+- Queries are automatically optimized by Convex
+- Use indexes for efficient queries (defined in schema)
+- Queries are cached and only re-run when dependencies change
+- Real-time updates are efficient (only changed data is sent)
 
-### Rendering Optimization
+### Component Optimization
 
-- Use server components for data fetching
-- Use `revalidatePath()` strategically after mutations
-- Implement virtualization for long lists
-- Optimize images using Next.js Image component
+- Use React.memo for expensive components
+- Use useMemo for expensive computations
+- Use useCallback for stable function references
+- Convex queries handle loading states efficiently
 
 ### Database Optimization
 
-- Use service layer for efficient queries
-- Implement pagination for large datasets
 - Use indexes for frequently queried fields
+- Filter queries efficiently using indexes
+- Use pagination for large datasets (if needed)
 
 ## Accessibility (a11y)
 
@@ -420,83 +655,36 @@ import { FadeIn, SlideUp, StaggerContainer } from "@/components/animations"
 
 ### File Naming
 
-- Use PascalCase for component files: `PageManager.tsx`
+- Use PascalCase for component files: `IdentityManager.tsx`
 - Use kebab-case for utility files: `date-utils.ts`
-- Use camelCase for function files: `pageService.ts`
+- Use camelCase for hook files: `useIdentities.ts`
 - Use `index.ts` files for clean exports
 
 ### Import Order
 
 1. External libraries
-2. Internal modules
-3. Types
-4. CSS/style imports
+2. Convex imports
+3. Internal modules
+4. Types
+5. CSS/style imports
 
 ```typescript
 // Example import order
-import { auth } from "@clerk/nextjs/server"
-import { revalidatePath } from "next/cache"
-import { z } from "zod"
-
+import { useQuery, useMutation } from "convex/react"
+import { api } from "@/convex/_generated/api"
 import { Button } from "@/components/ui/button"
-import { createPage } from "@/data/pages"
+import { useUserIdentities } from "@/hooks/convex"
 import { trackEvent } from "@/lib/analytics"
-
-import type { Page } from "@/data/db"
-
+import type { Doc } from "@/convex/_generated/dataModel"
 import "./styles.css"
-```
-
-## Error Handling
-
-### Server Actions
-
-- Return `ActionResult<T>` type
-- Handle errors gracefully
-- Provide user-friendly error messages
-
-```typescript
-try {
-  const page = await createPage(userId, data)
-  return { success: true, data: page }
-} catch (error) {
-  if (error instanceof SlugTakenError) {
-    return { success: false, error: "Slug is already taken" }
-  }
-  return { success: false, error: "Failed to create page" }
-}
-```
-
-### API Routes
-
-- Use `withErrorHandling()` wrapper
-- Return standardized error responses
-- Log errors appropriately
-
-```typescript
-export const POST = withErrorHandling(async (request) => {
-  // Handler code
-  return successResponse(data)
-})
-```
-
-### Service Layer
-
-- Throw custom error classes
-- Let errors bubble up to be caught by actions/API routes
-
-```typescript
-export class PageNotFoundError extends Error { }
-export class SlugTakenError extends Error { }
-export class NotAuthorizedError extends Error { }
 ```
 
 ## Documentation
 
 - Add JSDoc comments for complex functions and components
-- Document state management approaches
+- Document Convex functions with clear descriptions
 - Keep README and documentation up to date
-- Document API endpoints and their usage
+- Document custom hooks and their usage
 - Document authentication requirements
 
 ## Git Workflow
@@ -538,9 +726,10 @@ export class NotAuthorizedError extends Error { }
 Following these standards and best practices will ensure a consistent, maintainable, and high-quality codebase for the Link-It application. These guidelines should be referenced when writing new code, refactoring existing code, or debugging issues.
 
 Key principles:
-- Type safety with TypeScript and Zod
-- Server-first architecture with Next.js 16
-- Three-tier data architecture (DAL → Service → API/Component)
+- Type safety with TypeScript and Convex-generated types
+- Real-time reactivity with Convex queries
+- Client-first architecture with Next.js 16
+- Convex backend for all data operations
 - Pixel art aesthetic with neobrutalism design
 - Authentication and authorization with Clerk
 - Analytics integration with PostHog

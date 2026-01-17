@@ -4,7 +4,7 @@ This document provides an overview of the Link-It architecture, designed to help
 
 ## Project Overview
 
-Link-It is a "link in bio" application (similar to Linktree) where users can create personalized pages with collections of links. The application features a modern pixel art aesthetic with neobrutalism accents. Users can create multiple pages (identities), customize themes, manage links, and view analytics. The application is built with Next.js 16, React 19, TypeScript, and Tailwind CSS v4.
+Link-It is a "link in bio" application (similar to Linktree) where users can create personalized pages with collections of links. The application features a modern pixel art aesthetic with neobrutalism accents. Users can create multiple identities (pages), customize themes, manage links, and view analytics. The application is built with Next.js 16, React 19, TypeScript, Tailwind CSS v4, and Convex for real-time data management.
 
 ## Tech Stack
 
@@ -12,7 +12,8 @@ Link-It is a "link in bio" application (similar to Linktree) where users can cre
 - **UI Library**: React 19
 - **Styling**: Tailwind CSS v4 + shadcn/ui (new-york style)
 - **Language**: TypeScript
-- **Authentication**: Clerk
+- **Backend**: Convex (real-time database with reactive queries)
+- **Authentication**: Clerk (integrated with Convex via JWT)
 - **Validation**: Zod for schema validation
 - **Analytics**: PostHog
 - **Animations**: Framer Motion
@@ -24,111 +25,120 @@ Link-It is a "link in bio" application (similar to Linktree) where users can cre
 
 ```
 link-it/
-├── docs/                          # Documentation
-│   └── architecture/              # Architecture documentation
-├── plans/                         # Implementation plans
-├── public/                        # Static assets
-├── src/                           # Source code
-│   ├── actions/                   # Server actions
-│   │   ├── index.ts
-│   │   ├── links.ts              # Link CRUD actions
-│   │   └── pages.ts              # Page CRUD actions
-│   ├── app/                       # Next.js app router
-│   │   ├── (routes)/              # Route groups
+├── convex/                        # Convex backend functions
+│   ├── _generated/                # Auto-generated types (don't edit)
+│   ├── analytics/                 # Analytics queries
+│   │   └── queries.ts
+│   ├── identities/               # Identity (page) operations
+│   │   ├── queries.ts            # Authenticated queries
+│   │   ├── mutations.ts          # CRUD mutations
+│   │   └── public.ts             # Public queries (no auth)
+│   ├── links/                    # Link operations
+│   │   ├── queries.ts            # Authenticated queries
+│   │   ├── mutations.ts          # CRUD mutations
+│   │   └── public.ts             # Public queries (no auth)
+│   ├── themes/                   # Theme operations
+│   │   ├── queries.ts
+│   │   └── mutations.ts
+│   ├── users/                    # User operations
+│   │   ├── queries.ts
+│   │   ├── mutations.ts
+│   │   └── internal.ts           # Webhook-only functions
+│   ├── settings/                 # User settings
+│   │   ├── queries.ts
+│   │   └── mutations.ts
+│   ├── lib/                      # Convex utilities
+│   │   ├── utils.ts              # Helpers (slug generation, etc.)
+│   │   └── validators.ts         # Validation logic
+│   ├── schema.ts                 # Database schema definition
+│   ├── auth.config.ts            # Clerk JWT configuration
+│   ├── http.ts                   # HTTP routes (Clerk webhook)
+│   ├── seed.ts                   # Database seeding
+│   └── seedAll.ts                # Full database seeding
+├── docs/                         # Documentation
+│   └── architecture/             # Architecture documentation
+├── plans/                        # Implementation plans
+├── public/                       # Static assets
+├── src/                          # Source code
+│   ├── app/                      # Next.js app router
+│   │   ├── (routes)/             # Route groups
 │   │   │   └── admin/            # Protected admin routes
 │   │   │       ├── analytics/    # Analytics dashboard
+│   │   │       ├── identities/   # Identity management
+│   │   │       │   └── [identityId]/
+│   │   │       │       ├── links/    # Identity-specific links
+│   │   │       │       └── themes/  # Theme customization
 │   │   │       ├── links/        # Global links management
-│   │   │       ├── pages/        # Page management
-│   │   │       │   └── [pageId]/
-│   │   │       │       ├── links/    # Page-specific links
-│   │   │       │       └── themes/   # Theme customization
 │   │   │       ├── layout.tsx    # Admin layout with sidebar
 │   │   │       └── page.tsx     # Admin dashboard
 │   │   ├── [username]/           # Public user profile pages
 │   │   ├── api/                  # API routes
-│   │   │   ├── v1/               # API v1 endpoints
-│   │   │   │   ├── health/       # Health check
-│   │   │   │   ├── pages/        # Page CRUD API
-│   │   │   │   ├── links/        # Link CRUD API
-│   │   │   │   └── webhooks/     # Webhook handlers
-│   │   │   │       └── clerk/    # Clerk webhook
+│   │   │   └── v1/               # API v1 endpoints
+│   │   │       └── health/       # Health check
 │   │   ├── login/                # Clerk authentication
 │   │   ├── globals.css           # Global styles
-│   │   ├── layout.tsx            # Root layout
+│   │   ├── layout.tsx            # Root layout (with ConvexProvider)
 │   │   ├── page.tsx              # Landing page
-│   │   └── not-found.tsx         # 404 page
+│   │   └── not-found.tsx        # 404 page
 │   ├── components/               # React components
-│   │   ├── animations/          # Framer Motion components
-│   │   ├── pixel-art/           # Pixel art styled components
-│   │   ├── providers/           # Context providers
-│   │   ├── ui/                  # shadcn/ui components
+│   │   ├── animations/           # Framer Motion components
+│   │   ├── pixel-art/            # Pixel art styled components
+│   │   ├── providers/            # Context providers
+│   │   │   ├── ConvexClientProvider.tsx
+│   │   │   └── PostHogProvider.tsx
+│   │   ├── convex/               # Convex-powered components
+│   │   │   ├── IdentityManager.tsx
+│   │   │   ├── IdentityLinksManager.tsx
+│   │   │   ├── IdentityThemeManager.tsx
+│   │   │   ├── IdentityThemeGallery.tsx
+│   │   │   ├── IdentityThemeEditor.tsx
+│   │   │   ├── PublicIdentityComponent.tsx
+│   │   │   └── index.ts
+│   │   ├── ui/                   # shadcn/ui components
 │   │   ├── admin-dashboard.tsx
 │   │   ├── admin-sidebar.tsx
 │   │   ├── analytics-dashboard.tsx
 │   │   ├── global-links-manager.tsx
 │   │   ├── home.tsx
-│   │   ├── page-links-manager.tsx
-│   │   ├── page-manager.tsx
-│   │   ├── page-theme-editor.tsx
-│   │   ├── page-theme-gallery.tsx
-│   │   ├── page-theme-manager.tsx
-│   │   ├── public-page-component.tsx
+│   │   ├── page-header.tsx
+│   │   ├── public-identity-page.tsx
 │   │   └── ReactScan.tsx
-│   ├── data/                     # Data access layer
-│   │   ├── db/                   # Database abstraction
-│   │   │   ├── client.ts         # DatabaseClient interface + DummyDatabaseClient
-│   │   │   ├── schema.ts         # Zod schemas (User, Page, Link, Theme)
-│   │   │   └── index.ts
-│   │   ├── links/                # Link data layer
-│   │   │   ├── linkDAL.ts        # Direct database operations
-│   │   │   ├── linkService.ts    # Business logic (ownership, reordering)
-│   │   │   └── index.ts
-│   │   ├── pages/                # Page data layer
-│   │   │   ├── pageDAL.ts        # Direct database operations
-│   │   │   ├── pageService.ts    # Business logic (ownership, slug uniqueness)
-│   │   │   └── index.ts
-│   │   ├── users/                # User data layer
-│   │   │   ├── userDAL.ts
-│   │   │   ├── userService.ts
-│   │   │   └── index.ts
-│   │   ├── index.ts              # Combined exports
-│   │   └── dummy.json            # Mock data
 │   ├── hooks/                    # Custom React hooks
+│   │   ├── convex/               # Convex hooks
+│   │   │   ├── useUser.ts
+│   │   │   ├── useIdentities.ts
+│   │   │   ├── useLinks.ts
+│   │   │   ├── useThemes.ts
+│   │   │   ├── useAnalytics.ts
+│   │   │   ├── useSettings.ts
+│   │   │   └── index.ts
+│   │   └── use-mobile.ts
 │   ├── lib/                      # Utility libraries
-│   │   ├── analytics/           # PostHog integration
-│   │   │   ├── events.ts        # Type-safe event definitions
+│   │   ├── analytics/            # PostHog integration
+│   │   │   ├── events.ts         # Type-safe event definitions
 │   │   │   ├── posthog-client.ts
 │   │   │   ├── posthog-server.ts
 │   │   │   └── index.ts
-│   │   ├── animations/          # Framer Motion variants
+│   │   ├── animations/            # Framer Motion variants
 │   │   │   └── variants.ts
-│   │   ├── api/                 # API utilities
-│   │   │   ├── auth.ts          # requireAuth, requireOwnership
-│   │   │   ├── rate-limit.ts    # Rate limiting
-│   │   │   ├── response.ts      # successResponse, errorResponse
-│   │   │   ├── security.ts      # Security utilities
-│   │   │   ├── validation.ts    # Zod validation helpers
-│   │   │   └── index.ts
-│   │   ├── auth.ts              # Legacy auth utilities
-│   │   ├── errors.ts            # Error classes
-│   │   ├── gallery-themes.ts    # Theme gallery data
-│   │   ├── logger.ts            # Logging utilities
-│   │   ├── mock-pages.ts        # Mock page data
-│   │   ├── utils.ts             # General utilities
-│   │   └── validate/            # Validation utilities
-│   ├── middleware.ts            # Clerk authentication middleware
-│   ├── types/                   # TypeScript type definitions
-│   └── utils/                   # Utility functions
-├── .eslintrc.json               # ESLint configuration
-├── .gitignore                   # Git ignore configuration
-├── .prettierignore              # Prettier ignore configuration
-├── .prettierrc.js               # Prettier configuration
-├── CLAUDE.md                    # Claude-specific documentation
-├── next.config.mjs              # Next.js configuration
-├── package.json                 # Project dependencies
-├── postcss.config.mjs           # PostCSS configuration
-├── tailwind.config.ts           # Tailwind CSS configuration
-└── tsconfig.json                # TypeScript configuration
+│   │   ├── auth.ts               # Legacy auth utilities
+│   │   ├── errors.ts             # Error classes
+│   │   ├── gallery-themes.ts     # Theme gallery data
+│   │   ├── logger.ts             # Logging utilities
+│   │   ├── utils.ts              # General utilities
+│   │   └── validate/             # Validation utilities
+│   ├── middleware.ts             # Clerk authentication middleware
+│   └── utils/                    # Utility functions
+├── .eslintrc.json                # ESLint configuration
+├── .gitignore                    # Git ignore configuration
+├── .prettierignore               # Prettier ignore configuration
+├── .prettierrc.js                # Prettier configuration
+├── CLAUDE.md                     # Claude-specific documentation
+├── components.json               # shadcn/ui configuration
+├── next.config.mjs               # Next.js configuration
+├── package.json                  # Project dependencies
+├── postcss.config.mjs            # PostCSS configuration
+└── tsconfig.json                 # TypeScript configuration
 ```
 
 ## Key Components
@@ -137,108 +147,116 @@ link-it/
 
 1. **Page Components** (`src/app/`):
    - `page.tsx`: Public landing page
-   - `[username]/page.tsx`: Public user profile page (increments view count)
+   - `[username]/page.tsx`: Public user profile page (uses Convex public queries)
    - `login/[[...login]]/page.tsx`: Clerk authentication page
    - `(routes)/admin/page.tsx`: Admin dashboard
-   - `(routes)/admin/pages/page.tsx`: Page management
-   - `(routes)/admin/pages/[pageId]/links/page.tsx`: Link management for a page
-   - `(routes)/admin/pages/[pageId]/themes/page.tsx`: Theme customization
+   - `(routes)/admin/identities/page.tsx`: Identity management
+   - `(routes)/admin/identities/[identityId]/links/page.tsx`: Link management for an identity
+   - `(routes)/admin/identities/[identityId]/themes/page.tsx`: Theme customization
    - `(routes)/admin/analytics/page.tsx`: Analytics dashboard
+   - `(routes)/admin/links/page.tsx`: Global links management
 
 2. **UI Components** (`src/components/`):
    - `ui/`: shadcn/ui components with pixel variants (Button, Card, Badge, etc.)
    - `pixel-art/`: Custom pixel art components (PixelBorder, PixelIcon, PixelCorner, PixelDivider)
    - `animations/`: Framer Motion components (PageTransition, FadeIn, SlideUp, StaggerContainer, etc.)
+   - `convex/`: Convex-powered components using `useQuery` and `useMutation`
    - `admin-*.tsx`: Admin-specific components
-   - `public-page-component.tsx`: Public page display component
+   - `public-identity-page.tsx`: Public identity display component
 
 3. **API Routes** (`src/app/api/v1/`):
-   - `health/route.ts`: Health check endpoint
-   - `pages/route.ts`: GET (list), POST (create)
-   - `pages/[pageId]/route.ts`: GET, PUT, DELETE
-   - `pages/[pageId]/links/route.ts`: GET, POST for page links
-   - `links/route.ts`: POST /reorder
-   - `links/[linkId]/route.ts`: GET, PUT, DELETE
-   - `webhooks/clerk/route.ts`: Clerk webhook handler
+   - `health/route.ts`: Health check endpoint (minimal API routes, most data via Convex)
 
-### Data Management
+### Backend (Convex)
 
-The application uses a three-tier data architecture:
+The application uses Convex for all data operations with real-time reactivity:
 
-1. **Database Client** (`src/data/db/client.ts`):
-   - `DatabaseClient` interface for database abstraction
-   - `DummyDatabaseClient` implementation using mock data
-   - Designed to swap to Neon PostgreSQL via interface
+1. **Schema** (`convex/schema.ts`):
+   - Defines all database tables: `users`, `identities`, `links`, `themes`, `tags`, `linkTags`, `identityCollaborators`, `identityViews`, `linkClicks`, `userSettings`, `userProgress`, `auditLogs`
+   - Uses Convex's type-safe schema definitions
+   - Indexes for efficient queries
 
-2. **Data Access Layer (DAL)** (`src/data/*/*DAL.ts`):
-   - Direct CRUD operations through `getDb()`
-   - No business logic, just data operations
-   - Examples: `pageDAL.ts`, `linkDAL.ts`, `userDAL.ts`
+2. **Queries** (`convex/*/queries.ts`):
+   - Read-only operations that return data
+   - Can be public (no auth) or authenticated
+   - Automatically reactive - components re-render when data changes
+   - Examples: `getUserIdentities`, `getIdentity`, `getIdentityLinks`, `getPublicIdentityByUsername`
 
-3. **Service Layer** (`src/data/*/*Service.ts`):
-   - Business logic with ownership verification
-   - Slug uniqueness checks
-   - Link reordering logic
-   - Examples: `pageService.ts`, `linkService.ts`, `userService.ts`
+3. **Mutations** (`convex/*/mutations.ts`):
+   - Write operations that modify data
+   - Always authenticated (except internal webhook functions)
+   - Examples: `createIdentity`, `updateIdentity`, `deleteIdentity`, `createLink`, `reorderLinks`
 
-4. **Schemas** (`src/data/db/schema.ts`):
-   - Zod schemas for User, Page, Link, Theme
-   - Type inference from schemas
-   - Validation schemas for create/update operations
+4. **Public Functions** (`convex/*/public.ts`):
+   - Public queries that don't require authentication
+   - Used for public-facing pages
+   - Examples: `getPublicIdentityByUsername`, `getPublicIdentityLinks`, `recordIdentityView`, `trackLinkClick`
 
-### Server Actions (`src/actions/`)
+5. **Internal Functions** (`convex/*/internal.ts`):
+   - Functions only callable from HTTP routes (webhooks)
+   - Used for Clerk webhook integration
+   - Example: `createUserFromClerk` in `users/internal.ts`
 
-- `pages.ts`: `createPageAction`, `updatePageAction`, `deletePageAction`
-- `links.ts`: `createLinkAction`, `updateLinkAction`, `deleteLinkAction`, `reorderLinksAction`
+### React Hooks (`src/hooks/convex/`)
 
-### API Utilities (`src/lib/api/`)
+Custom hooks that wrap Convex queries and mutations:
 
-- `auth.ts`: `requireAuth()`, `requireOwnership()`, `requirePageOwnership()`
-- `response.ts`: `successResponse()`, `errorResponse()`, `ApiErrors`
-- `validation.ts`: Zod schemas, `sanitizeText()`, `validateBody()`
-- `rate-limit.ts`: In-memory rate limiter with configs
-- `security.ts`: `getClientIp()`, `verifyOrigin()`, `isSafeRedirectUrl()`
+- `useUser.ts`: User-related hooks (`useCurrentUser`, `useUserByUsername`, etc.)
+- `useIdentities.ts`: Identity hooks (`useUserIdentities`, `useIdentity`, `useSlugAvailable`, etc.)
+- `useLinks.ts`: Link hooks (`useIdentityLinks`, `useLink`, `useLinkMutations`, etc.)
+- `useThemes.ts`: Theme hooks (`useTheme`, `useSystemThemes`, `useAllThemes`, etc.)
+- `useAnalytics.ts`: Analytics hooks (`useDashboardStats`, `useIdentityAnalytics`, etc.)
+- `useSettings.ts`: Settings hooks (`useUserSettings`, `useUserProgress`, etc.)
 
-### Analytics (`src/lib/analytics/`)
+### Convex Components (`src/components/convex/`)
 
-- `events.ts`: Type-safe event definitions
-- `posthog-client.ts`: Client-side initialization, `trackEvent()`, `identifyUser()`
-- `posthog-server.ts`: Server-side client for API routes
-- `PostHogProvider` in layout for automatic page tracking
+Components that use Convex hooks for real-time data:
+
+- `IdentityManager.tsx`: Manage identities (create, edit, delete)
+- `IdentityLinksManager.tsx`: Manage links for an identity
+- `IdentityThemeManager.tsx`: Theme management interface
+- `IdentityThemeGallery.tsx`: Browse and apply themes
+- `IdentityThemeEditor.tsx`: Custom theme editor
+- `PublicIdentityComponent.tsx`: Display public identity page
 
 ## Application Flow
 
 1. **Public Flow**:
-   - Users visit `/[username]` to view a public profile page
-   - View count is incremented automatically
-   - Links are displayed with click tracking
+   - Users visit `/[username]` to view a public identity page
+   - Component uses `useQuery(api.identities.public.getPublicIdentityByUsername)`
+   - View count is incremented via `useMutation(api.identities.public.recordIdentityView)`
+   - Links are displayed with real-time click tracking
 
 2. **Authentication Flow**:
    - Users visit `/login` for Clerk authentication
    - Middleware (`src/middleware.ts`) protects all routes except `/` and `/login`
-   - Clerk webhook (`/api/webhooks/clerk`) syncs user data
+   - Clerk webhook (`convex/http.ts`) syncs user data to Convex
+   - ConvexProvider in layout passes Clerk JWT to Convex
 
 3. **Admin Flow**:
    - Authenticated users access `/admin/*` routes
    - Admin sidebar layout provides navigation
-   - Users can manage pages, links, themes, and view analytics
+   - Components use Convex hooks for real-time data
+   - Users can manage identities, links, themes, and view analytics
+   - All changes are reactive - updates appear instantly across tabs
 
 4. **Data Flow**:
-   - Components call server actions or API routes
-   - Server actions/API routes use service layer
-   - Service layer uses DAL for database operations
-   - All inputs validated with Zod schemas
+   - Components use `useQuery()` for reading data (reactive)
+   - Components use `useMutation()` for writing data
+   - Convex handles all database operations
+   - Real-time subscriptions automatically update UI when data changes
+   - All inputs validated with Zod schemas in Convex validators
 
 ## Common Patterns
 
 1. **Next.js App Router**: File-based routing with route groups `(routes)`
-2. **Three-Tier Data Architecture**: DAL → Service → Component/API
-3. **Authentication**: Clerk middleware + `requireAuth()` in API routes
-4. **Validation**: Zod schemas with XSS prevention via `sanitizeText()`
+2. **Convex Real-Time Architecture**: `useQuery` → Convex Query → Reactive Updates
+3. **Authentication**: Clerk middleware + Convex JWT verification
+4. **Validation**: Zod schemas in Convex validators
 5. **Styling**: Tailwind CSS v4 with pixel art utilities and shadcn/ui components
 6. **Animations**: Framer Motion with reusable variants
-7. **Error Handling**: Standardized API responses with error codes
-8. **Rate Limiting**: In-memory rate limiter with different configs
+7. **Error Handling**: ConvexError with standardized error codes
+8. **Real-Time Updates**: Automatic UI updates via Convex subscriptions
 
 ## Development Guidelines
 
@@ -246,31 +264,28 @@ The application uses a three-tier data architecture:
    - Place reusable UI components in `src/components/ui/`
    - Pixel art components in `src/components/pixel-art/`
    - Animation components in `src/components/animations/`
+   - Convex-powered components in `src/components/convex/`
    - Page-specific components co-located with pages
 
 2. **Adding New Pages**:
    - Create files in `src/app/` following Next.js app router conventions
    - Admin pages go in `src/app/(routes)/admin/`
-   - Use server components when possible
+   - Use client components with Convex hooks for data fetching
 
-3. **Data Modifications**:
-   - Define Zod schemas in `src/data/db/schema.ts`
-   - Add DAL functions in `src/data/*/*DAL.ts`
-   - Add service functions in `src/data/*/*Service.ts`
-   - Use service layer for business logic
+3. **Adding New Data Operations**:
+   - Add queries in `convex/[resource]/queries.ts`
+   - Add mutations in `convex/[resource]/mutations.ts`
+   - Add public functions in `convex/[resource]/public.ts` if needed
+   - Create custom hooks in `src/hooks/convex/use[Resource].ts`
+   - Use hooks in components for type-safe, reactive data
 
-4. **API Routes**:
-   - Create routes in `src/app/api/v1/`
-   - Use `requireAuth()` for authentication
-   - Use `successResponse()` and `errorResponse()` for responses
-   - Apply rate limiting and input validation
+4. **Adding New Tables**:
+   - Define table in `convex/schema.ts`
+   - Add indexes for efficient queries
+   - Create queries/mutations in appropriate folder
+   - Update types are auto-generated from schema
 
-5. **Server Actions**:
-   - Create actions in `src/actions/`
-   - Use service layer for data operations
-   - Handle errors and return appropriate responses
-
-6. **Style Modifications**:
+5. **Style Modifications**:
    - Use Tailwind CSS utility classes
    - Pixel art utilities in `globals.css` (`.pixel-shadow`, `.pixel-border`, etc.)
    - shadcn/ui components with pixel variants
@@ -278,30 +293,41 @@ The application uses a three-tier data architecture:
 ## Testing and Debugging
 
 The codebase is set up with:
-- `pnpm dev`: Starts the development server
+- `pnpm dev`: Starts Next.js development server
+- `pnpm dev:convex`: Starts both Next.js and Convex dev servers
+- `pnpm convex:dev`: Starts only Convex dev server
 - `pnpm build`: Production build
 - `pnpm lint`: Run ESLint
 - `pnpm scan`: Dev server with React Scan for performance analysis
 
-Currently uses mock data from `src/dummy.json` via `DummyDatabaseClient`. Designed to swap to real database via `DatabaseClient` interface.
+Uses Convex for all data operations with real-time reactivity. Data is stored in Convex cloud database.
 
 ## Security Features
 
-- **Headers**: Security headers configured in `next.config.mjs`
-- **Rate Limiting**: In-memory rate limiter with configs (default, strict, lenient, analytics)
-- **Input Validation**: Zod schemas with XSS prevention via `sanitizeText()`
-- **Webhook Verification**: Svix signature verification for Clerk webhooks
-- **Authentication**: Clerk middleware protecting routes
-- **Ownership Verification**: Service layer checks resource ownership
+- **Authentication**: Clerk middleware protecting routes + Convex JWT verification
+- **Authorization**: Convex queries/mutations verify user ownership
+- **Input Validation**: Zod schemas in Convex validators
+- **Webhook Verification**: Svix signature verification for Clerk webhooks in `convex/http.ts`
+- **Real-Time Security**: Convex automatically handles auth token validation
+
+## Key Terminology
+
+- **Identity**: A user's "link in bio" page (previously called "page")
+- **Link**: A single link item on an identity
+- **Theme**: Color scheme and styling for an identity
+- **Query**: Read-only Convex function that returns data (reactive)
+- **Mutation**: Write Convex function that modifies data
+- **Public Function**: Convex function that doesn't require authentication
 
 ## Conclusion
 
-Link-It uses a modern, well-structured architecture with:
-- Clear separation of concerns (DAL, Service, API/Components)
-- Type-safe validation with Zod
+Link-It uses a modern, real-time architecture with:
+- Convex for reactive data management
+- Type-safe queries and mutations
+- Automatic real-time UI updates
 - Authentication and authorization with Clerk
 - Pixel art aesthetic with neobrutalism design
 - Analytics integration with PostHog
 - Smooth animations with Framer Motion
 
-This architecture allows for easy maintenance, extension, and debugging while ensuring data integrity, security, and a great user experience.
+This architecture provides instant updates across all clients, type safety throughout the stack, and a great developer experience with minimal boilerplate.

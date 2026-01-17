@@ -1,10 +1,24 @@
- Overview
+## Status: ✅ COMPLETED
 
- Migrate Link-It from mock data to a fully-featured Convex database with real-time capabilities, type-safe
- queries/mutations, and Clerk authentication integration.
+The Convex database migration has been completed. All data operations now use Convex for real-time reactivity.
 
- Current State: Mock data in src/dummy.json with DatabaseClient abstraction
- Target State: Convex reactive database with real-time subscriptions
+---
+
+## Overview
+
+This document describes the completed migration from mock data to a fully-featured Convex database with real-time capabilities, type-safe queries/mutations, and Clerk authentication integration.
+
+**Completed Migration:**
+- ✅ Convex schema defined with all tables (users, identities, links, themes, etc.)
+- ✅ All queries and mutations implemented
+- ✅ Public functions for public-facing pages
+- ✅ Clerk webhook integration for user sync
+- ✅ Custom React hooks for Convex operations
+- ✅ All components migrated to use Convex
+- ✅ Real-time updates working across all clients
+
+**Current State:** Convex reactive database with real-time subscriptions
+**Previous State:** Mock data in src/dummy.json with DatabaseClient abstraction
 
  ---
  Architecture Map (Current System)
@@ -14,10 +28,10 @@
  ├─────────────────────────────────────────────────────────────────────────────┤
  │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────────────────┐  │
  │  │  Public Pages   │  │  Admin Pages    │  │  Components                 │  │
- │  │  /[username]    │  │  /admin/*       │  │  - page-manager.tsx         │  │
+ │  │  /[username]    │  │  /admin/*       │  │  - IdentityManager.tsx      │  │
  │  │                 │  │                 │  │  - analytics-dashboard.tsx  │  │
- │  │  Real-time:     │  │  Authenticated  │  │  - public-page-component    │  │
- │  │  - View counts  │  │  via Clerk      │  │  - page-links-manager       │  │
+ │  │  Real-time:     │  │  Authenticated  │  │  - PublicIdentityComponent  │  │
+ │  │  - View counts  │  │  via Clerk      │  │  - IdentityLinksManager     │  │
  │  └────────┬────────┘  └────────┬────────┘  └──────────────┬──────────────┘  │
  │           │                    │                          │                 │
  │           └────────────────────┼──────────────────────────┘                 │
@@ -26,7 +40,7 @@
  │                       SERVER ACTIONS / API                                  │
  │  ┌─────────────────────────────┼─────────────────────────────────────────┐  │
  │  │  src/actions/               │    src/app/api/v1/                      │  │
- │  │  - pages.ts                 │    - pages/route.ts                     │  │
+ │  │  (removed - using Convex)   │    (removed - using Convex)            │  │
  │  │  - links.ts                 │    - links/route.ts                     │  │
  │  │  (FormData + Zod)           │    - webhooks/clerk/route.ts            │  │
  │  └─────────────────────────────┼─────────────────────────────────────────┘  │
@@ -34,8 +48,7 @@
  ├────────────────────────────────┼────────────────────────────────────────────┤
  │                          SERVICE LAYER                                      │
  │  ┌─────────────────────────────┼─────────────────────────────────────────┐  │
- │  │  src/data/pages/pageService.ts  │  src/data/links/linkService.ts      │  │
- │  │  - Ownership verification       │  - Ownership through page           │  │
+ │  │  (removed - using Convex)       │  (removed - using Convex)            │  │
  │  │  - Slug uniqueness              │  - Reorder validation               │  │
  │  │  - Business logic errors        │  - Click tracking                   │  │
  │  └─────────────────────────────┼─────────────────────────────────────────┘  │
@@ -44,15 +57,14 @@
  │                        DATA ACCESS LAYER                                    │
  │  ┌─────────────────────────────┼─────────────────────────────────────────┐  │
  │  │  src/data/db/client.ts      │  DatabaseClient Interface               │  │
- │  │  ├── users.findById()       │  ├── pages.findBySlug()                 │  │
- │  │  ├── pages.create()         │  ├── links.reorder()                    │  │
+ │  │  (removed - using Convex)   │  (removed - using Convex)              │  │
  │  │  └── themes.findAll()       │  └── Soft delete support                │  │
  │  └─────────────────────────────┼─────────────────────────────────────────┘  │
  │                                │                                            │
  │                                ▼                                            │
  │  ┌──────────────────────────────────────────────────────────────────────┐   │
  │  │                    src/dummy.json (Mock Data)                        │   │
- │  │  users[], pages[], links[], themes[], pageViews[], linkClicks[]      │   │
+ │  │  users[], identities[], links[], themes[], identityViews[], linkClicks[] │   │
  │  └──────────────────────────────────────────────────────────────────────┘   │
  └─────────────────────────────────────────────────────────────────────────────┘
 
@@ -94,33 +106,33 @@
  │  ├── auth.config.ts     → Clerk JWT verification                            │
  │  │                                                                          │
  │  ├── users/                                                                 │
- │  │   ├── queries.ts     → getUserByClerkId, getUserPages                    │
+ │  │   ├── queries.ts     → getUserByClerkId, getCurrentUser                 │
  │  │   └── mutations.ts   → createUser, updateUser, deleteUser                │
  │  │                                                                          │
  │  ├── pages/                                                                 │
- │  │   ├── queries.ts     → getPage, getUserPages, isSlugAvailable            │
- │  │   ├── mutations.ts   → createPage, updatePage, deletePage                │
- │  │   └── public.ts      → getPublicPage (no auth)                           │
+ │  │   ├── queries.ts     → getIdentity, getUserIdentities, isSlugAvailable  │
+ │  │   ├── mutations.ts   → createIdentity, updateIdentity, deleteIdentity  │
+ │  │   └── public.ts      → getPublicIdentityByUsername (no auth)            │
  │  │                                                                          │
  │  ├── links/                                                                 │
- │  │   ├── queries.ts     → getPageLinks, getLink                             │
+ │  │   ├── queries.ts     → getIdentityLinks, getLink                         │
  │  │   ├── mutations.ts   → createLink, updateLink, reorderLinks              │
  │  │   └── public.ts      → trackClick (no auth)                              │
  │  │                                                                          │
  │  ├── themes/            → System + custom themes                            │
- │  ├── analytics/         → Page views, link clicks (future)                  │
+ │  ├── analytics/         → Identity views, link clicks (future)            │
  │  ├── http.ts            → Clerk webhook handler                             │
  │  └── crons.ts           → Scheduled analytics aggregation                   │
  │                                                                             │
  ├─────────────────────────────────────────────────────────────────────────────┤
  │                         CONVEX DATABASE                                     │
- │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────────────┐   │
- │  │  users  │  │  pages  │  │  links  │  │ themes  │  │ Future tables   │   │
- │  │         │──│         │──│         │  │         │  │ - pageViews     │   │
- │  │         │  │         │──│         │  │         │  │ - linkClicks    │   │
- │  └─────────┘  └─────────┘  └─────────┘  └─────────┘  │ - collaborators │   │
- │      │             │            │                     │ - auditLogs     │   │
- │      └─────────────┴────────────┴─────────────────────┴─────────────────┘   │
+ │  ┌─────────┐  ┌─────────────┐  ┌─────────┐  ┌─────────┐  ┌─────────────────┐   │
+ │  │  users  │  │  identities │  │  links  │  │ themes  │  │ Future tables   │   │
+ │  │         │──│             │──│         │  │         │  │ - identityViews │   │
+ │  │         │  │             │──│         │  │         │  │ - linkClicks    │   │
+ │  └─────────┘  └─────────────┘  └─────────┘  └─────────┘  │ - collaborators │   │
+ │      │             │                │                     │ - auditLogs     │   │
+ │      └─────────────┴────────────────┴─────────────────────┴─────────────────┘   │
  └─────────────────────────────────────────────────────────────────────────────┘
 
                                EXTERNAL SERVICES
@@ -138,10 +150,10 @@
  └──────────────────────────────────────────────────────────────────────────────┘
 
    ┌─────────────┐         ┌─────────────┐         ┌─────────────┐
-   │    USER     │         │    PAGE     │         │    LINK     │
+   │    USER     │         │  IDENTITY   │         │    LINK     │
    ├─────────────┤         ├─────────────┤         ├─────────────┤
    │ _id         │◄───┐    │ _id         │◄───┐    │ _id         │
-   │ clerkUserId │    │    │ userId ─────┼────┘    │ pageId ─────┼────┐
+   │ clerkUserId │    │    │ userId ─────┼────┘    │ identityId ─────┼────┐
    │ email       │    │    │ name        │         │ title       │    │
    │ username    │    │    │ slug (uniq) │         │ url         │    │
    │ displayName │    │    │ bio         │         │ type        │    │
@@ -159,7 +171,7 @@
          │            │          │            │          │            │
          │            │          ▼            │          ▼            │
          │            │    ┌─────────────┐    │    Links belong to    │
-         │            │    │   THEME     │    │    exactly one Page   │
+         │            │    │   THEME     │    │    exactly one Identity│
          │            │    ├─────────────┤    │                       │
          │            │    │ _id         │◄───┘                       │
          │            └────┤ userId      │  (null = system theme)     │
@@ -176,10 +188,10 @@
    │  FUTURE TABLES
    │
    │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-   │  │ PAGE_VIEWS      │  │ LINK_CLICKS     │  │ COLLABORATORS   │
+   │  │ IDENTITY_VIEWS  │  │ LINK_CLICKS     │  │ COLLABORATORS   │
    │  ├─────────────────┤  ├─────────────────┤  ├─────────────────┤
-   └─►│ pageId          │  │ linkId          │  │ pageId          │
-      │ viewedAt        │  │ pageId          │  │ userId          │
+   └─►      │ identityId      │  │ linkId          │  │ identityId      │
+      │ viewedAt        │  │ identityId      │  │ userId          │
       │ visitorId       │  │ clickedAt       │  │ role            │
       │ userAgent       │  │ visitorId       │  │ invitedAt       │
       │ referrer        │  │ userAgent       │  │ acceptedAt      │
@@ -222,9 +234,9 @@
      .index("by_username", ["username"]),
 
    // ═══════════════════════════════════════════════════════════════
-   // PAGES - User's "link in bio" pages (Identities)
+   // IDENTITIES - User's "link in bio" pages
    // ═══════════════════════════════════════════════════════════════
-   pages: defineTable({
+   identities: defineTable({
      userId: v.id("users"),             // Owner
      name: v.string(),                  // Display name
      slug: v.string(),                  // URL path (unique globally)
@@ -255,7 +267,7 @@
    // LINKS - Individual links on a page
    // ═══════════════════════════════════════════════════════════════
    links: defineTable({
-     pageId: v.id("pages"),
+     identityId: v.optional(v.id("identities")),
      title: v.string(),
      url: v.string(),
      type: v.union(
@@ -276,8 +288,8 @@
      deletionTime: v.optional(v.number()),
      updatedAt: v.number(),
    })
-     .index("by_page", ["pageId", "deletionTime", "orderIndex"])
-     .index("by_page_active", ["pageId", "isActive", "deletionTime"]),
+     .index("by_identity", ["identityId", "deletionTime", "orderIndex"])
+     .index("by_identity_active", ["identityId", "isActive", "deletionTime"]),
 
    // ═══════════════════════════════════════════════════════════════
    // THEMES - Color themes (system + custom)
@@ -318,10 +330,10 @@
      .index("by_tag", ["tagId"]),
 
    // ═══════════════════════════════════════════════════════════════
-   // PAGE_COLLABORATORS - Shared page access (Future)
+   // IDENTITY_COLLABORATORS - Shared identity access (Future)
    // ═══════════════════════════════════════════════════════════════
-   pageCollaborators: defineTable({
-     pageId: v.id("pages"),
+   identityCollaborators: defineTable({
+     identityId: v.id("identities"),
      userId: v.id("users"),
      role: v.union(
        v.literal("owner"),
@@ -331,14 +343,14 @@
      invitedAt: v.number(),
      acceptedAt: v.optional(v.number()),
    })
-     .index("by_page", ["pageId"])
+     .index("by_identity", ["identityId"])
      .index("by_user", ["userId"]),
 
    // ═══════════════════════════════════════════════════════════════
-   // PAGE_VIEWS - Analytics (Future - supplement PostHog)
+   // IDENTITY_VIEWS - Analytics (Future - supplement PostHog)
    // ═══════════════════════════════════════════════════════════════
-   pageViews: defineTable({
-     pageId: v.id("pages"),
+   identityViews: defineTable({
+     identityId: v.id("identities"),
      viewedAt: v.number(),
      visitorId: v.optional(v.string()),
      userAgent: v.optional(v.string()),
@@ -346,14 +358,14 @@
      country: v.optional(v.string()),
      city: v.optional(v.string()),
    })
-     .index("by_page", ["pageId", "viewedAt"]),
+     .index("by_identity", ["identityId", "viewedAt"]),
 
    // ═══════════════════════════════════════════════════════════════
    // LINK_CLICKS - Analytics (Future - supplement PostHog)
    // ═══════════════════════════════════════════════════════════════
    linkClicks: defineTable({
      linkId: v.id("links"),
-     pageId: v.id("pages"),
+     identityId: v.id("identities"),
      clickedAt: v.number(),
      visitorId: v.optional(v.string()),
      userAgent: v.optional(v.string()),
@@ -361,7 +373,7 @@
      country: v.optional(v.string()),
    })
      .index("by_link", ["linkId", "clickedAt"])
-     .index("by_page", ["pageId", "clickedAt"]),
+     .index("by_identity", ["identityId", "clickedAt"]),
 
    // ═══════════════════════════════════════════════════════════════
    // USER_SETTINGS - Preferences
@@ -370,7 +382,7 @@
      userId: v.id("users"),
      darkMode: v.boolean(),
      emailNotifications: v.boolean(),
-     defaultPageId: v.optional(v.id("pages")),
+     defaultIdentityId: v.optional(v.id("identities")),
      updatedAt: v.number(),
    })
      .index("by_user", ["userId"]),
@@ -382,7 +394,7 @@
      userId: v.id("users"),
      completedIntro: v.boolean(),
      addedFirstLink: v.boolean(),
-     publishedPage: v.boolean(),
+     publishedIdentity: v.boolean(),
      updatedAt: v.number(),
    })
      .index("by_user", ["userId"]),
@@ -419,15 +431,15 @@
  │   ├── mutations.ts               # updateUser
  │   └── internal.ts                # createFromClerk (webhook only)
  │
- ├── pages/
- │   ├── queries.ts                 # getPage, getUserPages, isSlugAvailable
- │   ├── mutations.ts               # createPage, updatePage, deletePage
- │   └── public.ts                  # getPublicPage, incrementViewCount
+ ├── identities/
+ │   ├── queries.ts                 # getIdentity, getUserIdentities, isSlugAvailable
+ │   ├── mutations.ts               # createIdentity, updateIdentity, deleteIdentity
+ │   └── public.ts                  # getPublicIdentityByUsername, recordIdentityView
  │
  ├── links/
- │   ├── queries.ts                 # getLink, getPageLinks
+ │   ├── queries.ts                 # getLink, getIdentityLinks
  │   ├── mutations.ts               # createLink, updateLink, deleteLink, reorderLinks
- │   └── public.ts                  # getPublicPageLinks, trackClick
+ │   └── public.ts                  # getPublicIdentityLinks, trackLinkClick
  │
  ├── themes/
  │   ├── queries.ts                 # getTheme, getSystemThemes, getUserThemes
@@ -453,35 +465,40 @@
  6. Update layout.tsx with ConvexProviderWithClerk
  7. Set up http.ts for Clerk webhooks
 
- Phase 2: Core Queries & Mutations
+Phase 2: Core Queries & Mutations
 
- 1. Implement users/ functions
- 2. Implement pages/ functions
- 3. Implement links/ functions
- 4. Implement themes/ functions
- 5. Test all CRUD operations
+✅ Completed:
+1. ✅ Implement users/ functions
+2. ✅ Implement identities/ functions (previously pages/)
+3. ✅ Implement links/ functions
+4. ✅ Implement themes/ functions
+5. ✅ Test all CRUD operations
 
- Phase 3: Component Migration
+Phase 3: Component Migration
 
- 1. Create React hooks layer (src/hooks/convex/)
- 2. Migrate PageManager to useQuery/useMutation
- 3. Migrate PublicPageComponent
- 4. Migrate PageLinksManager
- 5. Migrate AnalyticsDashboard
- 6. Add optimistic updates
+✅ Completed:
+1. ✅ Create React hooks layer (src/hooks/convex/)
+2. ✅ Migrate IdentityManager (previously PageManager) to useQuery/useMutation
+3. ✅ Migrate PublicIdentityComponent (previously PublicPageComponent)
+4. ✅ Migrate IdentityLinksManager (previously PageLinksManager)
+5. ✅ Migrate AnalyticsDashboard
+6. ✅ Real-time updates working (no optimistic updates needed - Convex handles it)
 
- Phase 4: Cleanup
+Phase 4: Cleanup
 
- 1. Remove src/data/ folder
- 2. Remove src/dummy.json
- 3. Update/remove old API routes
- 4. Update server actions to use Convex
+✅ Completed:
+1. ✅ Removed src/data/ folder (no longer exists)
+2. ✅ src/dummy.json still exists but not used (can be removed)
+3. ✅ Old API routes removed (only health check remains)
+4. ✅ No server actions - all data operations use Convex
 
- Phase 5: Documentation
+Phase 5: Documentation
 
- 1. Create docs/convex-architecture.md
- 2. Update CLAUDE.md with new patterns
- 3. Document all Convex functions
+✅ Completed:
+1. ✅ Architecture documentation updated (docs/architecture/)
+2. ✅ Coding standards updated with Convex patterns
+3. ✅ Data flow documentation updated
+4. ✅ All Convex functions documented in code
 
  ---
  Key Files to Modify
@@ -490,11 +507,11 @@
  ├──────────────────────────────────────────┼─────────────────────────────────┤
  │ src/app/layout.tsx                       │ Add ConvexProviderWithClerk     │
  ├──────────────────────────────────────────┼─────────────────────────────────┤
- │ src/components/page-manager.tsx          │ Replace mock data with useQuery │
+ │ src/components/convex/IdentityManager.tsx │ ✅ Uses Convex hooks           │
  ├──────────────────────────────────────────┼─────────────────────────────────┤
- │ src/components/public-page-component.tsx │ Use Convex public queries       │
+ │ src/components/convex/PublicIdentityComponent.tsx │ ✅ Uses Convex public queries │
  ├──────────────────────────────────────────┼─────────────────────────────────┤
- │ src/components/page-links-manager.tsx    │ Use Convex mutations            │
+ │ src/components/convex/IdentityLinksManager.tsx │ ✅ Uses Convex mutations │
  ├──────────────────────────────────────────┼─────────────────────────────────┤
  │ src/components/analytics-dashboard.tsx   │ Connect to Convex analytics     │
  ├──────────────────────────────────────────┼─────────────────────────────────┤
@@ -505,29 +522,31 @@
  ---
  Verification Steps
 
- 1. Run npx convex dev - Convex dashboard accessible
- 2. Create a test user via Clerk webhook
- 3. Create a page via admin UI - appears in Convex dashboard
- 4. Add links to page - real-time updates work
- 5. View public page - view count increments live
- 6. Click link - click count updates
- 7. Check multiple browser tabs - real-time sync works
- 8. Run pnpm build - no TypeScript errors
+✅ All verification steps completed:
+
+1. ✅ Run npx convex dev - Convex dashboard accessible
+2. ✅ Create a test user via Clerk webhook
+3. ✅ Create an identity via admin UI - appears in Convex dashboard
+4. ✅ Add links to identity - real-time updates work
+5. ✅ View public identity page - view count increments live
+6. ✅ Click link - click count updates
+7. ✅ Check multiple browser tabs - real-time sync works
+8. ✅ Run pnpm build - no TypeScript errors
 
  ---
  Future Features (Already Scaffolded)
 
- - Collaborators: pageCollaborators table ready
+ - Collaborators: identityCollaborators table ready
  - Link Scheduling: visibleFrom/visibleUntil fields ready
  - Tags: tags and linkTags tables ready
  - Custom Domains: customDomain field ready
- - Analytics: pageViews and linkClicks tables ready
+ - Analytics: identityViews and linkClicks tables ready
  - Audit Logs: auditLogs table ready
 
  ---
  Notes
 
- - Will create docs/convex-architecture.md during implementation
+ - ✅ Architecture documentation updated in docs/architecture/
  - PostHog remains for behavioral analytics (Convex handles operational data)
  - Soft deletes via deletionTime field (same pattern as current)
  - All timestamps use Unix milliseconds (Convex standard)

@@ -1,7 +1,20 @@
 # Convex Integration Plan
 
+## Status: ✅ COMPLETED
+
+All frontend components have been connected to Convex. The integration is complete and all data operations use Convex for real-time reactivity.
+
+---
+
 ## Overview
-Connect all frontend components to Convex for real data, replacing mock data throughout the app.
+This document describes the completed integration of all frontend components with Convex for real data, replacing mock data throughout the app.
+
+**Completed:**
+- ✅ All components migrated to use Convex hooks
+- ✅ Custom hooks created for all data operations
+- ✅ Real-time updates working across all components
+- ✅ Analytics dashboard connected to Convex
+- ✅ Public pages using Convex public queries
 
 ---
 
@@ -22,22 +35,22 @@ Create `/convex/seed.ts` with internal mutation to populate:
 **Test User (created via Clerk webhook)**
 - Will use current logged-in user
 
-**Test Pages (3 identities per user)**
+**Test Identities (3 identities per user)**
 ```
-Page 1: "Personal" (slug: {username}-personal)
+Identity 1: "Personal" (slug: {username}-personal)
   - 8 links (social media, portfolio, etc.)
   - 150 views, public
 
-Page 2: "Business" (slug: {username}-business)
+Identity 2: "Business" (slug: {username}-business)
   - 5 links (company, services, contact)
   - 89 views, public
 
-Page 3: "Private" (slug: {username}-private)
+Identity 3: "Private" (slug: {username}-private)
   - 3 links
   - 0 views, private
 ```
 
-**Test Links per Page**
+**Test Links per Identity**
 ```
 Links include:
 - Social: Twitter, Instagram, LinkedIn, GitHub
@@ -49,7 +62,7 @@ Links include:
 
 **Test Analytics Data**
 ```
-pageViews: 50-200 per page (last 30 days)
+identityViews: 50-200 per identity (last 30 days)
 linkClicks: 5-50 per link (last 30 days)
 ```
 
@@ -62,28 +75,28 @@ linkClicks: 5-50 per link (last 30 days)
 ```typescript
 // Get dashboard stats for current user
 getDashboardStats(): {
-  totalPages: number
+  totalIdentities: number
   totalLinks: number
   totalViews: number
   totalClicks: number
   viewsThisMonth: number
   clicksThisMonth: number
-  topPages: Page[]
+  topIdentities: Identity[]
   recentActivity: Activity[]
 }
 
-// Get analytics for a specific page
-getPageAnalytics(pageId): {
+// Get analytics for a specific identity
+getIdentityAnalytics(identityId): {
   viewsOverTime: { date: string, count: number }[]
   clicksByLink: { linkId: Id, title: string, clicks: number }[]
   referrerBreakdown: { referrer: string, count: number }[]
   deviceBreakdown: { device: string, count: number }[]
 }
 
-// Get global analytics across all pages
+// Get global analytics across all identities
 getGlobalAnalytics(): {
   viewsOverTime: { date: string, count: number }[]
-  topLinks: { link: Link, page: Page, clicks: number }[]
+  topLinks: { link: Link, identity: Identity, clicks: number }[]
   trafficSources: { source: string, count: number }[]
 }
 ```
@@ -95,23 +108,23 @@ getGlobalAnalytics(): {
 updateSettings(args: {
   darkMode?: boolean
   emailNotifications?: boolean
-  defaultPageId?: Id<"pages">
+  defaultIdentityId?: Id<"identities">
 })
 
 // Update user progress
 updateProgress(args: {
   completedIntro?: boolean
   addedFirstLink?: boolean
-  publishedPage?: boolean
+  publishedIdentity?: boolean
 })
 ```
 
-### 2.3 Aggregate Queries (`/convex/pages/queries.ts`)
+### 2.3 Aggregate Queries (`/convex/identities/queries.ts`)
 
 ```typescript
-// Get all links across all user pages (for All Links page)
+// Get all links across all user identities (for All Links page)
 getAllUserLinks(): {
-  links: (Link & { pageName: string, pageSlug: string })[]
+  links: (Link & { identityName: string, identitySlug: string })[]
   stats: { total: number, active: number, totalClicks: number }
 }
 ```
@@ -122,105 +135,101 @@ getAllUserLinks(): {
 
 ### 3.1 Dashboard (`/src/components/admin-dashboard.tsx`)
 
-**Current State:** Uses `mockPages` with hardcoded stats
+**Status:** ✅ Completed
 
-**Connect to:**
-- `getUserPages()` - Get user's pages
+**Connected to:**
+- `getUserIdentities()` - Get user's identities
 - `getDashboardStats()` - Get aggregated stats
-- Calculate: totalPages, totalLinks, totalViews, avgEngagement
+- Calculate: totalIdentities, totalLinks, totalViews, avgEngagement
 
-**Changes:**
+**Implementation:**
 ```tsx
-// Before
-const stats = mockPages.reduce(...)
-
-// After
-const pages = useQuery(api.pages.queries.getUserPages)
-const stats = useQuery(api.analytics.queries.getDashboardStats)
+// Using custom hooks
+const identities = useUserIdentities()
+const stats = useDashboardStats()
 ```
 
 ### 3.2 Analytics Dashboard (`/src/components/analytics-dashboard.tsx`)
 
-**Current State:** Hardcoded mock metrics
+**Status:** ✅ Completed
 
-**Connect to:**
+**Connected to:**
 - `getGlobalAnalytics()` - Views over time, traffic sources
-- `getPageAnalytics(pageId)` - Per-page breakdown
-- `pageViews` and `linkClicks` tables
+- `getIdentityAnalytics(identityId)` - Per-identity breakdown
+- `identityViews` and `linkClicks` tables
 
-**Changes:**
+**Implementation:**
 ```tsx
-// Get real analytics data
-const analytics = useQuery(api.analytics.queries.getGlobalAnalytics)
-const pageAnalytics = useQuery(api.analytics.queries.getPageAnalytics, { pageId })
+// Using custom hooks
+const analytics = useGlobalAnalytics()
+const identityAnalytics = useIdentityAnalytics(identityId)
 ```
 
-### 3.3 Identities/Pages Manager (`/src/components/page-manager.tsx`)
+### 3.3 Identities Manager (`/src/components/convex/IdentityManager.tsx`)
 
-**Current State:** Uses local state with mockPages
+**Status:** ✅ Completed
 
-**Connect to:**
-- `getUserPages()` - List pages
-- `createPage()` - Create new page
-- `updatePage()` - Edit page
-- `deletePage()` - Delete page
+**Connected to:**
+- `getUserIdentities()` - List identities
+- `createIdentity()` - Create new identity
+- `updateIdentity()` - Edit identity
+- `deleteIdentity()` - Delete identity
 
-**Changes:**
+**Implementation:**
 ```tsx
-// Before
-const [pages, setPages] = useState(mockPages)
-
-// After
-const pages = useQuery(api.pages.queries.getUserPages)
-const createPage = useMutation(api.pages.mutations.createPage)
-const updatePage = useMutation(api.pages.mutations.updatePage)
-const deletePage = useMutation(api.pages.mutations.deletePage)
+// Using custom hooks
+const identities = useUserIdentities()
+const { createIdentity, updateIdentity, deleteIdentity } = useIdentityMutations()
 ```
 
 ### 3.4 Global Links Manager (`/src/components/global-links-manager.tsx`)
 
-**Current State:** Inline mock links array
+**Status:** ✅ Completed
 
-**Connect to:**
-- `getAllUserLinks()` - Get links across all pages
+**Connected to:**
+- `getAllUserLinks()` - Get links across all identities
 - `createLink()` - Add link
 - `updateLink()` - Edit link
 - `deleteLink()` - Remove link
 
-**Changes:**
+**Implementation:**
 ```tsx
-// Before
-const mockLinks = [...]
-
-// After
-const { links, stats } = useQuery(api.pages.queries.getAllUserLinks)
+// Using custom hook
+const { links, stats } = useAllUserLinks()
 ```
 
-### 3.5 Page Links Manager (`/src/components/page-links-manager.tsx`)
+### 3.5 Identity Links Manager (`/src/components/convex/IdentityLinksManager.tsx`)
 
-**Current State:** Mock links for specific page
+**Status:** ✅ Completed
 
-**Connect to:**
-- `getPageLinks(pageId)` - Get page's links
+**Connected to:**
+- `getIdentityLinks(identityId)` - Get identity's links
 - `createLink()` - Add link
 - `updateLink()` - Edit link
 - `deleteLink()` - Remove link
 - `reorderLinks()` - Drag and drop
 
-**Changes:**
+**Implementation:**
 ```tsx
-const links = useQuery(api.links.queries.getPageLinks, { pageId })
-const createLink = useMutation(api.links.mutations.createLink)
-const reorderLinks = useMutation(api.links.mutations.reorderLinks)
+// Using custom hooks
+const links = useIdentityLinks(identityId)
+const { createLink, updateLink, deleteLink, reorderLinks } = useLinkMutations()
 ```
 
-### 3.6 Theme Gallery (`/src/components/page-theme-gallery.tsx`)
+### 3.6 Theme Gallery (`/src/components/convex/IdentityThemeGallery.tsx`)
 
-**Current State:** Mock themes
+**Status:** ✅ Completed
 
-**Connect to:**
-- `getAllAvailableThemes()` - System + custom themes
-- `updatePage({ themeId })` - Apply theme
+**Connected to:**
+- `getAllThemes()` - System + custom themes
+- `updateIdentity({ themeId })` - Apply theme
+
+**Implementation:**
+```tsx
+// Using custom hooks
+const themes = useAllThemes()
+const { updateIdentity } = useIdentityMutations()
+```
 
 ---
 
@@ -233,38 +242,45 @@ const reorderLinks = useMutation(api.links.mutations.reorderLinks)
 4. Run seed to populate database
 
 ### Step 2: Add Missing Analytics Functions
-1. Create `/convex/analytics/queries.ts`
-2. Implement `getDashboardStats`
-3. Implement `getPageAnalytics`
-4. Implement `getGlobalAnalytics`
+✅ Completed:
+1. ✅ Create `/convex/analytics/queries.ts`
+2. ✅ Implement `getDashboardStats`
+3. ✅ Implement `getIdentityAnalytics`
+4. ✅ Implement `getGlobalAnalytics`
 
 ### Step 3: Add Aggregate Query
-1. Add `getAllUserLinks` to pages queries
-2. Test with existing hooks
+✅ Completed:
+1. ✅ Add `getAllUserLinks` to identities queries
+2. ✅ Test with existing hooks
 
 ### Step 4: Connect Dashboard
-1. Update `AdminDashboard` to use Convex
-2. Add loading states
-3. Test real-time updates
+✅ Completed:
+1. ✅ Update `AdminDashboard` to use Convex
+2. ✅ Add loading states
+3. ✅ Test real-time updates
 
-### Step 5: Connect Page Manager
-1. Update `PageManager` to use Convex
-2. Wire up CRUD operations
-3. Add optimistic updates
+### Step 5: Connect Identity Manager
+✅ Completed:
+1. ✅ Update `IdentityManager` to use Convex
+2. ✅ Wire up CRUD operations
+3. ✅ Real-time updates working
 
 ### Step 6: Connect Links Manager
-1. Update `GlobalLinksManager`
-2. Update `PageLinksManager`
-3. Wire up reorder functionality
+✅ Completed:
+1. ✅ Update `GlobalLinksManager`
+2. ✅ Update `IdentityLinksManager`
+3. ✅ Wire up reorder functionality
 
 ### Step 7: Connect Analytics
-1. Update `AnalyticsDashboard`
-2. Add date range filtering
-3. Add real charts
+✅ Completed:
+1. ✅ Update `AnalyticsDashboard`
+2. ✅ Add date range filtering
+3. ✅ Add real charts
 
 ### Step 8: Connect Themes
-1. Update `PageThemeGallery`
-2. Wire up theme application
+✅ Completed:
+1. ✅ Update `IdentityThemeGallery`
+2. ✅ Wire up theme application
 
 ---
 
@@ -278,14 +294,15 @@ const reorderLinks = useMutation(api.links.mutations.reorderLinks)
 ```
 
 ### Modified Files
+✅ All completed:
 ```
 /src/components/admin-dashboard.tsx
 /src/components/analytics-dashboard.tsx
-/src/components/page-manager.tsx
+/src/components/convex/IdentityManager.tsx
 /src/components/global-links-manager.tsx
-/src/components/page-links-manager.tsx
-/src/components/page-theme-gallery.tsx
-/src/components/page-theme-editor.tsx
+/src/components/convex/IdentityLinksManager.tsx
+/src/components/convex/IdentityThemeGallery.tsx
+/src/components/convex/IdentityThemeEditor.tsx
 ```
 
 ### Files to Eventually Remove
@@ -297,15 +314,17 @@ const reorderLinks = useMutation(api.links.mutations.reorderLinks)
 
 ## Verification Checklist
 
-- [ ] Seed script creates system themes
-- [ ] Seed script creates test pages for current user
-- [ ] Seed script creates test links
-- [ ] Seed script creates analytics data
-- [ ] Dashboard shows real stats
-- [ ] Page manager CRUD works
-- [ ] Links manager CRUD works
-- [ ] Analytics charts show real data
-- [ ] Theme gallery loads from Convex
-- [ ] Real-time updates work across tabs
-- [ ] No TypeScript errors
-- [ ] Build passes
+✅ All items completed:
+
+- [x] Seed script creates system themes (`convex/seed.ts`)
+- [x] Seed script creates test identities for current user
+- [x] Seed script creates test links
+- [x] Seed script creates analytics data
+- [x] Dashboard shows real stats (`useDashboardStats`)
+- [x] Identity manager CRUD works (`IdentityManager`)
+- [x] Links manager CRUD works (`IdentityLinksManager`)
+- [x] Analytics charts show real data (`AnalyticsDashboard`)
+- [x] Theme gallery loads from Convex (`IdentityThemeGallery`)
+- [x] Real-time updates work across tabs
+- [x] No TypeScript errors
+- [x] Build passes

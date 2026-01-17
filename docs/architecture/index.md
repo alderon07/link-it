@@ -5,7 +5,7 @@ This index provides navigation to all architecture documentation for the Link-It
 ## Available Documentation
 
 1. [**Codebase Structure**](./codebase-structure.md) - Overview of the project's directory structure and key components
-2. [**Data Flow**](./data-flow.md) - Documentation of how data flows through the application and component interactions
+2. [**Data Flow**](./data-flow.md) - Documentation of how data flows through the application with Convex real-time architecture
 3. [**Coding Standards**](./coding-standards.md) - Coding conventions and best practices for maintaining and extending the codebase
 
 ## Quick Reference
@@ -16,7 +16,8 @@ This index provides navigation to all architecture documentation for the Link-It
 - **UI Library**: React 19
 - **Styling**: Tailwind CSS v4 + shadcn/ui (new-york style)
 - **Language**: TypeScript
-- **Authentication**: Clerk
+- **Backend**: Convex (real-time database with reactive queries)
+- **Authentication**: Clerk (integrated with Convex via JWT)
 - **Validation**: Zod for type-safe schema validation
 - **Analytics**: PostHog
 - **Animations**: Framer Motion
@@ -26,14 +27,11 @@ This index provides navigation to all architecture documentation for the Link-It
 
 ### Key Directories
 
-- `src/app` - Next.js application pages and API routes
-- `src/components` - Reusable React components (UI, pixel-art, animations, admin)
-- `src/data` - Three-tier data access layer (DAL, Service, Schema)
-- `src/lib` - Utility libraries (API helpers, analytics, animations, validation)
-- `src/actions` - Server actions for form handling
-- `src/types` - TypeScript type definitions
-- `src/utils` - Utility functions
-- `src/hooks` - Custom React hooks
+- `convex/` - Convex backend functions (queries, mutations, schema)
+- `src/app` - Next.js application pages and routes
+- `src/components` - React components (UI, pixel-art, animations, convex-powered)
+- `src/hooks/convex` - Custom React hooks for Convex operations
+- `src/lib` - Utility libraries (analytics, animations, validation)
 - `src/middleware.ts` - Clerk authentication middleware
 
 ### Common Tasks
@@ -42,40 +40,81 @@ This index provides navigation to all architecture documentation for the Link-It
 
 1. Create a new file in `src/app/` following Next.js app router conventions
 2. If it's an admin page, place it in `src/app/(routes)/admin/`
-3. If needed, create page-specific components in `src/components/`
-4. Connect to data sources using the data access layer (`src/data/`)
-5. Use server actions (`src/actions/`) for form submissions
+3. Use client components (`"use client"`) with Convex hooks for data
+4. If needed, create page-specific components in `src/components/`
 
 #### Adding a New Component
 
 1. Create component in `src/components/ui/` for shared UI components
 2. Use `src/components/pixel-art/` for pixel art styled components
 3. Use `src/components/animations/` for animated components
-4. Follow the established patterns and coding standards
-5. Use TypeScript for type safety
+4. Use `src/components/convex/` for Convex-powered components
+5. Follow the established patterns and coding standards
+6. Use TypeScript for type safety
 
 #### Working with Data
 
-1. Use the three-tier architecture:
-   - **DAL** (`*DAL.ts`): Direct database operations
-   - **Service** (`*Service.ts`): Business logic with ownership verification
-   - **Schema** (`src/data/db/schema.ts`): Zod schemas for validation
-2. Add new data access functions for new features
-3. Create Zod schemas in `src/data/db/schema.ts`
-4. Use the service layer for business logic (ownership checks, validation)
+1. **Add a new table**: Define in `convex/schema.ts` with indexes
+2. **Add queries**: Create in `convex/[resource]/queries.ts`
+3. **Add mutations**: Create in `convex/[resource]/mutations.ts`
+4. **Add public functions**: Create in `convex/[resource]/public.ts` if needed
+5. **Create custom hooks**: Add to `src/hooks/convex/use[Resource].ts`
+6. **Use in components**: Import hooks and use `useQuery`/`useMutation`
 
-#### Adding API Routes
+#### Adding Convex Functions
 
-1. Create routes in `src/app/api/v1/` following REST conventions
-2. Use `requireAuth()` from `@/lib/api/auth` for authentication
-3. Use `successResponse()` and `errorResponse()` from `@/lib/api/response`
-4. Apply rate limiting using `rateLimit()` from `@/lib/api/rate-limit`
-5. Validate inputs using Zod schemas and `validateBody()` from `@/lib/api/validation`
+1. Create queries in `convex/[resource]/queries.ts` for read operations
+2. Create mutations in `convex/[resource]/mutations.ts` for write operations
+3. Create public functions in `convex/[resource]/public.ts` for public access
+4. Use `ctx.auth.getUserIdentity()` for authentication
+5. Validate inputs with Zod schemas
+6. Use indexes for efficient queries (defined in schema)
+
+#### Adding Custom Hooks
+
+1. Create hook file in `src/hooks/convex/use[Resource].ts`
+2. Wrap Convex queries/mutations with additional logic
+3. Export from `src/hooks/convex/index.ts`
+4. Use in components for type-safe, reactive data
 
 ## How to Use This Documentation
 
 - Start with the [Codebase Structure](./codebase-structure.md) to understand the overall organization
-- Use the [Data Flow](./data-flow.md) document to understand how components interact
+- Use the [Data Flow](./data-flow.md) document to understand how Convex real-time architecture works
 - Reference the [Coding Standards](./coding-standards.md) when writing or refactoring code
 
-These documents provide a comprehensive understanding of the codebase and will be invaluable for AI-assisted development, refactoring, and debugging. 
+These documents provide a comprehensive understanding of the codebase and will be invaluable for AI-assisted development, refactoring, and debugging.
+
+## Key Concepts
+
+### Convex Real-Time Architecture
+
+- **Queries**: Read-only functions that return data (automatically reactive)
+- **Mutations**: Write functions that modify data (always authenticated)
+- **Public Functions**: Queries that don't require authentication
+- **Real-Time Updates**: Components automatically re-render when data changes
+
+### Terminology
+
+- **Identity**: A user's "link in bio" page (previously called "page")
+- **Link**: A single link item on an identity
+- **Theme**: Color scheme and styling for an identity
+- **Query**: Read-only Convex function that returns data (reactive)
+- **Mutation**: Write Convex function that modifies data
+
+### Authentication Flow
+
+1. User authenticates with Clerk
+2. Clerk JWT is passed to Convex via `ConvexClientProvider`
+3. Convex functions use `ctx.auth.getUserIdentity()` to verify authentication
+4. User data is synced via Clerk webhook to Convex
+
+### Data Flow Pattern
+
+```
+Component → useQuery/useMutation → Convex Function → Database
+                ↓
+         Real-time updates
+                ↓
+         Component re-renders
+```
