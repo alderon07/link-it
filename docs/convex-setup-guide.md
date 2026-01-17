@@ -35,14 +35,27 @@ CLERK_JWT_ISSUER_DOMAIN=https://your-app.clerk.accounts.dev
 
 ## Step 3: Configure Clerk JWT Template
 
-1. Go to your [Clerk Dashboard](https://dashboard.clerk.com)
-2. Navigate to **JWT Templates**
-3. Click **New template**
-4. Select **Convex** template (or create a blank one)
-5. Configure:
-   - **Name**: `convex`
-   - **Issuer**: Your Clerk issuer domain
-6. Save the template
+**Why is this required?**
+
+Clerk and Convex are separate services. When a user signs in via Clerk, Convex has no way to know who they are. The JWT template creates a signed token that Clerk passes to Convex, allowing Convex to verify the user's identity. Without this, `ctx.auth.getUserIdentity()` returns `null` and users can't be created in Convex.
+
+**Setup:**
+
+1. Go to [Clerk Dashboard](https://dashboard.clerk.com) → **Configure** → **JWT Templates**
+2. Click **New template** → Select **Convex**
+3. **Keep the name as "convex"** (must match `applicationID` in `auth.config.ts`)
+4. Copy the **Issuer URL** (e.g., `https://your-app-00.clerk.accounts.dev`)
+5. Click **Save**
+
+**Set the environment variable in both places:**
+
+1. `.env.local`:
+   ```
+   CLERK_JWT_ISSUER_DOMAIN=https://your-app-00.clerk.accounts.dev
+   ```
+
+2. Convex Dashboard → Settings → Environment Variables:
+   - Add `CLERK_JWT_ISSUER_DOMAIN` with the same issuer URL
 
 ## Step 4: Update Clerk Webhook
 
@@ -126,8 +139,10 @@ Run `npx convex dev` to initialize and authenticate.
 ### "Missing NEXT_PUBLIC_CONVEX_URL"
 Add the URL from Convex dashboard to `.env.local`.
 
-### Auth errors in Convex
-Ensure `CLERK_JWT_ISSUER_DOMAIN` matches your Clerk instance and JWT template is named "convex".
+### Auth errors in Convex / Users not created
+- Ensure JWT template named "convex" exists in Clerk Dashboard
+- Ensure `CLERK_JWT_ISSUER_DOMAIN` is set in both `.env.local` AND Convex Dashboard
+- The issuer URL must match your Clerk Frontend API URL exactly
 
 ### Webhook not creating users
 Check Clerk webhook logs and ensure the endpoint URL is correct.
