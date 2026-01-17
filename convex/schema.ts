@@ -145,7 +145,9 @@ export default defineSchema({
     referrer: v.optional(v.string()),
     country: v.optional(v.string()),
     city: v.optional(v.string()),
-  }).index("by_identity", ["identityId", "viewedAt"]),
+  })
+    .index("by_identity", ["identityId", "viewedAt"])
+    .index("by_identity_visitor", ["identityId", "visitorId"]),
 
   // ═══════════════════════════════════════════════════════════════
   // LINK_CLICKS - Analytics (Future - supplement PostHog)

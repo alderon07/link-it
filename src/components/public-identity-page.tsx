@@ -11,7 +11,8 @@ import { PixelIcon } from "@/components/pixel-art/PixelIcon"
 import { PixelDivider } from "@/components/pixel-art/PixelDivider"
 import { FadeIn, SlideUp } from "@/components/animations/PageTransition"
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer"
-import { CountUp } from "@/components/animations/CountUp"
+import { useMutation } from "convex/react"
+import { api } from "../../convex/_generated/api"
 import { Id, Doc } from "../../convex/_generated/dataModel"
 
 const iconMap: Record<string, "star" | "heart" | "arrow" | "check" | "cross" | "plus" | "minus" | "sparkle" | "diamond" | "coin" | "lightning" | "fire" | "link" | "cursor"> = {
@@ -72,8 +73,62 @@ interface PublicIdentityPageProps {
   links: Link[]
 }
 
+// Generate or retrieve a persistent visitor ID (localStorage - persists across sessions)
+function getVisitorId(): string {
+  if (typeof window === "undefined") return ""
+  
+  const STORAGE_KEY = "linkit_visitor_id"
+  let visitorId = localStorage.getItem(STORAGE_KEY)
+  
+  if (!visitorId) {
+    visitorId = `v_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+    localStorage.setItem(STORAGE_KEY, visitorId)
+  }
+  
+  return visitorId
+}
+
+// Session-based view tracking (sessionStorage - clears when tab closes)
+const SESSION_KEY = "linkit_viewed"
+
+function hasViewedThisSession(identityId: string): boolean {
+  if (typeof window === "undefined") return false
+  const viewed = sessionStorage.getItem(`${SESSION_KEY}_${identityId}`)
+  return viewed === "true"
+}
+
+function markViewedThisSession(identityId: string): void {
+  if (typeof window === "undefined") return
+  sessionStorage.setItem(`${SESSION_KEY}_${identityId}`, "true")
+}
+
 export function PublicIdentityPage({ identity, links }: PublicIdentityPageProps) {
   const [shareSuccess, setShareSuccess] = React.useState(false)
+  const hasRecordedView = React.useRef(false)
+  const recordView = useMutation(api.identities.public.recordIdentityView)
+
+  // Record view once per browser session
+  React.useEffect(() => {
+    // Skip if already attempted this render cycle
+    if (hasRecordedView.current) return
+    hasRecordedView.current = true
+    
+    // Check if already viewed in this session (refresh protection)
+    if (hasViewedThisSession(identity._id)) return
+    
+    const visitorId = getVisitorId()
+    if (!visitorId) return
+
+    // Mark as viewed in session immediately (before async call)
+    markViewedThisSession(identity._id)
+    
+    // Call server - Convex will automatically update identity.viewCount via real-time query
+    recordView({ identityId: identity._id, visitorId })
+  }, [identity._id, recordView])
+
+  // The view count comes directly from Convex real-time query
+  // When mutation succeeds, Convex automatically pushes the updated viewCount
+  const viewCount = identity.viewCount
 
   // Sort and filter links
   const activeLinks = links
@@ -150,7 +205,7 @@ export function PublicIdentityPage({ identity, links }: PublicIdentityPageProps)
             <PixelBorder variant="solid" shadow="sm" className="px-3 py-1.5 bg-card">
               <div className="flex items-center gap-2 text-sm">
                 <Eye className="h-4 w-4 text-pixel-teal" />
-                <CountUp value={identity.viewCount || 0} duration={1} />
+                <span className="font-medium">{viewCount.toLocaleString()}</span>
                 <span className="text-muted-foreground">views</span>
               </div>
             </PixelBorder>
@@ -189,10 +244,10 @@ export function PublicIdentityPage({ identity, links }: PublicIdentityPageProps)
               </PixelBorder>
             </motion.div>
 
-            {/* Name & Username */}
+            {/* Name & Slug */}
             <h1 className="text-2xl font-black mb-1 pixel-text-shadow">{identity.name}</h1>
             <p className="text-muted-foreground mb-3 flex items-center justify-center gap-1">
-              @{identity.user.username}
+              @{identity.slug}
             </p>
 
             {/* Bio */}

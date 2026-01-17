@@ -48,6 +48,7 @@ export function CountUp({
   const ref = React.useRef<HTMLSpanElement>(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
   const [hasStarted, setHasStarted] = React.useState(!startOnView)
+  const prevValueRef = React.useRef(value)
 
   // Start animation when in view
   React.useEffect(() => {
@@ -57,7 +58,8 @@ export function CountUp({
   }, [isInView, startOnView])
 
   // Spring animation for smooth counting
-  const spring = useSpring(0, {
+  // Initialize with current value to avoid starting from 0 when value is already set
+  const spring = useSpring(hasStarted ? value : 0, {
     duration: duration * 1000,
     bounce: 0,
   })
@@ -75,10 +77,12 @@ export function CountUp({
     return `${prefix}${parts.join(".")}${suffix}`
   })
 
-  // Start animation when hasStarted changes
+  // Update spring when value changes or hasStarted becomes true
   React.useEffect(() => {
     if (hasStarted) {
+      // Animate to new value
       spring.set(value)
+      prevValueRef.current = value
     }
   }, [hasStarted, spring, value])
 
