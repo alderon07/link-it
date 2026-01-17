@@ -3,9 +3,8 @@
 import * as React from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ExternalLink, Share2, Heart, Eye, LinkIcon, Star } from "lucide-react"
+import { ExternalLink, Share2, Heart, Eye, LinkIcon } from "lucide-react"
 import { motion } from "framer-motion"
 import { PixelBorder } from "@/components/pixel-art/PixelBorder"
 import { PixelIcon } from "@/components/pixel-art/PixelIcon"
@@ -13,10 +12,6 @@ import { PixelDivider } from "@/components/pixel-art/PixelDivider"
 import { FadeIn, SlideUp } from "@/components/animations/PageTransition"
 import { StaggerContainer, StaggerItem } from "@/components/animations/StaggerContainer"
 import { CountUp } from "@/components/animations/CountUp"
-import { trackEvent } from "@/lib/analytics/posthog-client"
-import { AnalyticsEvents } from "@/lib/analytics/events"
-import { useMutation } from "convex/react"
-import { api } from "../../convex/_generated/api"
 import { Id, Doc } from "../../convex/_generated/dataModel"
 
 const iconMap: Record<string, "star" | "heart" | "arrow" | "check" | "cross" | "plus" | "minus" | "sparkle" | "diamond" | "coin" | "lightning" | "fire" | "link" | "cursor"> = {
@@ -75,47 +70,17 @@ interface Link {
 interface PublicIdentityPageProps {
   identity: IdentityWithUser
   links: Link[]
-  onView?: () => void
 }
 
-export function PublicIdentityPage({ identity, links, onView }: PublicIdentityPageProps) {
-  const [viewCount, setViewCount] = React.useState<number>(identity.viewCount || 0)
+export function PublicIdentityPage({ identity, links }: PublicIdentityPageProps) {
   const [shareSuccess, setShareSuccess] = React.useState(false)
-  const trackClick = useMutation(api.links.public.trackClick)
 
   // Sort and filter links
   const activeLinks = links
     .filter((link) => link.isActive !== false && link.type !== "divider")
     .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
 
-  // Track page view on mount
-  React.useEffect(() => {
-    setViewCount((prev) => prev + 1)
-    onView?.()
-    
-    // Track in PostHog
-    trackEvent(AnalyticsEvents.PAGE_VIEW, {
-      page_id: identity._id,
-      page_slug: identity.slug,
-      page_name: identity.name,
-      is_public: true,
-    })
-  }, [identity._id, identity.slug, identity.name, onView])
-
-  const handleLinkClick = async (link: Link, index: number) => {
-    // Track click in PostHog
-    trackEvent(AnalyticsEvents.LINK_CLICK, {
-      link_id: link._id,
-      page_id: identity._id,
-      page_slug: identity.slug,
-      link_url: link.url,
-      link_title: link.title,
-      link_position: index,
-    })
-
-    // Track click in Convex
-    await trackClick({ linkId: link._id })
-
+  const handleLinkClick = (link: Link) => {
     // Open link
     if (link.url) {
       window.open(link.url, "_blank", "noopener,noreferrer")
@@ -185,7 +150,7 @@ export function PublicIdentityPage({ identity, links, onView }: PublicIdentityPa
             <PixelBorder variant="solid" shadow="sm" className="px-3 py-1.5 bg-card">
               <div className="flex items-center gap-2 text-sm">
                 <Eye className="h-4 w-4 text-pixel-teal" />
-                <CountUp value={viewCount} duration={1} />
+                <CountUp value={identity.viewCount || 0} duration={1} />
                 <span className="text-muted-foreground">views</span>
               </div>
             </PixelBorder>
@@ -268,7 +233,7 @@ export function PublicIdentityPage({ identity, links, onView }: PublicIdentityPa
                       <Card
                         variant="pixel-interactive"
                         className="cursor-pointer group"
-                        onClick={() => handleLinkClick(link, index)}
+                        onClick={() => handleLinkClick(link)}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-center gap-4">

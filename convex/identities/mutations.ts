@@ -54,6 +54,19 @@ export const createIdentity = mutation({
       });
     }
 
+    // Get default theme if none provided
+    let themeId = args.themeId;
+    if (!themeId) {
+      const defaultTheme = await ctx.db
+        .query("themes")
+        .withIndex("by_system", (q) => q.eq("isCustom", false))
+        .first();
+
+      if (defaultTheme) {
+        themeId = defaultTheme._id;
+      }
+    }
+
     // Create the identity
     const identityId = await ctx.db.insert("identities", {
       userId: user._id,
@@ -64,7 +77,7 @@ export const createIdentity = mutation({
       avatarUrl: args.avatarUrl,
       isPublic: args.isPublic,
       viewCount: 0,
-      themeId: args.themeId,
+      themeId,
       seoTitle: args.seoTitle ? sanitizeText(args.seoTitle) : undefined,
       seoDescription: args.seoDescription ? sanitizeText(args.seoDescription) : undefined,
       ogImageUrl: args.ogImageUrl,

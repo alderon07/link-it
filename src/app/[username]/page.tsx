@@ -1,27 +1,27 @@
 'use client'
 
 import { use } from "react"
-import { useQuery, useMutation } from "convex/react"
+import { useQuery } from "convex/react"
 import { api } from "../../../convex/_generated/api"
 import { notFound } from "next/navigation"
 import { PublicIdentityPage } from "@/components/public-identity-page"
 
 interface PublicPageProps {
   params: Promise<{
-    username: string
+    username: string // This is actually the identity slug from the URL
   }>
 }
 
 export default function PublicPage({ params }: PublicPageProps) {
-  const { username } = use(params)
+  const { username: slug } = use(params)
   
-  // Get the identity by username from Convex
-  const identity = useQuery(api.identities.public.getPublicIdentityByUsername, { username })
+  // Get identity by slug
+  const identity = useQuery(api.identities.public.getPublicIdentity, { slug })
+  
   const links = useQuery(
     api.links.public.getPublicIdentityLinks,
     identity?._id ? { identityId: identity._id } : "skip"
   )
-  const recordView = useMutation(api.identities.public.recordIdentityView)
 
   // Loading state
   if (identity === undefined) {
@@ -36,7 +36,7 @@ export default function PublicPage({ params }: PublicPageProps) {
   }
 
   // Not found
-  if (identity === null) {
+  if (!identity) {
     notFound()
   }
 
@@ -44,7 +44,6 @@ export default function PublicPage({ params }: PublicPageProps) {
     <PublicIdentityPage 
       identity={identity} 
       links={links ?? []} 
-      onView={() => recordView({ identityId: identity._id })}
     />
   )
 }
