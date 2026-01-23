@@ -17,6 +17,10 @@ export const CONSTRAINTS = {
   themeName: { min: 1, max: 50 },
   seoTitle: { max: 100 },
   seoDescription: { max: 200 },
+  // Maximum size for any single text field (100KB)
+  maxFieldSize: 100000,
+  // Maximum size for URL fields (2KB)
+  maxUrlSize: 2000,
 } as const;
 
 /**
@@ -99,4 +103,29 @@ export function validateEmail(email: string): void {
       message: "Invalid email format",
     });
   }
+}
+
+/**
+ * Validate maximum size for a text field
+ * Prevents oversized payloads that could affect performance
+ */
+export function validateMaxSize(
+  value: string,
+  fieldName: string,
+  maxSize: number = CONSTRAINTS.maxFieldSize
+): void {
+  if (value.length > maxSize) {
+    throw new ConvexError({
+      code: "VALIDATION_ERROR",
+      message: `${fieldName} exceeds maximum allowed size of ${maxSize} characters`,
+    });
+  }
+}
+
+/**
+ * Validate URL with size check
+ */
+export function validateUrlWithSize(url: string): void {
+  validateMaxSize(url, "URL", CONSTRAINTS.maxUrlSize);
+  validateUrl(url);
 }

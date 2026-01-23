@@ -1,6 +1,6 @@
-import { query, mutation } from "../_generated/server";
-import { v } from "convex/values";
-import { now } from "../lib/utils";
+import { query, mutation, internalMutation } from "../_generated/server";
+import { v, ConvexError } from "convex/values";
+import { now, getOrCreateUser } from "../lib/utils";
 
 /**
  * Get a public identity by slug (no authentication required)
@@ -110,27 +110,6 @@ export const getPublicIdentityByUsername = query({
 });
 
 /**
- * Increment view count for a public identity
- */
-export const incrementViewCount = mutation({
-  args: { identityId: v.id("identities") },
-  handler: async (ctx, args) => {
-    const identity = await ctx.db.get(args.identityId);
-
-    if (!identity || identity.deletionTime || !identity.isPublic) {
-      return { success: false };
-    }
-
-    await ctx.db.patch(args.identityId, {
-      viewCount: identity.viewCount + 1,
-      updatedAt: now(),
-    });
-
-    return { success: true };
-  },
-});
-
-/**
  * Record an identity view for analytics
  * 
  * Security measures:
@@ -195,21 +174,36 @@ export const recordIdentityView = mutation({
 
 /**
  * Reconcile view count for an identity
- * 
+ *
  * This syncs the denormalized viewCount with the actual identityViews records.
  * Use this if the counter ever drifts from reality (e.g., after data migration,
  * seeding, or if records are manually deleted).
- * 
+ *
  * This is an O(n) operation so use sparingly at scale.
+ * Requires authentication and ownership verification.
  */
 export const reconcileViewCount = mutation({
   args: {
     identityId: v.id("identities"),
   },
   handler: async (ctx, args) => {
+    // Require authentication and verify ownership
+    const user = await getOrCreateUser(ctx);
+
     const identity = await ctx.db.get(args.identityId);
     if (!identity) {
-      return { success: false, reason: "identity_not_found" };
+      throw new ConvexError({
+        code: "NOT_FOUND",
+        message: "Identity not found",
+      });
+    }
+
+    // Verify ownership
+    if (identity.userId !== user._id) {
+      throw new ConvexError({
+        code: "FORBIDDEN",
+        message: "You don't have permission to reconcile this identity",
+      });
     }
 
     // Count actual view records
@@ -217,7 +211,7 @@ export const reconcileViewCount = mutation({
       .query("identityViews")
       .withIndex("by_identity", (q) => q.eq("identityId", args.identityId))
       .collect();
-    
+
     const actualCount = views.length;
     const previousCount = identity.viewCount ?? 0;
 
@@ -227,8 +221,8 @@ export const reconcileViewCount = mutation({
       updatedAt: now(),
     });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       previousCount,
       actualCount,
       corrected: previousCount !== actualCount,
@@ -238,26 +232,28 @@ export const reconcileViewCount = mutation({
 
 /**
  * Reconcile view counts for ALL identities
- * 
+ *
  * WARNING: This is expensive at scale. Only use for maintenance/migration.
  * Consider running during low-traffic periods.
+ *
+ * This is an internal mutation - only callable from server code (e.g., cron jobs).
  */
-export const reconcileAllViewCounts = mutation({
+export const reconcileAllViewCounts = internalMutation({
   args: {},
   handler: async (ctx) => {
     const identities = await ctx.db.query("identities").collect();
-    
+
     let correctedCount = 0;
-    
+
     for (const identity of identities) {
       const views = await ctx.db
         .query("identityViews")
         .withIndex("by_identity", (q) => q.eq("identityId", identity._id))
         .collect();
-      
+
       const actualCount = views.length;
       const previousCount = identity.viewCount ?? 0;
-      
+
       if (previousCount !== actualCount) {
         await ctx.db.patch(identity._id, {
           viewCount: actualCount,
@@ -267,8 +263,8 @@ export const reconcileAllViewCounts = mutation({
       }
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       totalIdentities: identities.length,
       correctedCount,
     };

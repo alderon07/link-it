@@ -17,6 +17,7 @@ import { trackEvent } from "@/lib/analytics/posthog-client";
 import { AnalyticsEvents } from "@/lib/analytics/events";
 import { usePublicIdentity, usePublicIdentityLinks, useIdentityMutations, useLinkMutations } from "@/hooks/convex";
 import { Id } from "../../../convex/_generated/dataModel";
+import { nanoid } from "nanoid";
 
 const iconMap: Record<string, "star" | "heart" | "arrow" | "check" | "cross" | "plus" | "minus" | "sparkle" | "diamond" | "coin" | "lightning" | "fire" | "link" | "cursor"> = {
   star: "star",
@@ -61,20 +62,45 @@ interface PublicIdentityComponentProps {
   slug: string;
 }
 
+// Generate or retrieve a stable visitor ID for view deduplication
+function getVisitorId(): string {
+  if (typeof window === "undefined") return "";
+
+  const storageKey = "link-it-visitor-id";
+
+  try {
+    let visitorId = localStorage.getItem(storageKey);
+
+    if (!visitorId) {
+      visitorId = nanoid();
+      localStorage.setItem(storageKey, visitorId);
+    }
+
+    return visitorId;
+  } catch {
+    // localStorage may be unavailable in private browsing or when storage is disabled
+    // Return a session-only ID as fallback
+    return nanoid();
+  }
+}
+
 export function PublicIdentityComponent({ slug }: PublicIdentityComponentProps) {
   const identity = usePublicIdentity(slug);
   const links = usePublicIdentityLinks(identity?._id);
-  const { incrementViewCount } = useIdentityMutations();
+  const { recordIdentityView } = useIdentityMutations();
   const { incrementClickCount } = useLinkMutations();
 
   const [shareSuccess, setShareSuccess] = React.useState(false);
   const [viewTracked, setViewTracked] = React.useState(false);
 
-  // Track identity view on mount
+  // Track identity view on mount (with deduplication via visitorId)
   React.useEffect(() => {
     if (identity && !viewTracked) {
       setViewTracked(true);
-      incrementViewCount({ identityId: identity._id });
+      const visitorId = getVisitorId();
+      if (visitorId) {
+        recordIdentityView({ identityId: identity._id, visitorId });
+      }
 
       // Track in PostHog
       trackEvent(AnalyticsEvents.PAGE_VIEW, {
@@ -84,7 +110,7 @@ export function PublicIdentityComponent({ slug }: PublicIdentityComponentProps) 
         is_public: true,
       });
     }
-  }, [identity, viewTracked, incrementViewCount]);
+  }, [identity, viewTracked, recordIdentityView]);
 
   const handleLinkClick = async (linkId: Id<"links">, url: string, title: string, index: number) => {
     if (!identity) return;

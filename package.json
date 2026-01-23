@@ -11,7 +11,20 @@
     "build:convex": "convex deploy --cmd 'next build'",
     "start": "next start",
     "lint": "next lint",
-    "scan": "next dev & npx react-scan@latest localhost:3000"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "ci": "pnpm lint && pnpm typecheck && pnpm test",
+    "scan": "next dev & npx react-scan@latest localhost:3000",
+    "docker:build": "docker build -t link-it .",
+    "docker:run": "docker run -p 3000:3000 --env-file .env link-it",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up",
+    "docker:prod": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
   },
   "dependencies": {
     "@clerk/nextjs": "7.0.0-canary.v20260113005528",
@@ -50,18 +63,27 @@
     "zod": "^3.24.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@tailwindcss/postcss": "^4.1.7",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^22.15.18",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9",
     "eslint-config-next": "^16",
+    "happy-dom": "^20.3.7",
+    "jsdom": "^27.4.0",
     "npm-run-all": "^4.1.5",
     "postcss": "^8",
     "prettier": "^3.3.2",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^4.1.8",
     "tw-animate-css": "^1.3.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.18"
   }
 }

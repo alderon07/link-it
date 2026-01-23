@@ -2,7 +2,8 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { now, sanitizeText, getOrCreateUser } from "../lib/utils";
-import { validateLength, validateSlug, CONSTRAINTS } from "../lib/validators";
+import { validateLength, validateSlug, validateMaxSize, CONSTRAINTS } from "../lib/validators";
+import { logCreate, logUpdate, logDelete, ENTITY_TYPES } from "../lib/auditLog";
 
 /**
  * Create a new identity
@@ -39,6 +40,12 @@ export const createIdentity = mutation({
     }
     if (args.seoDescription) {
       validateLength(args.seoDescription, "SEO Description", CONSTRAINTS.seoDescription);
+    }
+    if (args.avatarUrl) {
+      validateMaxSize(args.avatarUrl, "Avatar URL", CONSTRAINTS.maxUrlSize);
+    }
+    if (args.ogImageUrl) {
+      validateMaxSize(args.ogImageUrl, "OG Image URL", CONSTRAINTS.maxUrlSize);
     }
 
     // Check slug availability
@@ -96,6 +103,13 @@ export const createIdentity = mutation({
         updatedAt: now(),
       });
     }
+
+    // Log the creation for audit trail
+    await logCreate(ctx, user._id, ENTITY_TYPES.IDENTITY, identityId, {
+      name: args.name,
+      slug: args.slug,
+      isPublic: args.isPublic,
+    });
 
     return ctx.db.get(identityId);
   },
@@ -171,6 +185,12 @@ export const updateIdentity = mutation({
     if (args.seoDescription !== undefined) {
       validateLength(args.seoDescription, "SEO Description", CONSTRAINTS.seoDescription);
     }
+    if (args.avatarUrl !== undefined) {
+      validateMaxSize(args.avatarUrl, "Avatar URL", CONSTRAINTS.maxUrlSize);
+    }
+    if (args.ogImageUrl !== undefined) {
+      validateMaxSize(args.ogImageUrl, "OG Image URL", CONSTRAINTS.maxUrlSize);
+    }
 
     // Build update object
     const updates: Record<string, unknown> = {
@@ -189,6 +209,10 @@ export const updateIdentity = mutation({
     if (args.ogImageUrl !== undefined) updates.ogImageUrl = args.ogImageUrl;
 
     await ctx.db.patch(args.identityId, updates);
+
+    // Log the update for audit trail
+    const changedFields = Object.keys(updates).filter((k) => k !== "updatedAt");
+    await logUpdate(ctx, user._id, ENTITY_TYPES.IDENTITY, args.identityId, changedFields);
 
     return ctx.db.get(args.identityId);
   },
@@ -242,6 +266,9 @@ export const deleteIdentity = mutation({
         updatedAt: deletionTime,
       });
     }
+
+    // Log the deletion for audit trail
+    await logDelete(ctx, user._id, ENTITY_TYPES.IDENTITY, args.identityId);
 
     return { success: true };
   },

@@ -124,9 +124,9 @@ export function useIdentityMutations() {
       ? api.identities.mutations.deleteIdentity
       : ("skip" as any)
   );
-  const incrementViewCountMutation = useMutation(
-    isAvailable && api?.identities?.public?.incrementViewCount
-      ? api.identities.public.incrementViewCount
+  const recordIdentityViewMutation = useMutation(
+    isAvailable && api?.identities?.public?.recordIdentityView
+      ? api.identities.public.recordIdentityView
       : ("skip" as any)
   );
 
@@ -139,7 +139,7 @@ export function useIdentityMutations() {
       createIdentity: noOp,
       updateIdentity: noOp,
       deleteIdentity: noOp,
-      incrementViewCount: noOp,
+      recordIdentityView: noOp,
     };
   }
 
@@ -147,6 +147,6 @@ export function useIdentityMutations() {
     createIdentity: createIdentityMutation,
     updateIdentity: updateIdentityMutation,
     deleteIdentity: deleteIdentityMutation,
-    incrementViewCount: incrementViewCountMutation,
+    recordIdentityView: recordIdentityViewMutation,
   };
 }

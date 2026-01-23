@@ -27,10 +27,17 @@ export const getCurrentUser = query({
 
 /**
  * Get a user by their Clerk ID
+ * Requires authentication to prevent data exposure
  */
 export const getUserByClerkId = query({
   args: { clerkUserId: v.string() },
   handler: async (ctx, args) => {
+    // Require authentication to prevent data exposure
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
+      return null;
+    }
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkUserId", args.clerkUserId))
@@ -46,10 +53,17 @@ export const getUserByClerkId = query({
 
 /**
  * Get a user by their username
+ * Requires authentication to prevent data exposure
  */
 export const getUserByUsername = query({
   args: { username: v.string() },
   handler: async (ctx, args) => {
+    // Require authentication to prevent data exposure
+    const authIdentity = await ctx.auth.getUserIdentity();
+    if (!authIdentity) {
+      return null;
+    }
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", args.username))

@@ -2,7 +2,8 @@ import { mutation } from "../_generated/server";
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
 import { now, sanitizeText, getOrCreateUser } from "../lib/utils";
-import { validateLength, validateUrl, CONSTRAINTS } from "../lib/validators";
+import { validateLength, validateUrlWithSize, CONSTRAINTS } from "../lib/validators";
+import { logCreate, logUpdate, logDelete, logAudit, ENTITY_TYPES, AUDIT_ACTIONS } from "../lib/auditLog";
 
 /**
  * Create a new link
@@ -38,7 +39,7 @@ export const createLink = mutation({
 
     const linkType = args.type || "link";
     if (linkType === "link") {
-      validateUrl(args.url);
+      validateUrlWithSize(args.url);
     }
 
     if (args.description) {
@@ -85,6 +86,13 @@ export const createLink = mutation({
         updatedAt: now(),
       });
     }
+
+    // Log the creation for audit trail
+    await logCreate(ctx, user._id, ENTITY_TYPES.LINK, linkId, {
+      title: args.title,
+      url: args.url,
+      identityId: args.identityId,
+    });
 
     return ctx.db.get(linkId);
   },
@@ -140,7 +148,7 @@ export const updateLink = mutation({
 
     const linkType = args.type ?? link.type;
     if (linkType === "link" && args.url !== undefined) {
-      validateUrl(args.url);
+      validateUrlWithSize(args.url);
     }
 
     if (args.description !== undefined) {
@@ -163,6 +171,10 @@ export const updateLink = mutation({
     if (args.visibleUntil !== undefined) updates.visibleUntil = args.visibleUntil;
 
     await ctx.db.patch(args.linkId, updates);
+
+    // Log the update for audit trail
+    const changedFields = Object.keys(updates).filter((k) => k !== "updatedAt");
+    await logUpdate(ctx, identity.userId, ENTITY_TYPES.LINK, args.linkId, changedFields);
 
     return ctx.db.get(args.linkId);
   },
@@ -207,6 +219,9 @@ export const deleteLink = mutation({
       updatedAt: deletionTime,
     });
 
+    // Log the deletion for audit trail
+    await logDelete(ctx, user._id, ENTITY_TYPES.LINK, args.linkId);
+
     return { success: true };
   },
 });
@@ -247,6 +262,11 @@ export const reorderLinks = mutation({
         updatedAt: timestamp,
       });
     }
+
+    // Log the reorder for audit trail
+    await logAudit(ctx, user._id, AUDIT_ACTIONS.LINK_REORDER, ENTITY_TYPES.LINK, args.identityId, {
+      linkIds: args.linkIds,
+    });
 
     return { success: true };
   },

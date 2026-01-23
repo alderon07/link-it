@@ -10,25 +10,25 @@ const isProtectedRoute = createRouteMatcher([
 
 // Public routes that never require authentication
 const isPublicRoute = createRouteMatcher([
-  '/login(.*)', 
+  '/login(.*)',
   '/',
   '/api/webhooks(.*)', // Clerk webhooks
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { pathname } = req.nextUrl;
-  
+
   // If it's a protected route, require auth
   if (isProtectedRoute(req)) {
     await auth.protect();
     return;
   }
-  
+
   // If it's explicitly public, allow access
   if (isPublicRoute(req)) {
     return;
   }
-  
+
   // For root-level paths that look like usernames (not starting with known prefixes),
   // allow public access for public identity pages
   // Usernames are alphanumeric with optional hyphens/underscores
@@ -36,7 +36,7 @@ export default clerkMiddleware(async (auth, req) => {
   if (isUsernamePath) {
     return; // Allow public access to username pages
   }
-  
+
   // Everything else requires authentication
   await auth.protect();
 })

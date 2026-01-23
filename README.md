@@ -29,6 +29,39 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
 
+## Docker Deployment
+
+This project supports containerized deployment with Docker for development, staging, and production environments.
+
+### Quick Start
+
+```bash
+# See all available commands
+make help
+
+# Development (with hot-reload)
+make dev
+
+# Staging (port 3001)
+make staging
+
+# Production (port 3000)
+make prod
+
+# Build production image
+make build
+```
+
+### Environment Validation
+
+Before deployment, validate your environment variables:
+
+```bash
+./scripts/check-env.sh all --env-file .env.prod
+```
+
+For detailed Docker deployment instructions, see [Docker Deployment Guide](docs/docker-deployment-guide.md).
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

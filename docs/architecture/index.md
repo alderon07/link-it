@@ -7,6 +7,9 @@ This index provides navigation to all architecture documentation for the Link-It
 1. [**Codebase Structure**](./codebase-structure.md) - Overview of the project's directory structure and key components
 2. [**Data Flow**](./data-flow.md) - Documentation of how data flows through the application with Convex real-time architecture
 3. [**Coding Standards**](./coding-standards.md) - Coding conventions and best practices for maintaining and extending the codebase
+4. [**Testing & CI/CD Guide**](../testing-ci-cd-guide.md) - Testing infrastructure, GitHub Actions pipelines, and deployment
+5. [**Deployment Setup Guide**](../deployment-setup-guide.md) - External configuration for GitHub, Convex, Clerk, and production server
+6. [**Docker Deployment Guide**](../docker-deployment-guide.md) - Docker containerization for development, staging, and production environments
 
 ## Quick Reference
 
@@ -76,6 +79,27 @@ This index provides navigation to all architecture documentation for the Link-It
 2. Wrap Convex queries/mutations with additional logic
 3. Export from `src/hooks/convex/index.ts`
 4. Use in components for type-safe, reactive data
+
+#### Docker Deployment
+
+```bash
+# Validate environment before deployment
+./scripts/check-env.sh all --env-file .env.prod
+
+# Build production image with metadata
+make build
+
+# Deploy to staging (port 3001)
+make staging
+
+# Deploy to production (port 3000)
+make prod
+
+# Verify deployment
+make smoke-test PORT=3000
+```
+
+See [Docker Deployment Guide](../docker-deployment-guide.md) for detailed instructions.
 
 ## How to Use This Documentation
 
