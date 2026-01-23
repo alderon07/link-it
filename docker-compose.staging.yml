@@ -1,0 +1,19 @@
+# ============================================
+# Staging Docker Compose Overrides for Link-It
+# ============================================
+# Usage: docker compose -f docker-compose.yml -f docker-compose.staging.yml -p linkit-staging up -d
+#
+# Uses NODE_ENV=production for library behavior
+# Uses APP_ENV=staging for app-specific staging logic
+
+services:
+  link-it:
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production    # Most libs need this for prod behavior
+      - APP_ENV=staging        # App can check this for staging-specific logic
+    # Resource limits (standalone mode, not Swarm)
+    mem_limit: 256m
+    cpus: 0.25
+    # No restart policy - fail fast for debugging in staging

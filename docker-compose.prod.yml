@@ -1,0 +1,17 @@
+# ============================================
+# Production Docker Compose Overrides for Link-It
+# ============================================
+# Usage: docker compose -f docker-compose.yml -f docker-compose.prod.yml -p linkit-prod up -d
+
+services:
+  link-it:
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - APP_ENV=production
+    # Resource limits (standalone mode, not Swarm)
+    mem_limit: 512m
+    cpus: 0.5
+    # Restart policy for production reliability
+    restart: unless-stopped

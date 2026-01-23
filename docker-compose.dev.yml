@@ -1,0 +1,42 @@
+# ============================================
+# Development Docker Compose for Link-It
+# Optimized for hot-reload with WSL/Windows polling fixes
+# ============================================
+#
+# Usage:
+#   Terminal 1: pnpm docker:dev     (Next.js in Docker)
+#   Terminal 2: pnpm convex:dev     (Convex CLI on host)
+#
+# Note: Convex dev server runs on host machine, not in Docker,
+# because it needs direct file system access for hot-reloading functions.
+
+services:
+  link-it:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      # WSL/Windows file watching fixes
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    volumes:
+      # Mount source code for hot-reload
+      - ./src:/app/src
+      - ./convex:/app/convex
+      - ./public:/app/public
+      # Mount config files
+      - ./next.config.mjs:/app/next.config.mjs
+      - ./tailwind.config.ts:/app/tailwind.config.ts
+      - ./postcss.config.mjs:/app/postcss.config.mjs
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./components.json:/app/components.json
+      # Use named volume for node_modules to avoid overwrite
+      - node_modules:/app/node_modules
+
+volumes:
+  node_modules:

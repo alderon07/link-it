@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output
+.next/
+out/
+
+# Version control
+.git/
+.gitignore
+
+# Docker files (prevent recursive contexts)
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation
+*.md
+docs/
+plans/
+
+# Environment files (use --env-file at runtime)
+.env*
+!.env.example
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test and coverage
+coverage/
+.nyc_output/
+
+# Misc
+*.log
+npm-debug.log*
+pnpm-debug.log*
