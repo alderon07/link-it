@@ -6,20 +6,7 @@ This document provides an overview of the Link-It architecture, designed to help
 
 Link-It is a "link in bio" application (similar to Linktree) where users can create personalized pages with collections of links. The application features a modern pixel art aesthetic with neobrutalism accents. Users can create multiple identities (pages), customize themes, manage links, and view analytics. The application is built with Next.js 16, React 19, TypeScript, Tailwind CSS v4, and Convex for real-time data management.
 
-## Tech Stack
-
-- **Frontend Framework**: Next.js 16 (App Router)
-- **UI Library**: React 19
-- **Styling**: Tailwind CSS v4 + shadcn/ui (new-york style)
-- **Language**: TypeScript
-- **Backend**: Convex (real-time database with reactive queries)
-- **Authentication**: Clerk (integrated with Convex via JWT)
-- **Validation**: Zod for schema validation
-- **Analytics**: PostHog
-- **Animations**: Framer Motion
-- **Toasts**: Sonner
-- **Icons**: Lucide React
-- **Development Tools**: ESLint, Prettier
+See [Tech Stack](./tech-stack.md) for full technology details.
 
 ## Directory Structure
 
@@ -258,76 +245,4 @@ Components that use Convex hooks for real-time data:
 7. **Error Handling**: ConvexError with standardized error codes
 8. **Real-Time Updates**: Automatic UI updates via Convex subscriptions
 
-## Development Guidelines
-
-1. **Adding New Components**:
-   - Place reusable UI components in `src/components/ui/`
-   - Pixel art components in `src/components/pixel-art/`
-   - Animation components in `src/components/animations/`
-   - Convex-powered components in `src/components/convex/`
-   - Page-specific components co-located with pages
-
-2. **Adding New Pages**:
-   - Create files in `src/app/` following Next.js app router conventions
-   - Admin pages go in `src/app/(routes)/admin/`
-   - Use client components with Convex hooks for data fetching
-
-3. **Adding New Data Operations**:
-   - Add queries in `convex/[resource]/queries.ts`
-   - Add mutations in `convex/[resource]/mutations.ts`
-   - Add public functions in `convex/[resource]/public.ts` if needed
-   - Create custom hooks in `src/hooks/convex/use[Resource].ts`
-   - Use hooks in components for type-safe, reactive data
-
-4. **Adding New Tables**:
-   - Define table in `convex/schema.ts`
-   - Add indexes for efficient queries
-   - Create queries/mutations in appropriate folder
-   - Update types are auto-generated from schema
-
-5. **Style Modifications**:
-   - Use Tailwind CSS utility classes
-   - Pixel art utilities in `globals.css` (`.pixel-shadow`, `.pixel-border`, etc.)
-   - shadcn/ui components with pixel variants
-
-## Testing and Debugging
-
-The codebase is set up with:
-- `pnpm dev`: Starts Next.js development server
-- `pnpm dev:convex`: Starts both Next.js and Convex dev servers
-- `pnpm convex:dev`: Starts only Convex dev server
-- `pnpm build`: Production build
-- `pnpm lint`: Run ESLint
-- `pnpm scan`: Dev server with React Scan for performance analysis
-
-Uses Convex for all data operations with real-time reactivity. Data is stored in Convex cloud database.
-
-## Security Features
-
-- **Authentication**: Clerk middleware protecting routes + Convex JWT verification
-- **Authorization**: Convex queries/mutations verify user ownership
-- **Input Validation**: Zod schemas in Convex validators
-- **Webhook Verification**: Svix signature verification for Clerk webhooks in `convex/http.ts`
-- **Real-Time Security**: Convex automatically handles auth token validation
-
-## Key Terminology
-
-- **Identity**: A user's "link in bio" page (previously called "page")
-- **Link**: A single link item on an identity
-- **Theme**: Color scheme and styling for an identity
-- **Query**: Read-only Convex function that returns data (reactive)
-- **Mutation**: Write Convex function that modifies data
-- **Public Function**: Convex function that doesn't require authentication
-
-## Conclusion
-
-Link-It uses a modern, real-time architecture with:
-- Convex for reactive data management
-- Type-safe queries and mutations
-- Automatic real-time UI updates
-- Authentication and authorization with Clerk
-- Pixel art aesthetic with neobrutalism design
-- Analytics integration with PostHog
-- Smooth animations with Framer Motion
-
-This architecture provides instant updates across all clients, type safety throughout the stack, and a great developer experience with minimal boilerplate.
+For development guidelines and common tasks, see [index.md](./index.md#common-tasks).

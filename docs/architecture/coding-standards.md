@@ -642,15 +642,6 @@ export function CreateIdentityForm() {
 - Filter queries efficiently using indexes
 - Use pagination for large datasets (if needed)
 
-## Accessibility (a11y)
-
-- Use semantic HTML elements
-- Ensure proper keyboard navigation
-- Include appropriate ARIA attributes
-- Maintain sufficient color contrast
-- Test with screen readers
-- Ensure pixel art components are accessible
-
 ## Code Organization
 
 ### File Naming
@@ -721,16 +712,3 @@ import "./styles.css"
 - `.pixel-glow` - Glow animation
 - `.scanlines` - CRT scanline effect
 
-## Conclusion
-
-Following these standards and best practices will ensure a consistent, maintainable, and high-quality codebase for the Link-It application. These guidelines should be referenced when writing new code, refactoring existing code, or debugging issues.
-
-Key principles:
-- Type safety with TypeScript and Convex-generated types
-- Real-time reactivity with Convex queries
-- Client-first architecture with Next.js 16
-- Convex backend for all data operations
-- Pixel art aesthetic with neobrutalism design
-- Authentication and authorization with Clerk
-- Analytics integration with PostHog
-- Smooth animations with Framer Motion
