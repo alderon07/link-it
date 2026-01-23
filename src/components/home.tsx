@@ -234,84 +234,86 @@ export default function HomePage() {
 
       <PixelDivider variant="stars" className="my-8" />
 
-      {/* Featured Profiles */}
-      <section id="explore" className="py-16 md:py-24 px-4">
-        <div className="container mx-auto">
-          <FadeIn>
-            <div className="text-center mb-16">
-              <Badge variant="retro" className="mb-4">
-                <Star className="h-3 w-3 mr-1" />
-                Featured
-              </Badge>
-              <h2 className="text-4xl md:text-5xl font-black mb-4">
-                Featured <span className="text-pixel-teal">Creators</span>
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                Discover amazing creators and their pixel-perfect link-it pages
-              </p>
-            </div>
-          </FadeIn>
+      {/* Featured Creators */}
+      {false && (
+        <section id="explore" className="py-16 md:py-24 px-4">
+          <div className="container mx-auto">
+            <FadeIn>
+              <div className="text-center mb-16">
+                <Badge variant="retro" className="mb-4">
+                  <Star className="h-3 w-3 mr-1" />
+                  Featured
+                </Badge>
+                <h2 className="text-4xl md:text-5xl font-black mb-4">
+                  Featured <span className="text-pixel-teal">Creators</span>
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+                  Discover amazing creators and their pixel-perfect link-it pages
+                </p>
+              </div>
+            </FadeIn>
 
-          <StaggerContainer className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-            {featuredProfiles.map((profile) => (
-              <StaggerItem key={profile.id}>
-                <Card variant="pixel-interactive" className="h-full group">
-                  <CardContent className="p-6">
-                    <div className="text-center">
-                      {/* Avatar */}
-                      <div className="flex justify-center mb-4">
-                        <div className="relative">
-                          <Avatar className={`w-20 h-20 pixel-border border-pixel-${profile.color}`}>
-                            <AvatarImage src={profile.avatar} alt={profile.name} />
-                            <AvatarFallback className={`text-xl font-bold bg-pixel-${profile.color}`}>
-                              {profile.name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          {profile.verified && (
-                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-pixel-yellow pixel-border flex items-center justify-center">
-                              <Star className="w-3 h-3 fill-current" />
-                            </div>
-                          )}
+            <StaggerContainer className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+              {featuredProfiles.map((profile) => (
+                <StaggerItem key={profile.id}>
+                  <Card variant="pixel-interactive" className="h-full group">
+                    <CardContent className="p-6">
+                      <div className="text-center">
+                        {/* Avatar */}
+                        <div className="flex justify-center mb-4">
+                          <div className="relative">
+                            <Avatar className={`w-20 h-20 pixel-border border-pixel-${profile.color}`}>
+                              <AvatarImage src={profile.avatar} alt={profile.name} />
+                              <AvatarFallback className={`text-xl font-bold bg-pixel-${profile.color}`}>
+                                {profile.name.charAt(0)}
+                              </AvatarFallback>
+                            </Avatar>
+                            {profile.verified && (
+                              <div className="absolute -top-1 -right-1 w-6 h-6 bg-pixel-yellow pixel-border flex items-center justify-center">
+                                <Star className="w-3 h-3 fill-current" />
+                              </div>
+                            )}
+                          </div>
                         </div>
+
+                        {/* Info */}
+                        <h3 className="text-lg font-bold mb-1">{profile.name}</h3>
+                        <p className="text-muted-foreground text-sm mb-3">@{profile.username}</p>
+                        <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{profile.bio}</p>
+
+                        {/* Badge */}
+                        <Badge variant="retro" className="mb-4">
+                          {profile.category}
+                        </Badge>
+
+                        {/* Stats */}
+                        <div className="flex justify-center gap-4 text-sm text-muted-foreground mb-4">
+                          <span className="flex items-center gap-1">
+                            <LinkIcon className="w-3 h-3" />
+                            {profile.linkCount} links
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <TrendingUp className="w-3 h-3" />
+                            {profile.views.toLocaleString()}
+                          </span>
+                        </div>
+
+                        {/* CTA */}
+                        <Button variant="pixel-secondary" className="w-full" asChild>
+                          <Link href={`/${profile.username}`}>
+                            View Page
+                            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                          </Link>
+                        </Button>
                       </div>
-
-                      {/* Info */}
-                      <h3 className="text-lg font-bold mb-1">{profile.name}</h3>
-                      <p className="text-muted-foreground text-sm mb-3">@{profile.username}</p>
-                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{profile.bio}</p>
-
-                      {/* Badge */}
-                      <Badge variant="retro" className="mb-4">
-                        {profile.category}
-                      </Badge>
-
-                      {/* Stats */}
-                      <div className="flex justify-center gap-4 text-sm text-muted-foreground mb-4">
-                        <span className="flex items-center gap-1">
-                          <LinkIcon className="w-3 h-3" />
-                          {profile.linkCount} links
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <TrendingUp className="w-3 h-3" />
-                          {profile.views.toLocaleString()}
-                        </span>
-                      </div>
-
-                      {/* CTA */}
-                      <Button variant="pixel-secondary" className="w-full" asChild>
-                        <Link href={`/${profile.username}`}>
-                          View Page
-                          <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
+                    </CardContent>
+                  </Card>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+          </div>
+        </section>
+      )}
 
       <PixelDivider variant="dashed" className="my-8" />
 
@@ -392,7 +394,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="pixel-border border-x-0 border-b-0 bg-card/50 py-12 px-4">
         <div className="container mx-auto">
-          <div className="grid gap-8 md:grid-cols-4 mb-8">
+          {/* <div className="grid gap-8 md:grid-cols-4 mb-8">
             <div className="md:col-span-1">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex items-center justify-center w-10 h-10 bg-pixel-pink pixel-border">
@@ -431,14 +433,14 @@ export default function HomePage() {
                 <li><Link href="#" className="hover:text-pixel-pink transition-colors">Careers</Link></li>
               </ul>
             </div>
-          </div>
+          </div> */}
 
           <PixelDivider variant="dashed" className="mb-8" />
 
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 text-muted-foreground text-sm">
               <Heart className="h-4 w-4 text-pixel-coral" />
-              <p>&copy; 2024 link-it. Made with love for creators.</p>
+              <p>&copy; 2026 link-it. Made with love for creators.</p>
             </div>
           </div>
         </div>
