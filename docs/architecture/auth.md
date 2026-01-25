@@ -10,7 +10,7 @@ User → Clerk Auth → JWT Token → ConvexProvider → Convex Backend
 
 ## Clerk Middleware
 
-Located at `src/middleware.ts`. Protects all routes except public ones.
+Located at `src/proxy.ts`. Protects all routes except public ones.
 
 ```typescript
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"

@@ -38,7 +38,7 @@ link-it/
 │   │   ├── analytics/             # PostHog integration
 │   │   └── animations/            # Framer Motion variants
 │   │
-│   └── middleware.ts              # Clerk auth middleware
+│   └── proxy.ts                   # Clerk auth proxy
 │
 └── docs/architecture/             # This documentation
 ```
@@ -48,7 +48,7 @@ link-it/
 | File | Purpose |
 |------|---------|
 | `convex/schema.ts` | Database tables and indexes |
-| `src/middleware.ts` | Route protection |
+| `src/proxy.ts` | Route protection |
 | `src/app/layout.tsx` | Root layout with providers |
 | `src/components/providers/ConvexClientProvider.tsx` | Convex + Clerk JWT |
 
