@@ -1,5 +1,6 @@
 "use client"
 
+import { useClerk } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -88,6 +89,8 @@ const features = [
 ]
 
 export default function HomePage() {
+  const { openSignIn } = useClerk()
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden max-w-full">
       {/* Pixel Grid Background */}
@@ -114,8 +117,12 @@ export default function HomePage() {
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              <Button variant="ghost" asChild className="font-bold uppercase text-xs sm:text-sm tracking-wide px-2 sm:px-4">
-                <Link href="/login">Sign In</Link>
+              <Button
+                variant="ghost"
+                className="font-bold uppercase text-xs sm:text-sm tracking-wide px-2 sm:px-4"
+                onClick={() => openSignIn({ forceRedirectUrl: '/admin' })}
+              >
+                Sign In
               </Button>
               <Button variant="pixel" asChild className="text-xs sm:text-sm px-3 sm:px-4">
                 <Link href="/admin">

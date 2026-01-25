@@ -4,6 +4,9 @@
 import { PostHog } from "posthog-node"
 import type { AnalyticsEventName, AnalyticsEventPayload } from "./events"
 
+// Application identifier for multi-app PostHog projects
+const APP_NAME = "link-it"
+
 // ============================================
 // Server-side PostHog Client
 // ============================================
@@ -62,6 +65,7 @@ export function trackServerEvent(
     event: eventName,
     properties: {
       ...properties,
+      app: APP_NAME,
       $lib: "posthog-node",
       timestamp: new Date().toISOString(),
     },
@@ -90,6 +94,7 @@ export function trackServerPageView(
     event: "$pageview",
     properties: {
       ...properties,
+      app: APP_NAME,
       $current_url: properties.url,
       $referrer: properties.referrer,
       $lib: "posthog-node",

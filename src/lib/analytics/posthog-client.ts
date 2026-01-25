@@ -4,6 +4,9 @@
 import posthog from "posthog-js"
 import type { AnalyticsEventName, AnalyticsEventPayload } from "./events"
 
+// Application identifier for multi-app PostHog projects
+const APP_NAME = "link-it"
+
 // ============================================
 // Initialization
 // ============================================
@@ -27,12 +30,14 @@ export function initPostHog(): void {
   }
 
   posthog.init(apiKey, {
-    api_host: apiHost,
+    api_host: "/ingest", // Proxy through our domain to avoid ad blockers
+    ui_host: apiHost, // Keep UI links pointing to PostHog
     capture_pageview: false, // We handle this manually for more control
     capture_pageleave: true,
     persistence: "localStorage",
     autocapture: false, // Disable autocapture for cleaner data
     disable_session_recording: process.env.NODE_ENV === "development",
+    capture_performance: false, // Disable Web Vitals capture
     loaded: (ph) => {
       // Enable debug mode in development
       if (process.env.NODE_ENV === "development") {
@@ -112,6 +117,7 @@ export function trackEvent(
 
   ph.capture(eventName, {
     ...properties,
+    app: APP_NAME,
     timestamp: new Date().toISOString(),
   })
 }
@@ -131,6 +137,7 @@ export function trackPageView(properties?: {
 
   ph.capture("$pageview", {
     ...properties,
+    app: APP_NAME,
     $current_url: window.location.href,
     $referrer: properties?.referrer || document.referrer,
   })
